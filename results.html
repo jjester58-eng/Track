@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <link rel="icon" type="image/png" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Field Events">
+  <meta name="theme-color" content="#0d1b2a">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      background: #0a0f1a;
+      color: #e0e6f0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: #0d1b2a;
+      border-bottom: 2px solid #1e3a5f;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .topbar-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #7eb8f7;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .topbar select {
+      flex: 1;
+      background: #162438;
+      color: #e0e6f0;
+      border: 1px solid #2a4a6e;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 15px;
+      max-width: 420px;
+    }
+    .refresh-info {
+      font-size: 12px;
+      color: #557;
+      white-space: nowrap;
+    }
+    .pulse {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #28a745;
+      margin-right: 5px;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* ── Main layout ── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      gap: 0;
+    }
+
+    /* ── Leaderboard (left) ── */
+    .leaderboard {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      border-right: 2px solid #1e3a5f;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #4a7aaa;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Horizontal leaderboard table */
+    .lb-table { width: 100%; border-collapse: collapse; }
+    .lb-table thead tr {
+      background: #111d2e;
+      font-size: 11px;
+      color: #4a7aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .lb-table thead th { padding: 8px 10px; text-align: left; border-bottom: 1px solid #1e3a5f; }
+    .lb-table thead th.center { text-align: center; }
+    .lb-table tbody tr {
+      border-bottom: 1px solid #141f30;
+      transition: background 0.2s;
+    }
+    .lb-table tbody tr:hover { background: #111d2e; }
+    .lb-table tbody td { padding: 9px 10px; font-size: 14px; vertical-align: middle; }
+    .lb-table tbody td.center { text-align: center; }
+
+    .place-cell { width: 48px; }
+    .place-badge {
+      display: inline-block;
+      font-size: 12px; font-weight: bold;
+      padding: 3px 6px; border-radius: 4px;
+      min-width: 30px; text-align: center;
+    }
+    .p1  { background: #c8a800; color: #000; }
+    .p2  { background: #8a8a8a; color: #fff; }
+    .p3  { background: #7a4a1a; color: #fff; }
+    .p4,.p5,.p6,.p7,.p8 { background: #1e3a5f; color: #aac; }
+    .pT  { background: #3a3a5a; color: #aab; font-style: italic; }
+    .pNM { background: #1a1a2a; color: #445; }
+    .pOUT{ background: #4a1a1a; color: #f88; }
+
+    .ath-name { font-weight: 600; font-size: 15px; color: #d0e4ff; }
+    .ath-team { font-size: 11px; color: #4a6a8a; margin-top: 1px; }
+    .best-mark { font-size: 16px; font-weight: 800; color: #7eb8f7; }
+    .no-mark { color: #2a4a6a; font-size: 13px; }
+
+    .att-cell {
+      font-size: 13px; text-align: center;
+      min-width: 72px;
+    }
+    .att-mark  { color: #7eb8f7; font-weight: 600; }
+    .att-foul  { color: #e05555; font-weight: bold; }
+    .att-pass  { color: #556677; }
+    .att-empty { color: #1e3050; }
+    .att-best  { background: #0d2a1a; border-radius: 4px; padding: 2px 4px; color: #4dca7a; }
+
+    /* Vertical leaderboard */
+    .v-ath-row {
+      background: #0d1624;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+    }
+    .v-ath-row.elim { border-color: #4a1a1a; background: #110d0d; }
+    .v-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .v-heights { display: flex; gap: 6px; flex-wrap: wrap; }
+    .v-ht-chip {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid #1e3a5f;
+      background: #0a1628;
+      color: #557;
+    }
+    .v-ht-chip.cleared { background: #0a2a18; border-color: #1a5a30; color: #4dca7a; }
+    .v-ht-chip.missed  { background: #2a0a0a; border-color: #5a1a1a; color: #e05555; }
+    .v-ht-chip.passed  { background: #1a1a2a; border-color: #3a3a5a; color: #556; }
+    .v-ht-chip b { font-size: 11px; display: block; margin-bottom: 1px; color: #aab; }
+    .dots span { font-size: 13px; }
+
+    /* ── Right panel (status) ── */
+    .status-panel {
+      width: 280px;
+      flex-shrink: 0;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    .status-card {
+      background: #0d1624;
+      border: 1px solid #1e3a5f;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .status-card .sc-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      color: #4a7aaa; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .bar-height-display {
+      font-size: 48px;
+      font-weight: 900;
+      color: #7eb8f7;
+      letter-spacing: 2px;
+      text-align: center;
+      padding: 10px 0;
+    }
+    .competing-name {
+      font-size: 18px; font-weight: 700; color: #d0e4ff;
+      margin-bottom: 4px;
+    }
+    .competing-team { font-size: 12px; color: #4a6a8a; }
+    .competing-best { font-size: 13px; color: #4dca7a; margin-top: 6px; }
+    .up-next-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid #141f30;
+      font-size: 13px;
+    }
+    .up-next-row:last-child { border-bottom: none; }
+    .up-next-num {
+      font-size: 11px; color: #4a6a8a;
+      min-width: 18px;
+    }
+    .up-next-name { color: #a0c0e0; }
+    .up-next-mark { color: #4a7aaa; font-size: 12px; margin-left: auto; }
+
+    .no-event-msg {
+      color: #2a4a6a;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #0a0f1a; }
+    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">⚡ FIELD EVENTS PRO</div>
+  <select id="eventSelect" onchange="onEventChange()">
+    <option value="">— Select Event —</option>
+  </select>
+  <div class="refresh-info"><span class="pulse"></span> Live · refreshes every 10s</div>
+</div>
+
+<div class="main">
+  <div class="leaderboard" id="leaderboard">
+    <div class="no-event-msg">Select an event to view the live leaderboard.</div>
+  </div>
+  <div class="status-panel" id="statusPanel">
+    <div class="status-card">
+      <div class="sc-label">Now Competing</div>
+      <div id="nowCompeting" style="color:#2a4a6a; font-size:13px;">—</div>
+    </div>
+    <div class="status-card" id="upNextCard">
+      <div class="sc-label">Up Next</div>
+      <div id="upNext" style="color:#2a4a6a; font-size:13px;">—</div>
+    </div>
+    <div class="status-card" id="barHeightCard" style="display:none;">
+      <div class="sc-label">Current Bar Height</div>
+      <div class="bar-height-display" id="barHeightDisplay">—</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====================== SUPABASE SETUP ======================
+const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+// ====================== STATE ======================
+let currentEventId   = '';
+let currentEventName = '';
+let isVertical       = false;
+let athleteList      = [];
+let attemptsData     = [];
+let refreshTimer     = null;
+
+// ====================== INIT ======================
+window.onload = () => {
+  loadEvents();
+};
+
+async function loadEvents() {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .order('name');
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const sel = document.getElementById('eventSelect');
+  data.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = `${e.name} (${e.gender} ${e.level || ''})`;
+    sel.appendChild(opt);
+  });
+}
+
+async function onEventChange() {
+  currentEventId = document.getElementById('eventSelect').value;
+  if (!currentEventId) return;
+
+  currentEventName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
+  isVertical = currentEventName.includes('high jump') || currentEventName.includes('pole vault');
+
+  document.getElementById('barHeightCard').style.display = isVertical ? 'block' : 'none';
+
+  if (refreshTimer) clearInterval(refreshTimer);
+  await fetchAll();
+  refreshTimer = setInterval(fetchAll, 10000);
+}
+
+// ====================== FETCH DATA ======================
+async function fetchAll() {
+  if (!currentEventId) return;
+
+  // Load athletes
+  const { data: athletes } = await supabase
+    .from('event_athletes')
+    .select('*, athletes(*)')
+    .eq('event_id', currentEventId);
+
+  athleteList = athletes || [];
+
+  // Load attempts
+  const { data: attempts } = await supabase
+    .from('attempts')
+    .select('*')
+    .eq('event_id', currentEventId)
+    .order('created_at', { ascending: true });
+
+  attemptsData = attempts || [];
+
+  render();
+}
+
+function render() {
+  if (isVertical) {
+    renderVLeaderboard();
+  } else {
+    renderHLeaderboard();
+  }
+  renderStatusPanel();
+}
+
+// (All your renderHLeaderboard, renderVLeaderboard, renderStatusPanel, calcHPlaces, calcVPlaces, etc. functions stay exactly the same below)
+function renderHLeaderboard() { /* your original code */ }
+function renderVLeaderboard() { /* your original code */ }
+function renderStatusPanel() { /* your original code */ }
+function calcHPlaces(list) { /* your original code */ }
+function calcVPlaces(list) { /* your original code */ }
+function placeBadge(pObj) { /* your original code */ }
+function getBestMark(atts) { /* your original code */ }
+function getVBest(atts) { /* your original code */ }
+function parseMark(m) { /* your original code */ }
+function parseHeight(h) { return parseMark(h); }
+function isEliminated(atts) { /* your original code */ }
+function markArraysEqual(a, b) { /* your original code */ }
+function vTied(a, b) { /* your original code */ }
+</script>
+</body>
+</html>

@@ -3,21 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Field Events Pro</title>
+  <title>Track App</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: -apple-system, sans-serif; background: #0a0f1a; color: #e0e6f0; text-align: center; padding: 40px; }
-    .card { background: #0d1b2a; border-radius: 12px; padding: 30px; max-width: 420px; margin: 0 auto; }
-    h1 { color: #7eb8f7; }
-    .btn { display: block; margin: 20px auto; padding: 14px 28px; background: #1e3a5c; color: white; text-decoration: none; border-radius: 8px; font-size: 18px; }
-    .btn:hover { background: #2a4a6e; }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    button { padding: 12px 20px; margin: 8px 4px; font-size: 16px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #4a90e2; color: white; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>⚡ FIELD EVENTS PRO</h1>
-    <p style="margin:20px 0;">Choose your role</p>
-    <a href="coach.html" class="btn">👟 Coach / Scorer (Enter Marks)</a>
-    <a href="results.html" class="btn">📊 Live Results (Pressbox / Parents)</a>
+  <h1>Track App - Athletics Attendance</h1>
+
+  <div id="login-screen">
+    <h2>Coach Login</h2>
+    <input id="email" type="email" placeholder="Email" style="padding:8px; width:250px;"><br><br>
+    <input id="password" type="password" placeholder="Password" style="padding:8px; width:250px;"><br><br>
+    <button onclick="signIn()">Sign In</button>
+    <button onclick="signUp()">Sign Up</button>
   </div>
+
+  <div id="app-screen" style="display: none;">
+    <button onclick="signOut()">Sign Out</button>
+    <h2>Athletes Roster</h2>
+    <button onclick="loadAthletes()">Load Athletes</button>
+    <table id="athletes-table"></table>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+    const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+    const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+    async function signUp() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) alert(error.message);
+      else alert('Check your email to confirm account');
+    }
+
+    async function signIn() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) alert(error.message);
+      else {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        loadAthletes();
+      }
+    }
+
+    async function signOut() {
+      await supabase.auth.signOut();
+      document.getElementById('login-screen').style.display = 'block';
+      document.getElementById('app-screen').style.display = 'none';
+    }
+
+    async function loadAthletes() {
+      const { data, error } = await supabase
+        .from('athletes')
+        .select('*');
+      
+      if (error) {
+        console.error(error);
+        alert('Error loading athletes');
+      } else {
+        let html = '<tr><th>Name</th><th>Grade</th><th>Action</th></tr>';
+        data.forEach(athlete => {
+          html += `
+            <tr>
+              <td>${athlete.name || 'No name'}</td>
+              <td>${athlete.grade || ''}</td>
+              <td><button onclick="checkIn('${athlete.id}')">Check In</button></td>
+            </tr>`;
+        });
+        document.getElementById('athletes-table').innerHTML = html;
+      }
+    }
+
+    async function checkIn(athleteId) {
+      const { error } = await supabase
+        .from('attendance')
+        .insert({ 
+          athlete_id: athleteId, 
+          date: new Date().toISOString().split('T')[0],
+          present: true 
+        });
+      if (error) alert(error.message);
+      else alert('Athlete checked in!');
+    }
+
+    // Auto-check if already logged in
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        loadAthletes();
+      }
+    });
+  </script>
 </body>
 </html>
