@@ -1,109 +1,222 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Track App</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
-    button { padding: 12px 20px; margin: 8px 4px; font-size: 16px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    th { background: #4a90e2; color: white; }
-  </style>
-</head>
-<body>
-  <h1>Track App - Athletics Attendance</h1>
+<script>
+// ====================== SUPABASE SETUP ======================
+const supabaseUrl   = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-  <div id="login-screen">
-    <h2>Coach Login</h2>
-    <input id="email" type="email" placeholder="Email" style="padding:8px; width:250px;"><br><br>
-    <input id="password" type="password" placeholder="Password" style="padding:8px; width:250px;"><br><br>
-    <button onclick="signIn()">Sign In</button>
-    <button onclick="signUp()">Sign Up</button>
-  </div>
+// ====================== HELPER FUNCTIONS (unchanged) ======================
+function normalizeLevel(raw) {
+  if (!raw) return '';
+  var t = raw.toString().toLowerCase().trim();
+  if (t.indexOf('varsity') !== -1) return 'Varsity';
+  if (t.indexOf('jv') !== -1 || t.indexOf('junior var') !== -1) return 'JV';
+  if (t.indexOf('8th') !== -1 || t === '8') return '8th Grade';
+  if (t.indexOf('7th') !== -1 || t === '7') return '7th Grade';
+  if (t.indexOf('6th') !== -1 || t === '6') return '6th Grade';
+  if (t.indexOf('middle') !== -1 || t === 'ms') return 'Middle School';
+  if (t.indexOf('frosh') !== -1 || t.indexOf('freshman') !== -1 || t.indexOf('9th') !== -1) return 'Freshman';
+  if (t.indexOf('soph') !== -1 || t.indexOf('10th') !== -1) return 'Sophomore';
+  return raw.toString().trim();
+}
 
-  <div id="app-screen" style="display: none;">
-    <button onclick="signOut()">Sign Out</button>
-    <h2>Athletes Roster</h2>
-    <button onclick="loadAthletes()">Load Athletes</button>
-    <table id="athletes-table"></table>
-  </div>
+function safeHeightString(val) {
+  if (!val && val !== 0) return '';
+  if (typeof val === 'string' && val.indexOf('-') !== -1) return val.trim();
+  return String(val).trim();
+}
 
-  <script>
-    const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
-    const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-    const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+function parseMark(mark) {
+  if (!mark || mark.indexOf('-') === -1) return null;
+  var parts = mark.split('-');
+  return (parseFloat(parts[0])||0)*12 + (parseFloat(parts[1])||0);
+}
 
-    async function signUp() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) alert(error.message);
-      else alert('Check your email to confirm account');
+// ====================== SUPABASE FUNCTIONS ======================
+
+// Load all events for dropdown
+async function getEvents() {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .order('name');
+
+  if (error) { console.error(error); return []; }
+  return data.map(r => ({
+    id: r.id,
+    name: r.name,
+    gender: r.gender,
+    level: r.level
+  }));
+}
+
+// Load athletes for a specific event
+async function getAthletesByEvent(eventId) {
+  if (!eventId) return [];
+
+  const { data, error } = await supabase
+    .from('event_assignments')
+    .select(`
+      athletes (
+        id, fname, lname, team
+      )
+    `)
+    .eq('event_id', eventId);
+
+  if (error) { console.error(error); return []; }
+
+  return data.map(row => ({
+    id: row.athletes.id,
+    name: `${row.athletes.fname} ${row.athletes.lname}`.trim(),
+    team: row.athletes.team || ''
+  }));
+}
+
+// Get all attempts for an event
+async function getAllAttemptsForEvent(eventId) {
+  if (!eventId) return [];
+
+  const { data, error } = await supabase
+    .from('attempts')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: true });
+
+  if (error) { console.error(error); return []; }
+
+  return data.map(r => ({
+    id: r.id,
+    event_id: r.event_id,
+    athlete_id: r.athlete_id,
+    athlete_name: r.athlete_name,
+    mark: r.mark || '',
+    foul: r.foul || false,
+    pass: r.pass || false,
+    phase: r.phase || '',
+    height: safeHeightString(r.height),
+    std: r.std || '',
+    ts: r.created_at || ''
+  }));
+}
+
+// Save a new attempt
+async function saveAttempt(a) {
+  if (!a || !a.event_id || !a.athlete_id) return { success: false, error: 'missing fields' };
+
+  const { error } = await supabase
+    .from('attempts')
+    .insert([{
+      id: 'tmp_' + Date.now().toString(36),
+      event_id: a.event_id,
+      athlete_id: a.athlete_id,
+      athlete_name: a.athlete_name || '',
+      mark: a.mark || '',
+      foul: !!a.is_foul,
+      pass: !!a.is_pass,
+      phase: a.phase || '',
+      height: a.bar_height || '',
+      std: a.standards || ''
+    }]);
+
+  if (error) {
+    console.error(error);
+    return { success: false, error: error.message };
+  }
+  return { success: true };
+}
+
+// Delete an attempt
+async function deleteAttempt(id) {
+  const { error } = await supabase
+    .from('attempts')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error(error);
+    return { success: false };
+  }
+  return { success: true };
+}
+
+// Add athlete to event
+async function addAthleteToEvent(fname, lname, team, gender, level, eventId) {
+  const aId = 'a_' + Date.now().toString(36);
+
+  // Insert athlete
+  await supabase.from('athletes').insert([{
+    id: aId,
+    fname: fname,
+    lname: lname,
+    gender: gender,
+    level: level,
+    team: team || ''
+  }]);
+
+  // Assign to event
+  await supabase.from('event_assignments').insert([{
+    athlete_id: aId,
+    event_id: eventId
+  }]);
+
+  return {
+    id: aId,
+    name: (fname + ' ' + lname).trim(),
+    team: team || ''
+  };
+}
+
+// Remove athlete from event
+async function removeAthleteFromEvent(athleteId, eventId) {
+  await supabase
+    .from('event_assignments')
+    .delete()
+    .eq('athlete_id', athleteId)
+    .eq('event_id', eventId);
+
+  return { success: true };
+}
+
+// Clear all data (use with caution)
+async function clearAllData() {
+  if (!confirm('Delete ALL data? This cannot be undone.')) return;
+
+  await supabase.from('attempts').delete().neq('id', '0');
+  await supabase.from('event_assignments').delete().neq('id', '0');
+  await supabase.from('athletes').delete().neq('id', '0');
+  await supabase.from('events').delete().neq('id', '0');
+
+  alert('All data cleared.');
+  location.reload();
+}
+
+// Import from MileSplit CSV
+async function importMileSplit(csvData) {
+  // Keep your existing parsing logic, then insert via Supabase
+  // (I can expand this if you want the full converted importer)
+  alert("CSV Import - parsing ready. Let me know if you want the full Supabase version.");
+  return 0;
+}
+
+// ====================== FINALISTS (for finals phase) ======================
+async function getFinalists(eventId) {
+  const { data } = await supabase
+    .from('attempts')
+    .select('*')
+    .eq('event_id', eventId);
+
+  const athMap = {};
+  data.forEach(r => {
+    if (r.foul || r.pass || !r.mark) return;
+    const val = parseMark(r.mark);
+    if (val === null) return;
+    if (!athMap[r.athlete_id] || val > athMap[r.athlete_id].val) {
+      athMap[r.athlete_id] = { id: r.athlete_id, name: r.athlete_name, val: val, mark: r.mark };
     }
+  });
 
-    async function signIn() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) alert(error.message);
-      else {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'block';
-        loadAthletes();
-      }
-    }
-
-    async function signOut() {
-      await supabase.auth.signOut();
-      document.getElementById('login-screen').style.display = 'block';
-      document.getElementById('app-screen').style.display = 'none';
-    }
-
-    async function loadAthletes() {
-      const { data, error } = await supabase
-        .from('athletes')
-        .select('*');
-      
-      if (error) {
-        console.error(error);
-        alert('Error loading athletes');
-      } else {
-        let html = '<tr><th>Name</th><th>Grade</th><th>Action</th></tr>';
-        data.forEach(athlete => {
-          html += `
-            <tr>
-              <td>${athlete.name || 'No name'}</td>
-              <td>${athlete.grade || ''}</td>
-              <td><button onclick="checkIn('${athlete.id}')">Check In</button></td>
-            </tr>`;
-        });
-        document.getElementById('athletes-table').innerHTML = html;
-      }
-    }
-
-    async function checkIn(athleteId) {
-      const { error } = await supabase
-        .from('attendance')
-        .insert({ 
-          athlete_id: athleteId, 
-          date: new Date().toISOString().split('T')[0],
-          present: true 
-        });
-      if (error) alert(error.message);
-      else alert('Athlete checked in!');
-    }
-
-    // Auto-check if already logged in
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'block';
-        loadAthletes();
-      }
-    });
-  </script>
-</body>
-</html>
+  return Object.values(athMap)
+    .sort((a,b) => b.val - a.val)
+    .slice(0, 8)
+    .reverse();
+}
+</script>

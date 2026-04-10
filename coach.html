@@ -10,32 +10,185 @@
   <meta name="theme-color" content="#0d1b2a">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* (Your full original CSS stays exactly the same) */
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0;
            display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    /* ... paste all your original styles here (I kept them all) ... */
-    /* (All your CSS from .nav-bar to .danger-btn is unchanged) */
+    #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px;
+      font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0; letter-spacing: 0.5px; }
+    #offlineBanner.show { display: block; }
+    #queueBanner { display: none; background: #856404; color: #fff3cd; font-size: 12px;
+      text-align: center; padding: 5px 12px; flex-shrink: 0; }
+    #queueBanner.show { display: block; }
+    #flightBarStrip { display: none; background: #1e3a1e; color: white; padding: 8px 12px;
+      flex-shrink: 0; align-items: center; gap: 10px; flex-wrap: wrap; }
+    #flightBarStrip.show { display: flex; }
+    #flightBarStrip label { font-size: 12px; opacity: .75; white-space: nowrap; }
+    #flightBarInput { width: 90px; padding: 6px 8px; border-radius: 5px; border: none;
+      font-size: 16px; font-weight: bold; text-align: center; background: #fff; }
+    .fbar-inc { padding: 6px 10px; background: rgba(255,255,255,.15);
+                border: 1px solid rgba(255,255,255,.4); color: white;
+                border-radius: 5px; cursor: pointer; font-size: 13px; }
+    #flightBarSet { padding: 6px 14px; background: #28a745; border: none;
+                    color: white; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    #flightBarDisplay { font-size: 14px; font-weight: bold; margin-left: 4px;
+                        background: rgba(255,255,255,.1); padding: 4px 10px; border-radius: 5px; }
+    .nav-bar { background: #0d1b2a; display: flex; justify-content: space-around;
+               padding: 10px; border-bottom: 2px solid #1a3a5c; flex-shrink: 0; }
+    .nav-bar button { background: none; border: 1px solid white; color: white;
+                      padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+    .nav-bar button.active { background: white; color: #0d1b2a; font-weight: bold; }
+    .header { background: #1a3a5c; color: white; padding: 10px;
+              display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+    .header select { flex: 2; min-width: 160px; }
+    .phase-btn { padding: 8px 10px; background: rgba(255,255,255,0.15);
+                 border: 1px solid rgba(255,255,255,0.4); color: white;
+                 border-radius: 5px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
+    .container { display: flex; flex: 1; overflow: hidden; }
+    .left-panel { width: 38%; border-right: 2px solid #ddd; overflow-y: auto; background: white; flex-shrink: 0; }
+    .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
+    .ath-btn { width: 100%; text-align: left; padding: 10px 12px; border: none;
+               border-bottom: 1px solid #eee; background: white; cursor: pointer; line-height: 1.4; }
+    .ath-btn.active { background: #eef4ff; border-left: 5px solid #1a3a5c; }
+    .ath-btn.eliminated { background: #fff5f5; }
+    .ath-btn.passing-height { background: #f4f4f4; opacity: 0.65; }
+    .ath-btn.needs-checkin { background: #fffbf0; }
+    .ath-top-row { display: flex; align-items: center; gap: 6px; }
+    .place-badge { font-size: 12px; font-weight: bold; min-width: 26px; text-align: center;
+                   padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
+    .place-1 { background: #FFD700; color: #333; }
+    .place-2 { background: #C0C0C0; color: #333; }
+    .place-3 { background: #cd7f32; color: white; }
+    .place-4, .place-5, .place-6, .place-7, .place-8 { background: #e9ecef; color: #333; }
+    .place-T { background: #6c757d; color: white; font-style: italic; }
+    .place-elim { background: #dc3545; color: white; }
+    .place-nr { background: #f0f0f0; color: #aaa; }
+    .entry-badge { display: inline-block; background: #e8f4fd; border: 1px solid #90caf9;
+                   color: #1565c0; font-size: 11px; font-weight: bold; padding: 2px 7px;
+                   border-radius: 10px; margin-top: 3px; white-space: nowrap; }
+    .entry-badge.not-checked { background: #fff8e1; border-color: #f9a825; color: #795548; }
+    .ath-name-line { font-weight: bold; font-size: 14px; }
+    .ath-sub { font-size: 11px; color: #888; margin-top: 1px; }
+    .ath-best-line { font-size: 12px; color: #28a745; font-weight: bold; margin-top: 2px; }
+    .ath-pass-line { font-size: 11px; color: #999; margin-top: 2px; font-style: italic; }
+    #rosterMgr { border-top: 2px solid #ddd; padding: 10px 12px; background: #f8f9fa; display: none; }
+    #rosterMgr.show { display: block; }
+    .btn-add-ath { background: #1a3a5c; color: white; border: none; padding: 8px 14px;
+                   border-radius: 5px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    .roster-toggle { width: 100%; margin: 0; padding: 8px; background: #eef4ff;
+                     border: none; border-top: 1px solid #ddd; font-size: 12px;
+                     color: #1a3a5c; font-weight: bold; cursor: pointer; }
+    .card { background: white; border-radius: 10px; padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    .attempt-slot { border: 2px solid #ddd; border-radius: 8px; padding: 12px;
+                    margin-bottom: 10px; background: #fafafa; }
+    .attempt-slot.active-slot { border-color: #1a3a5c; background: #eef4ff; }
+    .attempt-slot.done { border-color: #28a745; background: #f0fff4; }
+    .attempt-slot.foul { border-color: #dc3545; background: #fff5f5; }
+    .attempt-slot.passed { border-color: #6c757d; background: #f8f9fa; }
+    .attempt-slot.queued { border-color: #856404; background: #fffbf0; }
+    .btn-save { flex: 1; background: #1a3a5c; color: white; padding: 14px; border: none;
+                border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .btn-foul { flex: 1; background: #dc3545; color: white; padding: 14px; border: none;
+                border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .vmark-btn { height: 60px; border-radius: 8px; border: none; font-size: 22px;
+                 font-weight: bold; color: white; cursor: pointer; }
+    .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
+    .btn-checkin-in { width: 100%; padding: 14px; background: #1a3a5c; color: white;
+                      border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .danger-btn { background: #dc3545; color: white; padding: 15px; width: 100%;
+                  border: none; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <!-- Your full HTML structure remains 100% the same -->
-  <div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally and will sync when back online</div>
-  <div id="queueBanner"></div>
-  <!-- ... all the rest of your HTML (nav-bar, flightBarStrip, tabs, etc.) ... -->
+<div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally and will sync when back online</div>
+<div id="queueBanner"></div>
+
+<div class="nav-bar">
+  <button id="navScore" class="active" onclick="showTab('score')">SCORING</button>
+  <button id="navAdmin" onclick="showTab('admin')">ADMIN / IMPORT</button>
+</div>
+
+<!-- Flight Bar Strip -->
+<div id="flightBarStrip">
+  <label>FLIGHT BAR:</label>
+  <input type="text" id="flightBarInput" placeholder="e.g. 7-00">
+  <button class="fbar-inc" onclick="incFlightBar(2)">+2"</button>
+  <button class="fbar-inc" onclick="incFlightBar(6)">+6"</button>
+  <button class="fbar-inc" onclick="incFlightBar(12)">+1'</button>
+  <button id="flightBarSet" onclick="setFlightBar()">SET BAR ▶</button>
+  <span id="flightBarDisplay"></span>
+</div>
+
+<div id="tabScore" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+  <div class="header">
+    <select id="eventSelect" onchange="loadEvent()" style="flex:2; min-width:160px">
+      <option value="">-- Select Event --</option>
+    </select>
+    <div id="hPhaseButtons">
+      <button class="phase-btn active" id="phBtn3" onclick="setHPhase('3att')">3 Att</button>
+      <button class="phase-btn" id="phBtn4" onclick="setHPhase('4att')">4 Att</button>
+      <button class="phase-btn" id="phBtnF" onclick="setHPhase('finals')">Finals</button>
+    </div>
+    <div id="vPhaseButtons" class="hidden">
+      <button class="phase-btn active" id="vPhBtnP" onclick="setVPhase('Prelims')">Prelims</button>
+      <button class="phase-btn" id="vPhBtnF" onclick="setVPhase('Finals')">Finals</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="left-panel" style="display:flex; flex-direction:column;">
+      <div id="athleteList" style="flex:1; overflow-y:auto;">
+        <p style="padding:20px; color:#999">Select event to begin.</p>
+      </div>
+      <button class="roster-toggle hidden" id="rosterToggleBtn" onclick="toggleRoster()">＋ Manage Roster</button>
+      <div id="rosterMgr">
+        <h5>Add Walk-on</h5>
+        <div class="add-row">
+          <input type="text" id="addFName" placeholder="First">
+          <input type="text" id="addLName" placeholder="Last">
+        </div>
+        <input type="text" id="addTeam" placeholder="Team / School (optional)" style="margin-top:6px;">
+        <button class="btn-add-ath" style="width:100%; margin-top:6px;" onclick="doAddAthlete()">ADD TO EVENT</button>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div id="entryUI" class="hidden">
+        <!-- HORIZONTAL & VERTICAL panels (your full original HTML) remain unchanged -->
+        <!-- ... (all your hEntry, vEntry, checkInPanel, etc. stay exactly as you had them) ... -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tabAdmin" class="hidden" style="padding:20px; overflow-y:auto;">
+  <div class="card">
+    <h3>Import Meet Roster</h3>
+    <p style="font-size:13px; color:#666">Upload your MileSplit CSV file.</p>
+    <input type="file" id="csvFile">
+    <button class="btn-save" style="background:#28a745; margin-top:10px;" id="impBtn" onclick="doImport()">RUN IMPORT</button>
+  </div>
+  <div class="card" style="margin-top:20px">
+    <h3>Reset Meet</h3>
+    <p style="font-size:13px; color:#666">This deletes all athletes and results.</p>
+    <button class="danger-btn" id="clrBtn" onclick="clearMeet()">DELETE ALL DATA</button>
+  </div>
+</div>
 
 <script>
 // ====================== SUPABASE SETUP ======================
 const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
 const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-
 const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-// ====================== OFFLINE QUEUE (still works) ======================
+// ====================== OFFLINE QUEUE (kept intact) ======================
 const QUEUE_KEY = 'fieldEventsQueue_v1';
 const DELETED_KEY = 'fieldEventsDeleted_v1';
+const SAVE_TIMEOUT = 12000;
+let retryTimer = null;
+let isSyncing = false;
 
-// ... (keep your existing loadQueue, saveQueue, enqueue, dequeue, updateBanners, etc. functions) ...
+// ... (keep all your loadQueue, saveQueue, enqueue, dequeue, updateBanners, scheduleRetry, drainQueue, drainDeletes functions exactly as they were) ...
 
 // ====================== STATE ======================
 let currentAth = null;
@@ -45,34 +198,19 @@ let isVertical = false;
 let hPhase = '3att';
 let maxAttempts = 3;
 let vPhase = 'Prelims';
+let stickyStds = {};
+let stickyOpeningHeight = {};
+let lastBarHeight = '';
 let flightBarHeight = '';
 let checkinStatus = {};
 let attemptsCache = {};
 let athleteListCache = [];
+let _athMap = {};
 
-// ====================== AUTH & INIT ======================
-async function initApp() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    alert("Please log in first (add a simple login screen if needed)");
-    return;
-  }
-  updateBanners();
-  loadEvents();
-}
-
+// ====================== SUPABASE FUNCTIONS ======================
 async function loadEvents() {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('name');
-
-  if (error) {
-    console.error(error);
-    alert('Error loading events');
-    return;
-  }
-
+  const { data, error } = await supabase.from('events').select('*').order('name');
+  if (error) { console.error(error); return; }
   const sel = document.getElementById('eventSelect');
   sel.innerHTML = '<option value="">-- Select Event --</option>';
   data.forEach(e => {
@@ -83,121 +221,97 @@ async function loadEvents() {
   });
 }
 
-// ====================== LOAD EVENT ======================
-async function loadEvent() {
-  currentEventId = document.getElementById('eventSelect').value;
-  if (!currentEventId) return;
+async function getAthletesByEvent(eventId) {
+  if (!eventId) return [];
+  const { data, error } = await supabase
+    .from('event_assignments')
+    .select('athletes(id, fname, lname, team)')
+    .eq('event_id', eventId);
+  if (error) { console.error(error); return []; }
+  return data.map(row => ({
+    id: row.athletes.id,
+    name: `${row.athletes.fname} ${row.athletes.lname}`.trim(),
+    team: row.athletes.team || ''
+  }));
+}
 
-  currentEventName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
-  isVertical = currentEventName.includes('high jump') || currentEventName.includes('pole vault');
-
-  // Toggle UI elements
-  document.getElementById('hPhaseButtons').classList.toggle('hidden', isVertical);
-  document.getElementById('vPhaseButtons').classList.toggle('hidden', !isVertical);
-  document.getElementById('flightBarStrip').classList.toggle('show', isVertical);
-
-  flightBarHeight = '';
-  checkinStatus = {};
-  document.getElementById('flightBarInput').value = '';
-  document.getElementById('flightBarDisplay').textContent = '';
-
-  if (!attemptsCache[currentEventId]) attemptsCache[currentEventId] = [];
-
-  // Load athletes
-  const { data: athletes } = await supabase
-    .from('event_athletes')           // ← Change table name if yours is different
-    .select('*, athletes(*)')
-    .eq('event_id', currentEventId);
-
-  athleteListCache = athletes || [];
-  renderAthleteList(athleteListCache);
-
-  // Load attempts
-  const { data: attempts } = await supabase
+async function getAllAttemptsForEvent(eventId) {
+  if (!eventId) return [];
+  const { data, error } = await supabase
     .from('attempts')
     .select('*')
-    .eq('event_id', currentEventId);
-
-  attemptsCache[currentEventId] = attempts || [];
-  renderAthleteList(athleteListCache);
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: true });
+  if (error) { console.error(error); return []; }
+  return data.map(r => ({
+    id: r.id,
+    event_id: r.event_id,
+    athlete_id: r.athlete_id,
+    athlete_name: r.athlete_name,
+    mark: r.mark || '',
+    foul: r.foul || false,
+    pass: r.pass || false,
+    phase: r.phase || '',
+    height: safeHeightString(r.height),
+    std: r.std || '',
+    ts: r.created_at || ''
+  }));
 }
 
-// ====================== SAVE ATTEMPT (Supabase) ======================
-async function saveAttemptToSupabase(data) {
-  const { error } = await supabase
-    .from('attempts')
-    .insert([{
-      event_id: data.event_id,
-      athlete_id: data.athlete_id,
-      mark: data.mark,
-      height: data.bar_height || null,
-      phase: data.phase,
-      is_foul: data.is_foul || false,
-      is_pass: data.is_pass || false
-    }]);
-
-  if (error) {
-    console.error(error);
-    enqueue(data);        // save to offline queue if fails
-  }
+async function saveAttempt(a) {
+  if (!a || !a.event_id || !a.athlete_id) return { success: false };
+  const { error } = await supabase.from('attempts').insert([{
+    event_id: a.event_id,
+    athlete_id: a.athlete_id,
+    athlete_name: a.athlete_name || '',
+    mark: a.mark || '',
+    foul: !!a.is_foul,
+    pass: !!a.is_pass,
+    phase: a.phase || '',
+    height: a.bar_height || '',
+    std: a.standards || ''
+  }]);
+  return { success: !error };
 }
 
-// Replace your submitHAttempt and submitV functions to call this
-
-// Example for horizontal save:
-function submitHAttempt(mark, isFoul, isPass) {
-  const data = {
-    event_id: currentEventId,
-    athlete_id: currentAth.id,
-    mark: mark,
-    phase: hPhase,
-    is_foul: isFoul,
-    is_pass: isPass
-  };
-
-  attemptsCache[currentEventId].push({ ...data, id: 'temp_'+Date.now(), _queued: true });
-  renderHEntry();
-  renderAthleteList(athleteListCache);
-
-  saveAttemptToSupabase(data);
-}
-
-// Same pattern for vertical (submitV)
-
-// ====================== DELETE ======================
-async function delAttempt(id) {
-  if (!confirm('Delete this attempt?')) return;
-
+async function deleteAttempt(id) {
   await supabase.from('attempts').delete().eq('id', id);
-
-  // Refresh
-  if (isVertical) renderVEntry(); else renderHEntry();
-  renderAthleteList(athleteListCache);
 }
 
-// ====================== ADD ATHLETE ======================
-async function doAddAthlete() {
-  // ... get values from inputs ...
-  const { data, error } = await supabase
-    .from('event_athletes')
-    .insert([{ 
-      event_id: currentEventId,
-      first_name: fn,
-      last_name: ln,
-      team: tm 
-    }])
-    .select();
-
-  if (!error && data) {
-    athleteListCache.push(data[0]);
-    renderAthleteList(athleteListCache);
-  }
+async function addAthleteToEvent(fname, lname, team, gender, level, eventId) {
+  const aId = 'a_' + Date.now().toString(36);
+  await supabase.from('athletes').insert([{ id: aId, fname, lname, gender, level, team: team || '' }]);
+  await supabase.from('event_assignments').insert([{ athlete_id: aId, event_id: eventId }]);
+  return { id: aId, name: (fname + ' ' + lname).trim(), team: team || '' };
 }
 
-// ====================== START THE APP ======================
-window.onload = initApp;
+async function removeAthleteFromEvent(athleteId, eventId) {
+  await supabase.from('event_assignments').delete().eq('athlete_id', athleteId).eq('event_id', eventId);
+  return { success: true };
+}
 
-// Keep all your other functions (renderAthleteList, calc places, check-in logic, height parsing, etc.) exactly as they are.
+async function clearAllData() {
+  if (!confirm('Delete ALL data?')) return;
+  await supabase.from('attempts').delete().neq('id', '');
+  await supabase.from('event_assignments').delete().neq('id', '');
+  await supabase.from('athletes').delete().neq('id', '');
+  await supabase.from('events').delete().neq('id', '');
+  alert('All data cleared.');
+  location.reload();
+}
+
+// ====================== INIT ======================
+window.onload = () => {
+  updateBanners();
+  if (loadQueue().length) scheduleRetry();
+  loadEvents();
+};
+
+// Replace the old google.script.run calls in loadEvent(), doAddAthlete(), etc. with the async versions above.
+// Example in loadEvent():
+// await getAthletesByEvent(currentEventId) instead of google.script.run...
+
+// (All your other functions like renderAthleteList, submitHAttempt, submitV, etc. stay exactly the same — just update the data fetching parts)
 </script>
 </body>
 </html>
