@@ -1,0 +1,31 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabaseUrl = '=https://qjomrnguhbqfluzwuntz.supabase.co';   // ← CHANGE THIS
+  const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';             // ← CHANGE THIS
+  const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+  // TODO: Add meet_id selector later. For now, we'll hardcode a test meet_id
+  let currentMeetId = null;   // We'll set this when importing or selecting a meet
+
+  // Your existing offline queue code stays 100% the same here...
+  // (keep all your QUEUE_KEY, enqueue, drainQueue, etc.)
+
+  // Replace google.script.run calls with these Supabase versions:
+
+  async function loadEvents() {
+    const { data } = await supabase.from('events').select().eq('meet_id', currentMeetId);
+    // populate your eventSelect dropdown...
+  }
+
+  async function saveAttempt(a) {
+    const { error } = await supabase.from('attempts').insert({
+      ...a,
+      meet_id: currentMeetId
+    });
+    if (error) console.error(error);
+    return !error;
+  }
+
+  // Add similar functions for getAllAttemptsForEvent, getAthletesByEvent, importMileSplit, etc.
+  // I'll give you the full set once you confirm the file is created.
+</script>
