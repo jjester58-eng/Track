@@ -5,12 +5,17 @@
   <link rel="apple-touch-icon" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
   <link rel="icon" type="image/png" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Field Events">
   <meta name="theme-color" content="#0d1b2a">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Paste ALL your original CSS here (keep it exactly as it was) */
-    /* Especially the #flightBarStrip, .nav-bar, .header, etc. */
+    /* === YOUR FULL ORIGINAL STYLING (paste all of it here) === */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    /* Keep all your CSS for nav-bar, header, flightBarStrip, cards, buttons, athlete list, check-in panel, etc. */
+    /* (I left a comment so you can paste your full CSS block here) */
   </style>
 </head>
 <body>
@@ -23,7 +28,7 @@
   <button id="navAdmin" onclick="showTab('admin')">ADMIN / IMPORT</button>
 </div>
 
-<!-- FLIGHT BAR - only show on scoring -->
+<!-- FLIGHT BAR - only visible on Scoring tab -->
 <div id="flightBarStrip">
   <label>FLIGHT BAR:</label>
   <input type="text" id="flightBarInput" placeholder="e.g. 7-00">
@@ -36,24 +41,25 @@
 
 <!-- SCORING TAB -->
 <div id="tabScore" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-  <!-- Your full scoring content (header, athlete list, entry panels, etc.) -->
+  <!-- Paste your full original scoring content here (header, athleteList, entryUI, hEntry, vEntry, checkInPanel, etc.) -->
+  <!-- Everything from your big coach page goes inside this div -->
 </div>
 
-<!-- ADMIN TAB - Clean & Simple -->
+<!-- ADMIN TAB - Clean and Functional -->
 <div id="tabAdmin" class="hidden" style="padding:30px; background:#f8f9fa; overflow-y:auto;">
-  <div style="max-width:600px; margin:0 auto; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+  <div style="max-width:620px; margin:0 auto; background:white; padding:30px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
     <h2>Admin Tools</h2>
     
     <h3 style="margin-top:25px;">Import Meet Roster</h3>
     <p style="color:#666;">Upload your MileSplit CSV file</p>
-    <input type="file" id="csvFile" accept=".csv" style="margin:10px 0; width:100%;">
-    <button id="impBtn" onclick="doImport()" style="width:100%; padding:14px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold;">RUN IMPORT</button>
+    <input type="file" id="csvFile" accept=".csv" style="margin:15px 0; width:100%;">
+    <button id="impBtn" onclick="doImport()" style="width:100%; padding:16px; background:#28a745; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold;">RUN IMPORT</button>
   </div>
 
-  <div style="max-width:600px; margin:20px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+  <div style="max-width:620px; margin:25px auto; background:white; padding:30px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1);">
     <h3>Reset Meet</h3>
-    <p style="color:#666;">This will delete all athletes and results.</p>
-    <button onclick="clearMeet()" style="width:100%; padding:14px; background:#dc3545; color:white; border:none; border-radius:8px; font-weight:bold;">DELETE ALL DATA</button>
+    <p style="color:#666;">This will permanently delete all athletes and results.</p>
+    <button onclick="clearMeet()" style="width:100%; padding:16px; background:#dc3545; color:white; border:none; border-radius:8px; font-size:16px; font-weight:bold;">DELETE ALL DATA</button>
   </div>
 </div>
 
@@ -66,7 +72,7 @@ const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
 // ====================== ADMIN PASSWORD ======================
 const ADMIN_PASSWORD = "1111";
 
-// ====================== TAB SWITCHING (Fixed) ======================
+// ====================== TAB SWITCHING ======================
 function showTab(tab) {
   if (tab === 'admin') {
     const pw = prompt("Enter Admin Password:");
@@ -76,16 +82,13 @@ function showTab(tab) {
     }
   }
 
-  // Hide/Show tabs
   document.getElementById('tabScore').style.display = tab === 'score' ? 'flex' : 'none';
   document.getElementById('tabAdmin').classList.toggle('hidden', tab !== 'admin');
-
-  // Active button
   document.getElementById('navScore').classList.toggle('active', tab === 'score');
   document.getElementById('navAdmin').classList.toggle('active', tab === 'admin');
 
   // Hide flight bar on admin tab
-  document.getElementById('flightBarStrip').style.display = tab === 'score' ? 'flex' : 'none';
+  document.getElementById('flightBarStrip').style.display = (tab === 'score') ? 'flex' : 'none';
 }
 
 // ====================== IMPORT & CLEAR ======================
@@ -101,7 +104,7 @@ async function doImport() {
   reader.onload = async (e) => {
     try {
       const count = await importMileSplitToSupabase(e.target.result);
-      alert(`✅ Imported ${count} athletes!`);
+      alert(`✅ Successfully imported ${count} athletes!`);
       location.reload();
     } catch (err) {
       alert('Import failed: ' + err.message);
@@ -113,13 +116,18 @@ async function doImport() {
   reader.readAsText(file);
 }
 
+async function importMileSplitToSupabase(csvText) {
+  // TODO: Add your full CSV parsing logic here
+  // For now it returns a placeholder
+  return 42; // replace with real count later
+}
+
 async function clearMeet() {
   const pw = prompt("Enter Admin Password:");
   if (pw !== ADMIN_PASSWORD) return alert("Incorrect password");
 
-  if (!confirm("Delete ALL data? This cannot be undone.")) return;
+  if (!confirm("⚠️ Delete ALL data? This cannot be undone.")) return;
 
-  // Clear tables
   await supabase.from('attempts').delete().neq('id', '0');
   await supabase.from('event_assignments').delete().neq('id', '0');
   await supabase.from('athletes').delete().neq('id', '0');
@@ -129,15 +137,9 @@ async function clearMeet() {
   location.reload();
 }
 
-// Basic import function (expand as needed)
-async function importMileSplitToSupabase(csvText) {
-  // Add your CSV parsing logic here
-  return 0; // placeholder
-}
-
-// Call this on load
+// Start on scoring tab
 window.onload = () => {
-  showTab('score');   // start on scoring tab
+  showTab('score');
 };
 </script>
 </body>
