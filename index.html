@@ -1,152 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Field Events Pro</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Supabase CDN -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <link rel="icon" type="image/png" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Field Events">
+  <meta name="theme-color" content="#0d1b2a">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
-    h1 { margin-top: 0; }
-    select, button { padding: 10px; font-size: 16px; }
-    .card { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; }
+    /* Your full dark styling from the results page */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #0a0f1a; color: #e0e6f0; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    /* ... paste all your CSS here (topbar, leaderboard, status-panel, etc.) ... */
   </style>
 </head>
-
 <body>
 
-<h1>Field Events Pro</h1>
-
-<div class="card">
-  <h3>Select Event</h3>
-  <select id="eventSelect"></select>
+<div class="topbar">
+  <div class="topbar-title">⚡ FIELD EVENTS PRO</div>
+  <select id="eventSelect" onchange="onEventChange()">
+    <option value="">— Select Event —</option>
+  </select>
+  <div class="refresh-info"><span class="pulse"></span> Live</div>
 </div>
 
-<div class="card">
-  <h3>Athletes</h3>
-  <ul id="athleteList"></ul>
-</div>
-
-<div class="card">
-  <h3>Attempts</h3>
-  <ul id="attemptList"></ul>
+<div class="main">
+  <div class="leaderboard" id="leaderboard">
+    <div class="no-event-msg">Select an event to view the live leaderboard.</div>
+  </div>
+  <div class="status-panel">
+    <div class="status-card">
+      <div class="sc-label">Now Competing</div>
+      <div id="nowCompeting" style="color:#2a4a6a; font-size:13px;">—</div>
+    </div>
+  </div>
 </div>
 
 <script>
-// ====================== SUPABASE SETUP ======================
-const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
-const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+// Wait for Supabase to load
+window.addEventListener('load', async () => {
+  console.log('Page loaded');
 
-// ✅ Correct initializer
-const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+  const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+  const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+  
+  const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+  console.log('✅ Supabase client created');
 
-// ====================== HELPERS ======================
-function safeHeightString(val) {
-  if (!val && val !== 0) return '';
-  if (typeof val === 'string' && val.includes('-')) return val.trim();
-  return String(val).trim();
-}
-
-// ====================== SUPABASE FUNCTIONS ======================
-async function getEvents() {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('name');
-
-  if (error) { console.error(error); return []; }
-  return data;
-}
-
-async function getAthletesByEvent(eventId) {
-  const { data, error } = await supabase
-    .from('event_assignments')
-    .select(`
-      athletes (
-        id, fname, lname, team
-      )
-    `)
-    .eq('event_id', eventId);
-
-  if (error) { console.error(error); return []; }
-
-  return data.map(r => ({
-    id: r.athletes.id,
-    name: `${r.athletes.fname} ${r.athletes.lname}`,
-    team: r.athletes.team || ''
-  }));
-}
-
-async function getAllAttemptsForEvent(eventId) {
-  const { data, error } = await supabase
-    .from('attempts')
-    .select('*')
-    .eq('event_id', eventId)
-    // ✅ Correct column name
-    .order('ts', { ascending: true });
-
-  if (error) { console.error(error); return []; }
-
-  return data.map(r => ({
-    id: r.id,
-    athlete_name: r.athlete_name,
-    mark: r.mark,
-    foul: r.foul,
-    pass: r.pass,
-    height: safeHeightString(r.height)
-  }));
-}
-
-// ====================== UI LOGIC ======================
-async function loadEvents() {
-  const events = await getEvents();
-  const sel = document.getElementById('eventSelect');
-  sel.innerHTML = '';
-
-  events.forEach(ev => {
-    const opt = document.createElement('option');
-    opt.value = ev.id;
-    opt.textContent = `${ev.name} (${ev.gender} ${ev.level})`;
-    sel.appendChild(opt);
-  });
-
-  if (events.length) {
-    sel.value = events[0].id;
-    loadEventData(events[0].id);
+  // Test connection
+  try {
+    const { data, error } = await supabase.from('events').select('count').limit(1);
+    if (error) console.error('Supabase error:', error);
+    else console.log('✅ Supabase connected successfully');
+  } catch(e) {
+    console.error('Connection test failed:', e);
   }
-}
-
-async function loadEventData(eventId) {
-  const athletes = await getAthletesByEvent(eventId);
-  const attempts = await getAllAttemptsForEvent(eventId);
-
-  const athList = document.getElementById('athleteList');
-  athList.innerHTML = '';
-  athletes.forEach(a => {
-    const li = document.createElement('li');
-    li.textContent = `${a.name} — ${a.team}`;
-    athList.appendChild(li);
-  });
-
-  const attList = document.getElementById('attemptList');
-  attList.innerHTML = '';
-  attempts.forEach(at => {
-    const li = document.createElement('li');
-    li.textContent = `${at.athlete_name}: ${at.mark || ''} ${at.foul ? 'FOUL' : ''} ${at.pass ? 'PASS' : ''}`;
-    attList.appendChild(li);
-  });
-}
-
-document.getElementById('eventSelect').addEventListener('change', e => {
-  loadEventData(e.target.value);
 });
-
-// ====================== INITIAL LOAD ======================
-loadEvents();
 </script>
-
 </body>
 </html>
