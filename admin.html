@@ -316,22 +316,25 @@ async function importMileSplit(csvText) {
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (!row[idx.fn] || row[idx.fn].toString().trim() === '') continue;
-    const evName = (row[idx.ev] || '').toLowerCase();
+    // Skip short/empty rows (common in MileSplit exports)
+    if (!row || row.length < 3) continue;
+    const safeGet = col => (col >= 0 && col < row.length) ? (row[col] || '').toString().trim() : '';
+    if (!safeGet(idx.fn)) continue;
+    const evName = safeGet(idx.ev).toLowerCase();
     if (!fieldKeywords.some(k => evName.indexOf(k) !== -1)) continue;
 
-    const level  = normalizeLevel(idx.div >= 0 ? (row[idx.div] || '') : '');
-    const gender = row[idx.gen] || '';
-    const evKey  = row[idx.ev] + '|' + gender + '|' + level;
+    const level  = normalizeLevel(safeGet(idx.div));
+    const gender = safeGet(idx.gen);
+    const evKey  = safeGet(idx.ev) + '|' + gender + '|' + level;
 
     if (!eventsFound[evKey]) {
       const eId = crypto.randomUUID().substring(0, 8);
       eventsFound[evKey] = eId;
-      eventRows.push({ id: eId, name: row[idx.ev], gender, level });
+      eventRows.push({ id: eId, name: safeGet(idx.ev), gender, level });
     }
     const aId = crypto.randomUUID().substring(0, 8);
-    athleteRows.push({ id: aId, fname: row[idx.fn], lname: row[idx.ln], gender, level, team: row[idx.tm] || '' });
-    assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], athlete_name: row[idx.fn] + ' ' + row[idx.ln] });
+    athleteRows.push({ id: aId, fname: safeGet(idx.fn), lname: safeGet(idx.ln), gender, level, team: safeGet(idx.tm) });
+    assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], athlete_name: (safeGet(idx.fn) + ' ' + safeGet(idx.ln)).trim() });
   }
 
   if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
@@ -399,20 +402,33 @@ function normalizeLevel(raw) {
 }
 
 function parseCSV(text) {
+  // Robust RFC 4180 parser: handles quoted fields with embedded commas,
+  // newlines, escaped quotes (""), and Excel/MileSplit BOM bytes.
+  text = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
   const rows = [];
-  const lines = text.split(/\r?\n/);
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const row = [], re = /("(?:[^"]|"")*"|[^,]*)/g;
-    let m;
-    while ((m = re.exec(line)) !== null) {
-      if (m[0] === '' && re.lastIndex === line.length + 1) break;
-      let v = m[1];
-      if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1,-1).replace(/""/g,'"');
-      row.push(v);
+  let row = [], field = '', inQuote = false, i = 0;
+
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQuote) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i += 2; continue; }
+      if (ch === '"') { inQuote = false; }
+      else { field += ch; }
+    } else {
+      if      (ch === '"')  { inQuote = true; }
+      else if (ch === ',')  { row.push(field.trim()); field = ''; }
+      else if (ch === '\n') {
+        row.push(field.trim()); field = '';
+        if (row.some(v => v !== '')) rows.push(row);
+        row = [];
+      } else { field += ch; }
     }
-    rows.push(row);
+    i++;
   }
+  // flush last row (file may not end with newline)
+  row.push(field.trim());
+  if (row.some(v => v !== '')) rows.push(row);
   return rows;
 }
 </script>
