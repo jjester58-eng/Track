@@ -1,39 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Field Events Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Supabase CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    h1 { margin-top: 0; }
+    select, button { padding: 10px; font-size: 16px; }
+    .card { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; }
+  </style>
+</head>
+
+<body>
+
+<h1>Field Events Pro</h1>
+
+<div class="card">
+  <h3>Select Event</h3>
+  <select id="eventSelect"></select>
+</div>
+
+<div class="card">
+  <h3>Athletes</h3>
+  <ul id="athleteList"></ul>
+</div>
+
+<div class="card">
+  <h3>Attempts</h3>
+  <ul id="attemptList"></ul>
+</div>
+
 <script>
 // ====================== SUPABASE SETUP ======================
-const supabaseUrl   = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
 const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-// ====================== HELPER FUNCTIONS (unchanged) ======================
-function normalizeLevel(raw) {
-  if (!raw) return '';
-  var t = raw.toString().toLowerCase().trim();
-  if (t.indexOf('varsity') !== -1) return 'Varsity';
-  if (t.indexOf('jv') !== -1 || t.indexOf('junior var') !== -1) return 'JV';
-  if (t.indexOf('8th') !== -1 || t === '8') return '8th Grade';
-  if (t.indexOf('7th') !== -1 || t === '7') return '7th Grade';
-  if (t.indexOf('6th') !== -1 || t === '6') return '6th Grade';
-  if (t.indexOf('middle') !== -1 || t === 'ms') return 'Middle School';
-  if (t.indexOf('frosh') !== -1 || t.indexOf('freshman') !== -1 || t.indexOf('9th') !== -1) return 'Freshman';
-  if (t.indexOf('soph') !== -1 || t.indexOf('10th') !== -1) return 'Sophomore';
-  return raw.toString().trim();
-}
+// ✅ Correct initializer
+const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
+// ====================== HELPERS ======================
 function safeHeightString(val) {
   if (!val && val !== 0) return '';
-  if (typeof val === 'string' && val.indexOf('-') !== -1) return val.trim();
+  if (typeof val === 'string' && val.includes('-')) return val.trim();
   return String(val).trim();
 }
 
-function parseMark(mark) {
-  if (!mark || mark.indexOf('-') === -1) return null;
-  var parts = mark.split('-');
-  return (parseFloat(parts[0])||0)*12 + (parseFloat(parts[1])||0);
-}
-
 // ====================== SUPABASE FUNCTIONS ======================
-
-// Load all events for dropdown
 async function getEvents() {
   const { data, error } = await supabase
     .from('events')
@@ -41,18 +58,10 @@ async function getEvents() {
     .order('name');
 
   if (error) { console.error(error); return []; }
-  return data.map(r => ({
-    id: r.id,
-    name: r.name,
-    gender: r.gender,
-    level: r.level
-  }));
+  return data;
 }
 
-// Load athletes for a specific event
 async function getAthletesByEvent(eventId) {
-  if (!eventId) return [];
-
   const { data, error } = await supabase
     .from('event_assignments')
     .select(`
@@ -64,159 +73,80 @@ async function getAthletesByEvent(eventId) {
 
   if (error) { console.error(error); return []; }
 
-  return data.map(row => ({
-    id: row.athletes.id,
-    name: `${row.athletes.fname} ${row.athletes.lname}`.trim(),
-    team: row.athletes.team || ''
+  return data.map(r => ({
+    id: r.athletes.id,
+    name: `${r.athletes.fname} ${r.athletes.lname}`,
+    team: r.athletes.team || ''
   }));
 }
 
-// Get all attempts for an event
 async function getAllAttemptsForEvent(eventId) {
-  if (!eventId) return [];
-
   const { data, error } = await supabase
     .from('attempts')
     .select('*')
     .eq('event_id', eventId)
-    .order('created_at', { ascending: true });
+    // ✅ Correct column name
+    .order('ts', { ascending: true });
 
   if (error) { console.error(error); return []; }
 
   return data.map(r => ({
     id: r.id,
-    event_id: r.event_id,
-    athlete_id: r.athlete_id,
     athlete_name: r.athlete_name,
-    mark: r.mark || '',
-    foul: r.foul || false,
-    pass: r.pass || false,
-    phase: r.phase || '',
-    height: safeHeightString(r.height),
-    std: r.std || '',
-    ts: r.created_at || ''
+    mark: r.mark,
+    foul: r.foul,
+    pass: r.pass,
+    height: safeHeightString(r.height)
   }));
 }
 
-// Save a new attempt
-async function saveAttempt(a) {
-  if (!a || !a.event_id || !a.athlete_id) return { success: false, error: 'missing fields' };
+// ====================== UI LOGIC ======================
+async function loadEvents() {
+  const events = await getEvents();
+  const sel = document.getElementById('eventSelect');
+  sel.innerHTML = '';
 
-  const { error } = await supabase
-    .from('attempts')
-    .insert([{
-      id: 'tmp_' + Date.now().toString(36),
-      event_id: a.event_id,
-      athlete_id: a.athlete_id,
-      athlete_name: a.athlete_name || '',
-      mark: a.mark || '',
-      foul: !!a.is_foul,
-      pass: !!a.is_pass,
-      phase: a.phase || '',
-      height: a.bar_height || '',
-      std: a.standards || ''
-    }]);
-
-  if (error) {
-    console.error(error);
-    return { success: false, error: error.message };
-  }
-  return { success: true };
-}
-
-// Delete an attempt
-async function deleteAttempt(id) {
-  const { error } = await supabase
-    .from('attempts')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error(error);
-    return { success: false };
-  }
-  return { success: true };
-}
-
-// Add athlete to event
-async function addAthleteToEvent(fname, lname, team, gender, level, eventId) {
-  const aId = 'a_' + Date.now().toString(36);
-
-  // Insert athlete
-  await supabase.from('athletes').insert([{
-    id: aId,
-    fname: fname,
-    lname: lname,
-    gender: gender,
-    level: level,
-    team: team || ''
-  }]);
-
-  // Assign to event
-  await supabase.from('event_assignments').insert([{
-    athlete_id: aId,
-    event_id: eventId
-  }]);
-
-  return {
-    id: aId,
-    name: (fname + ' ' + lname).trim(),
-    team: team || ''
-  };
-}
-
-// Remove athlete from event
-async function removeAthleteFromEvent(athleteId, eventId) {
-  await supabase
-    .from('event_assignments')
-    .delete()
-    .eq('athlete_id', athleteId)
-    .eq('event_id', eventId);
-
-  return { success: true };
-}
-
-// Clear all data (use with caution)
-async function clearAllData() {
-  if (!confirm('Delete ALL data? This cannot be undone.')) return;
-
-  await supabase.from('attempts').delete().neq('id', '0');
-  await supabase.from('event_assignments').delete().neq('id', '0');
-  await supabase.from('athletes').delete().neq('id', '0');
-  await supabase.from('events').delete().neq('id', '0');
-
-  alert('All data cleared.');
-  location.reload();
-}
-
-// Import from MileSplit CSV
-async function importMileSplit(csvData) {
-  // Keep your existing parsing logic, then insert via Supabase
-  // (I can expand this if you want the full converted importer)
-  alert("CSV Import - parsing ready. Let me know if you want the full Supabase version.");
-  return 0;
-}
-
-// ====================== FINALISTS (for finals phase) ======================
-async function getFinalists(eventId) {
-  const { data } = await supabase
-    .from('attempts')
-    .select('*')
-    .eq('event_id', eventId);
-
-  const athMap = {};
-  data.forEach(r => {
-    if (r.foul || r.pass || !r.mark) return;
-    const val = parseMark(r.mark);
-    if (val === null) return;
-    if (!athMap[r.athlete_id] || val > athMap[r.athlete_id].val) {
-      athMap[r.athlete_id] = { id: r.athlete_id, name: r.athlete_name, val: val, mark: r.mark };
-    }
+  events.forEach(ev => {
+    const opt = document.createElement('option');
+    opt.value = ev.id;
+    opt.textContent = `${ev.name} (${ev.gender} ${ev.level})`;
+    sel.appendChild(opt);
   });
 
-  return Object.values(athMap)
-    .sort((a,b) => b.val - a.val)
-    .slice(0, 8)
-    .reverse();
+  if (events.length) {
+    sel.value = events[0].id;
+    loadEventData(events[0].id);
+  }
 }
+
+async function loadEventData(eventId) {
+  const athletes = await getAthletesByEvent(eventId);
+  const attempts = await getAllAttemptsForEvent(eventId);
+
+  const athList = document.getElementById('athleteList');
+  athList.innerHTML = '';
+  athletes.forEach(a => {
+    const li = document.createElement('li');
+    li.textContent = `${a.name} — ${a.team}`;
+    athList.appendChild(li);
+  });
+
+  const attList = document.getElementById('attemptList');
+  attList.innerHTML = '';
+  attempts.forEach(at => {
+    const li = document.createElement('li');
+    li.textContent = `${at.athlete_name}: ${at.mark || ''} ${at.foul ? 'FOUL' : ''} ${at.pass ? 'PASS' : ''}`;
+    attList.appendChild(li);
+  });
+}
+
+document.getElementById('eventSelect').addEventListener('change', e => {
+  loadEventData(e.target.value);
+});
+
+// ====================== INITIAL LOAD ======================
+loadEvents();
 </script>
+
+</body>
+</html>
