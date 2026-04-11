@@ -46,13 +46,14 @@
                         background: rgba(255,255,255,.1); padding: 4px 10px; border-radius: 5px; }
 
     .nav-bar { background: #0d1b2a; display: flex; align-items: center;
-               padding: 10px; border-bottom: 2px solid #1a3a5c; flex-shrink: 0; gap: 8px; }
+               padding: 10px 12px; border-bottom: 2px solid #1a3a5c; flex-shrink: 0; gap: 12px; }
     .nav-bar button { background: none; border: 1px solid white; color: white; flex: 1;
                       padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 14px; }
     .nav-bar button.active { background: white; color: #0d1b2a; font-weight: bold; }
     .nav-home { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.4);
-               color: white; padding: 8px 12px; border-radius: 5px; font-size: 18px;
-               text-decoration: none; flex-shrink: 0; line-height: 1; }
+                color: white; padding: 8px 12px; border-radius: 5px; font-size: 18px;
+                text-decoration: none; flex-shrink: 0; line-height: 1; }
+    .nav-title { color: white; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; flex: 1; }
 
     .header { background: #1a3a5c; color: white; padding: 10px;
               display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
@@ -226,8 +227,7 @@
 
 <div class="nav-bar">
   <a href="index.html" class="nav-home" title="Home">⌂</a>
-  <button id="navScore" class="active" onclick="showTab('score')">SCORING</button>
-  <button id="navAdmin" onclick="showTab('admin')">ADMIN / IMPORT</button>
+  <span class="nav-title">SCORING</span>
 </div>
 
 <div id="flightBarStrip">
@@ -421,19 +421,6 @@
   </div>
 </div>
 
-<div id="tabAdmin" class="hidden" style="padding:20px; overflow-y:auto;">
-  <div class="card">
-    <h3>Import Meet Roster</h3>
-    <p style="font-size:13px; color:#666">Upload your MileSplit CSV file.</p>
-    <input type="file" id="csvFile">
-    <button class="btn-save" style="background:#28a745; margin-top:10px;" id="impBtn" onclick="doImport()">RUN IMPORT</button>
-  </div>
-  <div class="card" style="margin-top:20px;">
-    <h3>Reset Meet</h3>
-    <p style="font-size:13px; color:#666">This deletes all athletes and results.</p>
-    <button class="danger-btn" id="clrBtn" onclick="clearMeet()">DELETE ALL DATA</button>
-  </div>
-</div>
 
 <script>
 // ════════════════════════════════════════════════════════
@@ -690,14 +677,8 @@ let attemptsCache    = {};
 let athleteListCache = [];
 
 // ════════════════════════════════════════════════════════
-// TAB / INIT
+// INIT
 // ════════════════════════════════════════════════════════
-function showTab(tab) {
-  document.getElementById('tabScore').style.display = tab === 'score' ? 'flex' : 'none';
-  document.getElementById('tabAdmin').classList.toggle('hidden', tab !== 'admin');
-  document.getElementById('navScore').classList.toggle('active', tab === 'score');
-  document.getElementById('navAdmin').classList.toggle('active', tab === 'admin');
-}
 
 window.onload = async () => {
   updateBanners();
@@ -1497,37 +1478,6 @@ function parseCSV(text) {
   return rows;
 }
 
-// ════════════════════════════════════════════════════════
-// ADMIN
-// ════════════════════════════════════════════════════════
-async function doImport() {
-  const file = document.getElementById('csvFile').files[0];
-  if (!file) { alert('Select a CSV file first.'); return; }
-  const btn = document.getElementById('impBtn'); btn.innerText = 'IMPORTING…'; btn.disabled = true;
-  try {
-    const text = await file.text();
-    const n = await importMileSplit(text);
-    alert('Imported ' + n + ' athletes.');
-    location.reload();
-  } catch(err) {
-    alert('Import failed: ' + err.message);
-    btn.innerText = 'RUN IMPORT'; btn.disabled = false;
-  }
-}
-
-async function clearMeet() {
-  if (!confirm('Are you sure? This cannot be undone.')) return;
-  const btn = document.getElementById('clrBtn'); btn.innerText = 'CLEARING…'; btn.disabled = true;
-  try {
-    await clearAllData();
-    localStorage.removeItem(QUEUE_KEY); localStorage.removeItem(DELETED_KEY);
-    alert('All data cleared successfully.');
-    location.reload();
-  } catch(err) {
-    alert('Clear failed: ' + err.message);
-    btn.innerText = 'DELETE ALL DATA'; btn.disabled = false;
-  }
-}
 </script>
 </body>
 </html>
