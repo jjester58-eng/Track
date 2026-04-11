@@ -588,7 +588,7 @@ async function deleteAttempt(id) {
 }
 
 async function addAthleteToEvent(fname, lname, team, gender, level, eventId) {
-  const aId = crypto.randomUUID().substring(0, 8);
+  const aId = crypto.randomUUID();
   const { error: e1 } = await sb.from('athletes').insert({ id: aId, fname, lname, gender, level, team: team || '' });
   if (e1) throw e1;
   const { error: e2 } = await sb.from('event_assignments').insert({ athlete_id: aId, event_id: eventId, athlete_name: fname + ' ' + lname });
@@ -623,11 +623,11 @@ async function importMileSplit(csvText) {
     const gender = row[idx.gen] || '';
     const evKey  = row[idx.ev] + '|' + gender + '|' + level;
     if (!eventsFound[evKey]) {
-      const eId = crypto.randomUUID().substring(0,8);
+      const eId = crypto.randomUUID();
       eventsFound[evKey] = eId;
       eventRows.push({ id: eId, name: row[idx.ev], gender, level });
     }
-    const aId = crypto.randomUUID().substring(0,8);
+    const aId = crypto.randomUUID();
     athleteRows.push({ id: aId, fname: row[idx.fn], lname: row[idx.ln], gender, level, team: row[idx.tm] || '' });
     assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], athlete_name: row[idx.fn] + ' ' + row[idx.ln] });
   }
