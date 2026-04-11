@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <link rel="icon" type="image/png" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Field Events">
+  <meta name="theme-color" content="#0d1b2a">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Paste your full original CSS here - all of it */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    /* ... your full CSS for nav-bar, flightBarStrip, header, cards, buttons, etc. ... */
+  </style>
+</head>
+<body>
+
+<div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
+<div id="queueBanner"></div>
+
+<div class="nav-bar">
+  <button id="navScore" class="active" onclick="showTab('score')">SCORING</button>
+  <button id="navAdmin" onclick="showTab('admin')">ADMIN / IMPORT</button>
+</div>
+
+<!-- Flight Bar (only on scoring) -->
+<div id="flightBarStrip" style="display:none;">
+  <label>FLIGHT BAR:</label>
+  <input type="text" id="flightBarInput" placeholder="e.g. 7-00">
+  <button class="fbar-inc" onclick="incFlightBar(2)">+2"</button>
+  <button class="fbar-inc" onclick="incFlightBar(6)">+6"</button>
+  <button class="fbar-inc" onclick="incFlightBar(12)">+1'</button>
+  <button id="flightBarSet" onclick="setFlightBar()">SET BAR ▶</button>
+  <span id="flightBarDisplay"></span>
+</div>
+
+<div id="tabScore" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+  <div class="header">
+    <select id="eventSelect" onchange="loadEvent()" style="flex:2; min-width:160px">
+      <option value="">-- Select Event --</option>
+    </select>
+    <div id="hPhaseButtons">
+      <button class="phase-btn active" id="phBtn3" onclick="setHPhase('3att')">3 Att</button>
+      <button class="phase-btn" id="phBtn4" onclick="setHPhase('4att')">4 Att</button>
+      <button class="phase-btn" id="phBtnF" onclick="setHPhase('finals')">Finals</button>
+    </div>
+    <div id="vPhaseButtons" class="hidden">
+      <button class="phase-btn active" id="vPhBtnP" onclick="setVPhase('Prelims')">Prelims</button>
+      <button class="phase-btn" id="vPhBtnF" onclick="setVPhase('Finals')">Finals</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="left-panel" style="display:flex; flex-direction:column;">
+      <div id="athleteList" style="flex:1; overflow-y:auto;">
+        <p style="padding:20px; color:#999">Select event to begin.</p>
+      </div>
+      <button class="roster-toggle hidden" id="rosterToggleBtn" onclick="toggleRoster()">＋ Manage Roster</button>
+      <div id="rosterMgr">
+        <h5>Add Walk-on</h5>
+        <div class="add-row">
+          <input type="text" id="addFName" placeholder="First">
+          <input type="text" id="addLName" placeholder="Last">
+        </div>
+        <input type="text" id="addTeam" placeholder="Team / School (optional)" style="margin-top:6px;">
+        <button class="btn-add-ath" style="width:100%; margin-top:6px;" onclick="doAddAthlete()">ADD TO EVENT</button>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div id="entryUI" class="hidden">
+        <!-- Your full hEntry and vEntry panels go here - unchanged -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tabAdmin" class="hidden" style="padding:30px; background:#f8f9fa; overflow-y:auto;">
+  <!-- Your admin content here -->
+</div>
+
+<script>
+// ====================== SUPABASE SETUP ======================
+const supabaseUrl = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const supabaseAnonKey = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+// ====================== ADMIN PASSWORD ======================
+const ADMIN_PASSWORD = "1111";
+
+// ====================== STATE ======================
+let currentAth = null;
+let currentEventId = '';
+let currentEventName = '';
+let isVertical = false;
+let hPhase = '3att';
+let maxAttempts = 3;
+let vPhase = 'Prelims';
+let flightBarHeight = '';
+let checkinStatus = {};
+let attemptsCache = {};
+let athleteListCache = [];
+let _athMap = {};
+
+// ====================== TAB SWITCH ======================
+function showTab(tab) {
+  if (tab === 'admin') {
+    const pw = prompt("Enter Admin Password:");
+    if (pw !== ADMIN_PASSWORD) {
+      alert("❌ Incorrect password");
+      return;
+    }
+  }
+  document.getElementById('tabScore').style.display = tab === 'score' ? 'flex' : 'none';
+  document.getElementById('tabAdmin').classList.toggle('hidden', tab !== 'admin');
+  document.getElementById('navScore').classList.toggle('active', tab === 'score');
+  document.getElementById('navAdmin').classList.toggle('active', tab === 'admin');
+  document.getElementById('flightBarStrip').style.display = (tab === 'score') ? 'flex' : 'none';
+}
+
+// ====================== EVENTS LOGIC (Supabase) ======================
+async function loadEvents() {
+  const { data, error } = await supabase
+    .from('events')
+    .select('*')
+    .order('name');
+
+  if (error) return console.error(error);
+
+  const sel = document.getElementById('eventSelect');
+  sel.innerHTML = '<option value="">-- Select Event --</option>';
+  data.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = `${e.name} (${e.gender} ${e.level || ''})`;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadEvent() {
+  currentEventId = document.getElementById('eventSelect').value;
+  if (!currentEventId) return;
+
+  currentEventName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
+  isVertical = currentEventName.includes('high jump') || currentEventName.includes('pole vault');
+
+  document.getElementById('hPhaseButtons').classList.toggle('hidden', isVertical);
+  document.getElementById('vPhaseButtons').classList.toggle('hidden', !isVertical);
+  document.getElementById('flightBarStrip').style.display = isVertical ? 'flex' : 'none';
+
+  flightBarHeight = '';
+  checkinStatus = {};
+  attemptsCache[currentEventId] = attemptsCache[currentEventId] || [];
+  athleteListCache = [];
+  currentAth = null;
+
+  document.getElementById('athleteList').innerHTML = '<p style="padding:20px;color:#999">Loading…</p>';
+
+  // Load athletes
+  const { data: athletes } = await supabase
+    .from('event_assignments')
+    .select('athletes(id, fname, lname, team)')
+    .eq('event_id', currentEventId);
+
+  athleteListCache = (athletes || []).map(r => ({
+    id: r.athletes.id,
+    name: `${r.athletes.fname} ${r.athletes.lname}`.trim(),
+    team: r.athletes.team || ''
+  }));
+
+  // Load attempts
+  const { data: attempts } = await supabase
+    .from('attempts')
+    .select('*')
+    .eq('event_id', currentEventId);
+
+  attemptsCache[currentEventId] = attempts || [];
+
+  renderAthleteList(athleteListCache);
+}
+
+// Call on load
+window.onload = () => {
+  loadEvents();
+  showTab('score');
+};
+
+// Add your other functions (renderAthleteList, submitHAttempt, submitV, etc.) here as before
+// Replace any remaining google.script.run with the Supabase versions above
+
+</script>
+</body>
+</html>
