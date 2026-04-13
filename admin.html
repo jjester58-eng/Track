@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="apple-touch-icon" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
-  <link rel="icon" type="image/png" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
+  <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d1b2a">
@@ -11,19 +11,114 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: -apple-system, sans-serif; background: #0a0f1a; color: #e0e6f0; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar { background: #0d1b2a; border-bottom: 2px solid #1e3a5f; padding: 12px 18px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-    .topbar-title { font-size: 18px; font-weight: 800; color: #7eb8f7; letter-spacing: 1px; flex: 1; }
-    .home-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 14px; border-radius: 6px; font-size: 15px; text-decoration: none; }
-    .lock-card, .card { background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 14px; padding: 24px; margin-bottom: 20px; }
-    .btn-green { width: 100%; padding: 16px; background: #155724; color: #4dca7a; border: 1px solid #28a745; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .btn-red { width: 100%; padding: 16px; background: #3a0d0d; color: #f87; border: 1px solid #dc3545; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .file-label { display: block; width: 100%; padding: 16px; background: #162438; border: 2px dashed #1e3a5f; border-radius: 8px; color: #4a7aaa; font-size: 14px; text-align: center; cursor: pointer; margin-bottom: 14px; }
-    .file-label:hover { border-color: #4a7aaa; color: #7eb8f7; }
-    .status-msg { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; }
+    body { 
+      font-family: -apple-system, sans-serif; 
+      background: #0a0f1a; 
+      color: #e0e6f0; 
+      margin: 0; 
+      min-height: 100vh; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    .topbar { 
+      background: #0d1b2a; 
+      border-bottom: 2px solid #1e3a5f; 
+      padding: 12px 18px; 
+      display: flex; 
+      align-items: center; 
+      gap: 14px; 
+      flex-shrink: 0; 
+    }
+    .topbar-title { 
+      font-size: 18px; 
+      font-weight: 800; 
+      color: #7eb8f7; 
+      letter-spacing: 1px; 
+      flex: 1; 
+    }
+    .home-btn { 
+      background: rgba(255,255,255,0.1); 
+      border: 1px solid rgba(255,255,255,0.3); 
+      color: white; 
+      padding: 8px 14px; 
+      border-radius: 6px; 
+      font-size: 15px; 
+      text-decoration: none; 
+    }
+    .lock-card { 
+      background: #0d1b2a; 
+      border: 1px solid #1e3a5f; 
+      border-radius: 14px; 
+      padding: 40px 32px; 
+      max-width: 380px; 
+      width: 100%; 
+      text-align: center; 
+      margin: 40px auto; 
+    }
+    .lock-card h2 { color: #7eb8f7; margin: 0 0 8px 0; }
+    .lock-card input { 
+      width: 100%; 
+      padding: 14px; 
+      font-size: 22px; 
+      text-align: center; 
+      letter-spacing: 8px; 
+      background: #162438; 
+      border: 2px solid #1e3a5f; 
+      border-radius: 8px; 
+      color: #e0e6f0; 
+      margin-bottom: 16px; 
+    }
+    .lock-btn { 
+      width: 100%; 
+      padding: 14px; 
+      background: #1a3a5c; 
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      cursor: pointer; 
+    }
+    .card { 
+      background: #0d1b2a; 
+      border: 1px solid #1e3a5f; 
+      border-radius: 12px; 
+      padding: 24px; 
+      margin-bottom: 20px; 
+    }
+    .btn-green, .btn-red { 
+      width: 100%; 
+      padding: 16px; 
+      border: none; 
+      border-radius: 8px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      margin-top: 10px; 
+    }
+    .btn-green { background: #155724; color: #4dca7a; }
+    .btn-red   { background: #3a0d0d; color: #f87; }
+    .file-label { 
+      display: block; 
+      width: 100%; 
+      padding: 16px; 
+      background: #162438; 
+      border: 2px dashed #1e3a5f; 
+      border-radius: 8px; 
+      color: #4a7aaa; 
+      text-align: center; 
+      cursor: pointer; 
+      margin: 12px 0; 
+    }
+    .status-msg { 
+      margin-top: 12px; 
+      padding: 12px; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      font-weight: bold; 
+    }
     .status-msg.success { background: #0a2a18; border: 1px solid #28a745; color: #4dca7a; }
-    .status-msg.error { background: #2a0a0a; border: 1px solid #dc3545; color: #f87; }
-    .avatar { height: 42px; width: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #1e3a5f; }
+    .status-msg.error   { background: #2a0a0a; border: 1px solid #dc3545; color: #f87; }
   </style>
 </head>
 <body>
@@ -31,11 +126,6 @@
 <div class="topbar">
   <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
        alt="Ironclad Logo" style="height:42px; width:auto;">
-  
-  <!-- Dynamic User/School Avatar -->
-  <img id="userAvatar" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG" 
-       alt="Avatar" class="avatar">
-
   <div class="topbar-title">🔐 Admin — Field Events Pro</div>
   <a href="index.html" class="home-btn">⌂ Home</a>
 </div>
@@ -45,119 +135,95 @@
   <div class="lock-card">
     <h2>🔐 Admin Access</h2>
     <p>Enter the admin password to continue.</p>
-    <input type="password" id="pwInput" placeholder="••••" onkeydown="if(event.key==='Enter')checkPassword()">
-    <button class="lock-btn" onclick="checkPassword()">UNLOCK</button>
-    <div class="lock-error" id="lockError">❌ Incorrect password.</div>
+    <input type="password" id="pwInput" placeholder="••••" onkeydown="if(event.key==='Enter') checkPassword()">
+    <button class="lock-btn" onclick="checkPassword()">UNLOCK ADMIN</button>
+    <div id="lockError" style="color:#f87; margin-top:12px; display:none;">❌ Incorrect password. Try again.</div>
   </div>
 </div>
 
-<!-- Admin Content -->
+<!-- Admin Content (hidden until unlocked) -->
 <div id="adminContent" style="display:none; padding:24px 20px; max-width:700px; margin:0 auto;">
 
-  <!-- Upload Image Section -->
+  <!-- Upload Image -->
   <div class="card">
-    <h3>📸 Upload Image / Logo / Avatar</h3>
-    <p style="color:#557;">Upload school logo or your personal tab image.</p>
-    
-    <label class="file-label" id="imageLabel" for="imageFile">
-      📷 Click to choose an image
-    </label>
-    <input type="file" id="imageFile" accept="image/*" onchange="onImageChosen()" style="display:none;">
-    
-    <button class="btn-green" id="uploadImageBtn" onclick="uploadImage()" disabled>UPLOAD IMAGE TO STORAGE</button>
-    <div class="status-msg" id="imageStatus"></div>
+    <h3>📸 Upload Image / Logo</h3>
+    <p style="color:#557;">Upload company logo, school logo, or avatar.</p>
+    <label class="file-label" for="imageFile">📷 Click to choose an image</label>
+    <input type="file" id="imageFile" accept="image/*" style="display:none;" onchange="onImageChosen()">
+    <button class="btn-green" id="uploadBtn" onclick="uploadImage()" disabled>UPLOAD IMAGE</button>
+    <div id="imageStatus" class="status-msg"></div>
   </div>
 
-  <!-- Your existing CSV Import and Clear sections remain below -->
-  <!-- ... (keep your CSV import and clear meet code) ... -->
+  <!-- CSV Import (your existing one) -->
+  <div class="card">
+    <h3>📥 Import Meet Roster</h3>
+    <p>Upload MileSplit CSV</p>
+    <label class="file-label" for="csvFile">📄 Click to choose CSV</label>
+    <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="onFileChosen()">
+    <button class="btn-green" id="impBtn" onclick="doImport()" disabled>RUN IMPORT</button>
+    <div id="importStatus" class="status-msg"></div>
+  </div>
+
+  <!-- Clear Data -->
+  <div class="card">
+    <h3>🗑 Reset Meet</h3>
+    <p>This cannot be undone.</p>
+    <button class="btn-red" onclick="clearMeet()">DELETE ALL DATA</button>
+    <div id="clearStatus" class="status-msg"></div>
+  </div>
 
 </div>
 
 <script>
-// Supabase client
+// Supabase
 const supabase = Supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
 );
 
-const ADMIN_PASSWORD = '1111';
+const ADMIN_PASSWORD = "1111";
 
-// Password gate
+// Password protection
 function checkPassword() {
-  if (document.getElementById('pwInput').value === ADMIN_PASSWORD) {
+  const input = document.getElementById('pwInput').value.trim();
+  const errorDiv = document.getElementById('lockError');
+
+  if (input === ADMIN_PASSWORD) {
     document.getElementById('lockScreen').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
-    loadAvatar();   // ← Load saved avatar on unlock
   } else {
-    document.getElementById('lockError').style.display = 'block';
+    errorDiv.style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    setTimeout(() => errorDiv.style.display = 'none', 2500);
   }
 }
 
-// ====================== DYNAMIC AVATAR ======================
-async function loadAvatar() {
-  // For now we use a simple global default. Later we can tie it to a school_id or user.
-  const defaultAvatar = "https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG";
-  document.getElementById('userAvatar').src = defaultAvatar;
-}
-
-// ====================== UPLOAD IMAGE ======================
+// Image upload (Option B)
 async function uploadImage() {
   const file = document.getElementById('imageFile').files[0];
   const status = document.getElementById('imageStatus');
-  const btn = document.getElementById('uploadImageBtn');
+  if (!file) return status.textContent = '❌ Select an image';
 
-  if (!file) {
-    status.className = 'status-msg error';
-    status.textContent = '❌ Please select an image';
-    return;
-  }
-
-  btn.disabled = true;
-  status.className = 'status-msg';
   status.textContent = 'Uploading...';
-
-  const fileExt = file.name.split('.').pop();
-  const fileName = `avatar-${Date.now()}.${fileExt}`;
+  const fileName = `avatar-${Date.now()}.${file.name.split('.').pop()}`;
 
   try {
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file, { upsert: false });
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
-
-    // Update the avatar in the top bar immediately
-    document.getElementById('userAvatar').src = urlData.publicUrl;
-
-    status.className = 'status-msg success';
-    status.innerHTML = `✅ Uploaded and applied!<br>
-      <strong>New Avatar URL:</strong><br>
-      <small>${urlData.publicUrl}</small>`;
-
-    console.log('New avatar URL:', urlData.publicUrl);
-
+    await supabase.storage.from('avatars').upload(fileName, file);
+    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    
+    status.innerHTML = `✅ Uploaded!<br><small>${data.publicUrl}</small>`;
+    console.log('New avatar URL:', data.publicUrl);
   } catch (err) {
-    status.className = 'status-msg error';
     status.textContent = '❌ Upload failed: ' + err.message;
-  } finally {
-    btn.disabled = false;
   }
 }
 
 function onImageChosen() {
-  const file = document.getElementById('imageFile').files[0];
-  const label = document.getElementById('imageLabel');
-  const btn = document.getElementById('uploadImageBtn');
-  if (file) {
-    label.textContent = '✅ ' + file.name;
-    btn.disabled = false;
-  }
+  document.getElementById('uploadBtn').disabled = false;
 }
 
-// Keep all your existing CSV import, clearMeet, etc. functions here...
-// (They are unchanged from your file)
+// Keep your existing CSV import and clearMeet functions here (unchanged)
+// ... paste your doImport(), onFileChosen(), clearMeet() etc. below this line ...
 
 </script>
 </body>
