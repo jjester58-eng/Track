@@ -26,7 +26,7 @@
       padding: 12px 18px; 
       display: flex; 
       align-items: center; 
-      gap: 14px; 
+      gap: 12px; 
       flex-shrink: 0; 
     }
     .topbar-title { 
@@ -45,6 +45,13 @@
       font-size: 15px; 
       text-decoration: none; 
     }
+    .avatar {
+      height: 42px; 
+      width: 42px; 
+      border-radius: 50%; 
+      object-fit: cover; 
+      border: 2px solid #1e3a5f;
+    }
     .lock-card { 
       background: #0d1b2a; 
       border: 1px solid #1e3a5f; 
@@ -57,65 +64,32 @@
     }
     .lock-card h2 { color: #7eb8f7; margin: 0 0 8px 0; }
     .lock-card input { 
-      width: 100%; 
-      padding: 14px; 
-      font-size: 22px; 
-      text-align: center; 
-      letter-spacing: 8px; 
-      background: #162438; 
-      border: 2px solid #1e3a5f; 
-      border-radius: 8px; 
-      color: #e0e6f0; 
-      margin-bottom: 16px; 
+      width: 100%; padding: 14px; font-size: 22px; text-align: center; 
+      letter-spacing: 8px; background: #162438; border: 2px solid #1e3a5f; 
+      border-radius: 8px; color: #e0e6f0; margin-bottom: 16px; 
     }
     .lock-btn { 
-      width: 100%; 
-      padding: 14px; 
-      background: #1a3a5c; 
-      color: white; 
-      border: none; 
-      border-radius: 8px; 
-      font-size: 16px; 
-      font-weight: bold; 
-      cursor: pointer; 
+      width: 100%; padding: 14px; background: #1a3a5c; color: white; 
+      border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; 
     }
     .card { 
-      background: #0d1b2a; 
-      border: 1px solid #1e3a5f; 
-      border-radius: 12px; 
-      padding: 24px; 
-      margin-bottom: 20px; 
+      background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 12px; 
+      padding: 24px; margin-bottom: 20px; 
     }
     .btn-green, .btn-red { 
-      width: 100%; 
-      padding: 16px; 
-      border: none; 
-      border-radius: 8px; 
-      font-size: 16px; 
-      font-weight: bold; 
-      cursor: pointer; 
-      margin-top: 10px; 
+      width: 100%; padding: 16px; border: none; border-radius: 8px; 
+      font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; 
     }
     .btn-green { background: #155724; color: #4dca7a; }
     .btn-red   { background: #3a0d0d; color: #f87; }
     .file-label { 
-      display: block; 
-      width: 100%; 
-      padding: 16px; 
-      background: #162438; 
-      border: 2px dashed #1e3a5f; 
-      border-radius: 8px; 
-      color: #4a7aaa; 
-      text-align: center; 
-      cursor: pointer; 
-      margin: 12px 0; 
+      display: block; width: 100%; padding: 16px; background: #162438; 
+      border: 2px dashed #1e3a5f; border-radius: 8px; color: #4a7aaa; 
+      text-align: center; cursor: pointer; margin: 12px 0; 
     }
     .status-msg { 
-      margin-top: 12px; 
-      padding: 12px; 
-      border-radius: 8px; 
-      font-size: 14px; 
-      font-weight: bold; 
+      margin-top: 12px; padding: 12px; border-radius: 8px; 
+      font-size: 14px; font-weight: bold; 
     }
     .status-msg.success { background: #0a2a18; border: 1px solid #28a745; color: #4dca7a; }
     .status-msg.error   { background: #2a0a0a; border: 1px solid #dc3545; color: #f87; }
@@ -126,6 +100,12 @@
 <div class="topbar">
   <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
        alt="Ironclad Logo" style="height:42px; width:auto;">
+
+  <!-- Dynamic Avatar (Option B) -->
+  <img id="userAvatar" 
+       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG" 
+       alt="Avatar" class="avatar">
+
   <div class="topbar-title">🔐 Admin — Field Events Pro</div>
   <a href="index.html" class="home-btn">⌂ Home</a>
 </div>
@@ -141,23 +121,25 @@
   </div>
 </div>
 
-<!-- Admin Content (hidden until unlocked) -->
+<!-- Admin Content -->
 <div id="adminContent" style="display:none; padding:24px 20px; max-width:700px; margin:0 auto;">
 
-  <!-- Upload Image -->
+  <!-- Upload Image / Logo -->
   <div class="card">
-    <h3>📸 Upload Image / Logo</h3>
-    <p style="color:#557;">Upload company logo, school logo, or avatar.</p>
+    <h3>📸 Upload Image / Logo / Avatar</h3>
+    <p style="color:#557;">Upload company logo, school logo, or your personal avatar.</p>
+    
     <label class="file-label" for="imageFile">📷 Click to choose an image</label>
     <input type="file" id="imageFile" accept="image/*" style="display:none;" onchange="onImageChosen()">
-    <button class="btn-green" id="uploadBtn" onclick="uploadImage()" disabled>UPLOAD IMAGE</button>
+    
+    <button class="btn-green" id="uploadBtn" onclick="uploadImage()" disabled>UPLOAD IMAGE TO STORAGE</button>
     <div id="imageStatus" class="status-msg"></div>
   </div>
 
-  <!-- CSV Import (your existing one) -->
+  <!-- CSV Import -->
   <div class="card">
     <h3>📥 Import Meet Roster</h3>
-    <p>Upload MileSplit CSV</p>
+    <p>Upload a MileSplit CSV export.</p>
     <label class="file-label" for="csvFile">📄 Click to choose CSV</label>
     <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="onFileChosen()">
     <button class="btn-green" id="impBtn" onclick="doImport()" disabled>RUN IMPORT</button>
@@ -175,7 +157,7 @@
 </div>
 
 <script>
-// Supabase
+// Supabase client
 const supabase = Supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
@@ -191,6 +173,7 @@ function checkPassword() {
   if (input === ADMIN_PASSWORD) {
     document.getElementById('lockScreen').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
+    loadAvatar();   // Load saved avatar
   } else {
     errorDiv.style.display = 'block';
     document.getElementById('pwInput').value = '';
@@ -198,23 +181,53 @@ function checkPassword() {
   }
 }
 
-// Image upload (Option B)
+// Load avatar on unlock
+function loadAvatar() {
+  // For now using your Roo W image as default. 
+  // Later we can pull from a profiles table.
+  const defaultAvatar = "https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG";
+  document.getElementById('userAvatar').src = defaultAvatar;
+}
+
+// Upload image + instantly update avatar in top bar
 async function uploadImage() {
   const file = document.getElementById('imageFile').files[0];
   const status = document.getElementById('imageStatus');
-  if (!file) return status.textContent = '❌ Select an image';
+  const btn = document.getElementById('uploadBtn');
 
+  if (!file) {
+    status.className = 'status-msg error';
+    status.textContent = '❌ Please select an image';
+    return;
+  }
+
+  btn.disabled = true;
+  status.className = 'status-msg';
   status.textContent = 'Uploading...';
-  const fileName = `avatar-${Date.now()}.${file.name.split('.').pop()}`;
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `avatar-${Date.now()}.${fileExt}`;
 
   try {
-    await supabase.storage.from('avatars').upload(fileName, file);
-    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
-    
-    status.innerHTML = `✅ Uploaded!<br><small>${data.publicUrl}</small>`;
-    console.log('New avatar URL:', data.publicUrl);
+    const { error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: false });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+    // Update avatar in top bar immediately
+    document.getElementById('userAvatar').src = urlData.publicUrl;
+
+    status.className = 'status-msg success';
+    status.innerHTML = `✅ Uploaded and applied!<br><small>${urlData.publicUrl}</small>`;
+
   } catch (err) {
+    status.className = 'status-msg error';
     status.textContent = '❌ Upload failed: ' + err.message;
+  } finally {
+    btn.disabled = false;
   }
 }
 
@@ -222,8 +235,8 @@ function onImageChosen() {
   document.getElementById('uploadBtn').disabled = false;
 }
 
-// Keep your existing CSV import and clearMeet functions here (unchanged)
-// ... paste your doImport(), onFileChosen(), clearMeet() etc. below this line ...
+// Keep your existing CSV import and clearMeet functions here
+// (paste your doImport, onFileChosen, clearMeet, etc. below this line)
 
 </script>
 </body>

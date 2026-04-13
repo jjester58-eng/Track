@@ -21,81 +21,91 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 30px 20px;
+      padding: 40px 20px;
     }
 
-    .logo { font-size: 48px; margin-bottom: 8px; }
+    .company-logo {
+      height: 90px;
+      width: auto;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+
     h1 {
       color: #7eb8f7;
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 900;
-      letter-spacing: 1px;
-      margin: 0 0 6px 0;
+      letter-spacing: 1.5px;
+      margin: 0 0 8px 0;
     }
+
     .subtitle {
       color: #4a6a8a;
-      font-size: 14px;
-      margin-bottom: 48px;
+      font-size: 15px;
+      margin-bottom: 60px;
+      font-weight: 400;
     }
 
     .btn-group {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
 
     .btn {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 20px 24px;
-      border-radius: 12px;
+      gap: 18px;
+      padding: 22px 26px;
+      border-radius: 14px;
       text-decoration: none;
       color: white;
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 700;
       border: 1px solid transparent;
-      transition: transform 0.1s, box-shadow 0.15s;
+      transition: all 0.15s ease;
     }
+
     .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
     }
-    .btn:active { transform: translateY(0); }
 
     .btn-icon {
-      font-size: 26px;
+      font-size: 28px;
       flex-shrink: 0;
-      width: 40px;
+      width: 44px;
       text-align: center;
     }
+
     .btn-text { flex: 1; }
-    .btn-text .btn-title { display: block; }
-    .btn-text .btn-sub { display: block; font-size: 12px; font-weight: 400; opacity: 0.7; margin-top: 2px; }
-    .btn-arrow { font-size: 18px; opacity: 0.5; }
+    .btn-title { display: block; font-size: 18px; }
+    .btn-sub   { display: block; font-size: 13px; font-weight: 400; opacity: 0.75; margin-top: 3px; }
 
     .btn-scoring  { background: #0d2a4a; border-color: #1e5a8c; }
-    .btn-scoring:hover  { background: #112f54; }
+    .btn-scoring:hover  { background: #113455; }
+
     .btn-results { background: #0a2a18; border-color: #1a5a30; }
-    .btn-results:hover { background: #0d3320; }
+    .btn-results:hover { background: #0d3a22; }
+
     .btn-admin   { background: #2a0d0d; border-color: #5a1a1a; }
-    .btn-admin:hover   { background: #341010; }
+    .btn-admin:hover   { background: #3a1212; }
 
     .footer {
-      margin-top: 52px;
-      color: #2a3a4a;
-      font-size: 12px;
+      margin-top: 80px;
+      color: #445566;
+      font-size: 13px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Company Logo in header -->
+  <!-- Company Logo -->
   <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
        alt="Ironclad Logo" 
-       style="height:80px; width:auto; margin-bottom:20px;">
+       class="company-logo">
 
   <h1>FIELD EVENTS PRO</h1>
   <p class="subtitle">Texas High School Track &amp; Field</p>
@@ -106,7 +116,7 @@
       <span class="btn-icon">🏃</span>
       <span class="btn-text">
         <span class="btn-title">Coach Scoring</span>
-        <span class="btn-sub">Record attempts &amp; manage athletes</span>
+        <span class="btn-sub">Record attempts • Manage roster</span>
       </span>
       <span class="btn-arrow">›</span>
     </a>
@@ -115,7 +125,7 @@
       <span class="btn-icon">📊</span>
       <span class="btn-text">
         <span class="btn-title">Live Leaderboard</span>
-        <span class="btn-sub">Pressbox &amp; results display</span>
+        <span class="btn-sub">Pressbox view • Real-time results</span>
       </span>
       <span class="btn-arrow">›</span>
     </a>
@@ -124,14 +134,16 @@
       <span class="btn-icon">🔐</span>
       <span class="btn-text">
         <span class="btn-title">Admin / Import Roster</span>
-        <span class="btn-sub">Import CSV · reset meet data</span>
+        <span class="btn-sub">CSV Import • Reset meet • Upload images</span>
       </span>
       <span class="btn-arrow">›</span>
     </a>
 
   </div>
 
-  <div class="footer">Field Events Pro · Powered by Supabase</div>
+  <div class="footer">
+    Field Events Pro • Powered by Supabase
+  </div>
 
 </body>
 </html>
