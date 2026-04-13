@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
+  <link rel="apple-touch-icon" id="favicon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
+  <link rel="icon" type="image/png" id="faviconPng" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d1b2a">
@@ -45,6 +45,12 @@
       font-size: 15px; 
       text-decoration: none; 
     }
+    #topbarLogo {
+      height: 42px; 
+      width: auto;
+      cursor: pointer;
+      title: "Click to change logo";
+    }
     .avatar {
       height: 42px; 
       width: 42px; 
@@ -52,6 +58,8 @@
       object-fit: cover; 
       border: 2px solid #1e3a5f;
     }
+
+    /* Lock screen */
     .lock-card { 
       background: #0d1b2a; 
       border: 1px solid #1e3a5f; 
@@ -66,46 +74,101 @@
     .lock-card input { 
       width: 100%; padding: 14px; font-size: 22px; text-align: center; 
       letter-spacing: 8px; background: #162438; border: 2px solid #1e3a5f; 
-      border-radius: 8px; color: #e0e6f0; margin-bottom: 16px; 
+      border-radius: 8px; color: #e0e6f0; margin-bottom: 16px; outline: none;
     }
+    .lock-card input:focus { border-color: #7eb8f7; }
     .lock-btn { 
       width: 100%; padding: 14px; background: #1a3a5c; color: white; 
       border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; 
     }
+    .lock-btn:hover { background: #1e4a72; }
+
+    /* Admin cards */
     .card { 
       background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 12px; 
       padding: 24px; margin-bottom: 20px; 
     }
-    .btn-green, .btn-red { 
+    .card h3 { margin: 0 0 8px 0; color: #7eb8f7; }
+    .card p { color: #4a6a8a; margin: 0 0 12px 0; font-size: 14px; }
+
+    .btn-green, .btn-red, .btn-blue { 
       width: 100%; padding: 16px; border: none; border-radius: 8px; 
       font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; 
     }
     .btn-green { background: #155724; color: #4dca7a; }
+    .btn-green:hover { background: #1a6e30; }
+    .btn-green:disabled { background: #0a2a12; color: #2a6a40; cursor: not-allowed; }
     .btn-red   { background: #3a0d0d; color: #f87; }
+    .btn-red:hover { background: #4a1010; }
+    .btn-blue  { background: #0d2a4a; color: #7eb8f7; }
+    .btn-blue:hover { background: #1a3a5c; }
+    .btn-blue:disabled { background: #081520; color: #2a5a7a; cursor: not-allowed; }
+
     .file-label { 
       display: block; width: 100%; padding: 16px; background: #162438; 
       border: 2px dashed #1e3a5f; border-radius: 8px; color: #4a7aaa; 
       text-align: center; cursor: pointer; margin: 12px 0; 
+      transition: border-color 0.2s;
     }
+    .file-label:hover { border-color: #7eb8f7; color: #7eb8f7; }
+
     .status-msg { 
       margin-top: 12px; padding: 12px; border-radius: 8px; 
-      font-size: 14px; font-weight: bold; 
+      font-size: 14px; font-weight: bold; display: none;
     }
-    .status-msg.success { background: #0a2a18; border: 1px solid #28a745; color: #4dca7a; }
-    .status-msg.error   { background: #2a0a0a; border: 1px solid #dc3545; color: #f87; }
+    .status-msg.success { background: #0a2a18; border: 1px solid #28a745; color: #4dca7a; display: block; }
+    .status-msg.error   { background: #2a0a0a; border: 1px solid #dc3545; color: #f87; display: block; }
+    .status-msg.info    { background: #0a1a2a; border: 1px solid #1e5a8c; color: #7eb8f7; display: block; }
+
+    /* Logo preview */
+    .logo-preview-wrap {
+      margin: 12px 0;
+      text-align: center;
+      display: none;
+    }
+    .logo-preview-wrap img {
+      max-height: 80px;
+      max-width: 100%;
+      border-radius: 8px;
+      border: 1px solid #1e3a5f;
+      padding: 8px;
+      background: #162438;
+    }
+    .logo-tag {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    .logo-tag.active { background: #0a2a18; color: #4dca7a; border: 1px solid #28a745; }
+    .logo-tag.pending { background: #0a1a2a; color: #7eb8f7; border: 1px solid #1e5a8c; }
+
+    .current-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #0a1422;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .current-logo-wrap img { height: 40px; width: auto; }
+    .current-logo-wrap span { font-size: 13px; color: #4a6a8a; }
   </style>
 </head>
 <body>
 
 <div class="topbar">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
-       alt="Ironclad Logo" style="height:42px; width:auto;">
-
-  <!-- Dynamic Avatar (Option B) -->
+  <img id="topbarLogo"
+       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
+       alt="Logo">
   <img id="userAvatar" 
        src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG" 
        alt="Avatar" class="avatar">
-
   <div class="topbar-title">🔐 Admin — Field Events Pro</div>
   <a href="index.html" class="home-btn">⌂ Home</a>
 </div>
@@ -114,33 +177,60 @@
 <div id="lockScreen">
   <div class="lock-card">
     <h2>🔐 Admin Access</h2>
-    <p>Enter the admin password to continue.</p>
-    <input type="password" id="pwInput" placeholder="••••" onkeydown="if(event.key==='Enter') checkPassword()">
+    <p style="color:#4a6a8a;">Enter the admin password to continue.</p>
+    <input type="password" id="pwInput" maxlength="20" autocomplete="off" autocorrect="off" spellcheck="false"
+           placeholder="Password" 
+           onkeydown="if(event.key==='Enter'){ event.preventDefault(); checkPassword(); }">
     <button class="lock-btn" onclick="checkPassword()">UNLOCK ADMIN</button>
-    <div id="lockError" style="color:#f87; margin-top:12px; display:none;">❌ Incorrect password. Try again.</div>
+    <div id="lockError" style="color:#f87; margin-top:14px; font-size:14px; display:none;">
+      ❌ Incorrect password. Try again.
+    </div>
   </div>
 </div>
 
 <!-- Admin Content -->
-<div id="adminContent" style="display:none; padding:24px 20px; max-width:700px; margin:0 auto;">
+<div id="adminContent" style="display:none; padding:24px 20px; max-width:700px; margin:0 auto; width:100%;">
 
-  <!-- Upload Image / Logo -->
+  <!-- Upload Meet Logo -->
   <div class="card">
-    <h3>📸 Upload Image / Logo / Avatar</h3>
-    <p style="color:#557;">Upload company logo, school logo, or your personal avatar.</p>
+    <h3>🏫 Upload Meet / School Logo</h3>
+    <p>Upload your meet or school logo. This will replace the Ironclad logo on ALL pages of the app.</p>
     
-    <label class="file-label" for="imageFile">📷 Click to choose an image</label>
+    <div class="current-logo-wrap">
+      <img id="currentLogoPreview" src="" alt="Current logo">
+      <span id="currentLogoLabel">Current logo</span>
+    </div>
+
+    <label class="file-label" for="logoFile">🖼 Click to choose a logo image (PNG, JPG, SVG)</label>
+    <input type="file" id="logoFile" accept="image/*" style="display:none;" onchange="onLogoChosen()">
+    
+    <div class="logo-preview-wrap" id="logoPreviewWrap">
+      <img id="logoPreviewImg" src="" alt="Preview">
+      <br>
+      <span class="logo-tag pending">Preview — not yet saved</span>
+    </div>
+
+    <button class="btn-blue" id="uploadLogoBtn" onclick="uploadLogo()" disabled>UPLOAD & APPLY LOGO</button>
+    <div id="logoStatus" class="status-msg"></div>
+  </div>
+
+  <!-- Upload Avatar -->
+  <div class="card">
+    <h3>📸 Upload Coach Avatar</h3>
+    <p>Upload a personal avatar shown in the top bar of Scoring and Admin pages.</p>
+    
+    <label class="file-label" for="imageFile">📷 Click to choose an avatar image</label>
     <input type="file" id="imageFile" accept="image/*" style="display:none;" onchange="onImageChosen()">
     
-    <button class="btn-green" id="uploadBtn" onclick="uploadImage()" disabled>UPLOAD IMAGE TO STORAGE</button>
+    <button class="btn-green" id="uploadBtn" onclick="uploadImage()" disabled>UPLOAD AVATAR</button>
     <div id="imageStatus" class="status-msg"></div>
   </div>
 
   <!-- CSV Import -->
   <div class="card">
     <h3>📥 Import Meet Roster</h3>
-    <p>Upload a MileSplit CSV export.</p>
-    <label class="file-label" for="csvFile">📄 Click to choose CSV</label>
+    <p>Upload a MileSplit CSV export to populate athletes and events.</p>
+    <label class="file-label" for="csvFile">📄 Click to choose CSV file</label>
     <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="onFileChosen()">
     <button class="btn-green" id="impBtn" onclick="doImport()" disabled>RUN IMPORT</button>
     <div id="importStatus" class="status-msg"></div>
@@ -149,95 +239,235 @@
   <!-- Clear Data -->
   <div class="card">
     <h3>🗑 Reset Meet</h3>
-    <p>This cannot be undone.</p>
-    <button class="btn-red" onclick="clearMeet()">DELETE ALL DATA</button>
+    <p>Deletes all athletes, events, and attempts. <strong style="color:#f87;">This cannot be undone.</strong></p>
+    <button class="btn-red" onclick="clearMeet()">DELETE ALL MEET DATA</button>
     <div id="clearStatus" class="status-msg"></div>
   </div>
 
 </div>
 
 <script>
-// Supabase client
 const supabase = Supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
 );
 
 const ADMIN_PASSWORD = "1111";
+const DEFAULT_LOGO = "https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png";
+const DEFAULT_AVATAR = "https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG";
 
-// Password protection
+// ── Apply saved logo on every page load ──────────────────────────────────────
+function applySavedLogo() {
+  const saved = localStorage.getItem('fep_logo_url');
+  const url = saved || DEFAULT_LOGO;
+  document.getElementById('topbarLogo').src = url;
+}
+applySavedLogo();
+
+// ── Password check ────────────────────────────────────────────────────────────
 function checkPassword() {
-  const input = document.getElementById('pwInput').value.trim();
+  const raw = document.getElementById('pwInput').value;
+  const input = raw.replace(/\s/g, ''); // strip any accidental whitespace
   const errorDiv = document.getElementById('lockError');
 
   if (input === ADMIN_PASSWORD) {
     document.getElementById('lockScreen').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
-    loadAvatar();   // Load saved avatar
+    initAdmin();
   } else {
     errorDiv.style.display = 'block';
     document.getElementById('pwInput').value = '';
-    setTimeout(() => errorDiv.style.display = 'none', 2500);
+    document.getElementById('pwInput').focus();
+    setTimeout(() => { errorDiv.style.display = 'none'; }, 3000);
   }
 }
 
-// Load avatar on unlock
-function loadAvatar() {
-  // For now using your Roo W image as default. 
-  // Later we can pull from a profiles table.
-  const defaultAvatar = "https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG";
-  document.getElementById('userAvatar').src = defaultAvatar;
+// ── Init admin panel after unlock ─────────────────────────────────────────────
+function initAdmin() {
+  // Show current logo
+  const saved = localStorage.getItem('fep_logo_url');
+  const currentUrl = saved || DEFAULT_LOGO;
+  document.getElementById('currentLogoPreview').src = currentUrl;
+  document.getElementById('currentLogoLabel').textContent = saved 
+    ? '✅ Custom meet logo active' 
+    : 'Default: Ironclad logo (no custom logo set)';
+
+  // Show current avatar
+  const savedAvatar = localStorage.getItem('fep_avatar_url');
+  document.getElementById('userAvatar').src = savedAvatar || DEFAULT_AVATAR;
 }
 
-// Upload image + instantly update avatar in top bar
-async function uploadImage() {
-  const file = document.getElementById('imageFile').files[0];
-  const status = document.getElementById('imageStatus');
-  const btn = document.getElementById('uploadBtn');
+// ── Logo upload ───────────────────────────────────────────────────────────────
+function onLogoChosen() {
+  const file = document.getElementById('logoFile').files[0];
+  if (!file) return;
+  document.getElementById('uploadLogoBtn').disabled = false;
 
-  if (!file) {
-    status.className = 'status-msg error';
-    status.textContent = '❌ Please select an image';
-    return;
-  }
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wrap = document.getElementById('logoPreviewWrap');
+    document.getElementById('logoPreviewImg').src = e.target.result;
+    wrap.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadLogo() {
+  const file = document.getElementById('logoFile').files[0];
+  const status = document.getElementById('logoStatus');
+  const btn = document.getElementById('uploadLogoBtn');
+  if (!file) return;
 
   btn.disabled = true;
-  status.className = 'status-msg';
-  status.textContent = 'Uploading...';
+  setStatus(status, 'info', '⏳ Uploading logo...');
 
-  const fileExt = file.name.split('.').pop();
-  const fileName = `avatar-${Date.now()}.${fileExt}`;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `meet-logo-${Date.now()}.${ext}`;
 
   try {
     const { error } = await supabase.storage
-      .from('avatars')
+      .from('logos')
       .upload(fileName, file, { upsert: false });
-
     if (error) throw error;
 
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    const { data: urlData } = supabase.storage.from('logos').getPublicUrl(fileName);
+    const publicUrl = urlData.publicUrl;
 
-    // Update avatar in top bar immediately
-    document.getElementById('userAvatar').src = urlData.publicUrl;
+    // Save to localStorage so all pages pick it up
+    localStorage.setItem('fep_logo_url', publicUrl);
 
-    status.className = 'status-msg success';
-    status.innerHTML = `✅ Uploaded and applied!<br><small>${urlData.publicUrl}</small>`;
+    // Update logo everywhere on this page right now
+    document.getElementById('topbarLogo').src = publicUrl;
+    document.getElementById('currentLogoPreview').src = publicUrl;
+    document.getElementById('currentLogoLabel').textContent = '✅ Custom meet logo active';
 
+    setStatus(status, 'success', '✅ Logo uploaded and applied! All pages will now show this logo.');
   } catch (err) {
-    status.className = 'status-msg error';
-    status.textContent = '❌ Upload failed: ' + err.message;
+    setStatus(status, 'error', '❌ Upload failed: ' + err.message);
   } finally {
     btn.disabled = false;
   }
 }
 
+// ── Avatar upload ─────────────────────────────────────────────────────────────
 function onImageChosen() {
   document.getElementById('uploadBtn').disabled = false;
 }
 
-// Keep your existing CSV import and clearMeet functions here
-// (paste your doImport, onFileChosen, clearMeet, etc. below this line)
+async function uploadImage() {
+  const file = document.getElementById('imageFile').files[0];
+  const status = document.getElementById('imageStatus');
+  const btn = document.getElementById('uploadBtn');
+  if (!file) {
+    setStatus(status, 'error', '❌ Please select an image');
+    return;
+  }
 
+  btn.disabled = true;
+  setStatus(status, 'info', '⏳ Uploading avatar...');
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = `avatar-${Date.now()}.${ext}`;
+
+  try {
+    const { error } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: false });
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    const publicUrl = urlData.publicUrl;
+
+    localStorage.setItem('fep_avatar_url', publicUrl);
+    document.getElementById('userAvatar').src = publicUrl;
+
+    setStatus(status, 'success', '✅ Avatar uploaded and saved!<br><small style="font-weight:normal;">' + publicUrl + '</small>');
+  } catch (err) {
+    setStatus(status, 'error', '❌ Upload failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── CSV Import ────────────────────────────────────────────────────────────────
+function onFileChosen() {
+  document.getElementById('impBtn').disabled = false;
+}
+
+async function doImport() {
+  const file = document.getElementById('csvFile').files[0];
+  const status = document.getElementById('importStatus');
+  const btn = document.getElementById('impBtn');
+  if (!file) return;
+
+  btn.disabled = true;
+  setStatus(status, 'info', '⏳ Parsing CSV...');
+
+  try {
+    const text = await file.text();
+    const rows = text.split('\n').map(r => r.split(',').map(c => c.trim().replace(/^"|"$/g, '')));
+    const headers = rows[0].map(h => h.toLowerCase());
+    const nameIdx  = headers.findIndex(h => h.includes('name') || h.includes('athlete'));
+    const teamIdx  = headers.findIndex(h => h.includes('team') || h.includes('school'));
+    const eventIdx = headers.findIndex(h => h.includes('event'));
+    const gradeIdx = headers.findIndex(h => h.includes('grade') || h.includes('yr') || h.includes('year'));
+
+    if (nameIdx < 0 || eventIdx < 0) {
+      throw new Error('CSV must have columns for athlete name and event. Check your MileSplit export.');
+    }
+
+    let inserted = 0, skipped = 0;
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row[nameIdx]) continue;
+
+      const athleteName = row[nameIdx];
+      const teamName    = teamIdx >= 0 ? row[teamIdx] : '';
+      const eventName   = eventIdx >= 0 ? row[eventIdx] : '';
+      const grade       = gradeIdx >= 0 ? row[gradeIdx] : '';
+
+      // Upsert or insert — adjust table/column names to match your schema
+      const { error } = await supabase
+        .from('athletes')
+        .upsert({ name: athleteName, team: teamName, event: eventName, grade: grade }, { onConflict: 'name,event' });
+
+      if (error) { skipped++; } else { inserted++; }
+    }
+
+    setStatus(status, 'success', `✅ Import complete — ${inserted} athletes added, ${skipped} skipped.`);
+  } catch (err) {
+    setStatus(status, 'error', '❌ Import error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Clear Meet ────────────────────────────────────────────────────────────────
+async function clearMeet() {
+  const status = document.getElementById('clearStatus');
+  const confirmed = confirm('⚠️ DELETE ALL meet data?\n\nThis removes all athletes, events, and attempts.\n\nThis CANNOT be undone. Are you sure?');
+  if (!confirmed) return;
+
+  setStatus(status, 'info', '⏳ Deleting all data...');
+
+  try {
+    const tables = ['attempts', 'athletes', 'events'];
+    for (const table of tables) {
+      const { error } = await supabase.from(table).delete().neq('id', 0);
+      if (error) console.warn(`Could not clear ${table}:`, error.message);
+    }
+    setStatus(status, 'success', '✅ All meet data deleted.');
+  } catch (err) {
+    setStatus(status, 'error', '❌ Error: ' + err.message);
+  }
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+function setStatus(el, type, html) {
+  el.className = 'status-msg ' + type;
+  el.innerHTML = html;
+}
 </script>
 </body>
 </html>
