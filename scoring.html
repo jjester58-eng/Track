@@ -12,73 +12,123 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body { 
-      font-family: -apple-system, sans-serif; 
-      background: #f0f2f5; 
-      margin: 0; 
-      display: flex; 
-      flex-direction: column; 
-      height: 100vh; 
-      overflow: hidden; 
+    body {
+      font-family: -apple-system, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    .topbar { 
-      background: #0d1b2a; 
-      border-bottom: 2px solid #1e3a5f; 
-      padding: 12px 18px; 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      flex-shrink: 0; 
+    /* ── Topbar ── */
+    .topbar {
+      background: #0d1b2a;
+      border-bottom: 2px solid #1e3a5f;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
     }
-    .topbar img.logo { height: 42px; width: auto; }
-    .topbar img.avatar { 
-      height: 42px; 
-      width: 42px; 
-      border-radius: 50%; 
-      object-fit: cover; 
-      border: 2px solid #1e3a5f; 
+    /* Logo lockup */
+    .topbar-logos {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
     }
-    .topbar-title { 
-      font-size: 19px; 
-      font-weight: 800; 
-      color: #7eb8f7; 
-      letter-spacing: 1px; 
-      flex: 1; 
+    .topbar-logos img.ironclad-logo {
+      height: 38px;
+      width: auto;
     }
-    .nav-home { 
-      background: rgba(255,255,255,0.1); 
-      border: 1px solid rgba(255,255,255,0.3); 
-      color: white; 
-      padding: 8px 12px; 
-      border-radius: 6px; 
-      font-size: 18px; 
-      text-decoration: none; 
+    .topbar-logo-divider {
+      width: 1px;
+      height: 28px;
+      background: #1e3a5f;
+      display: none;
+    }
+    #meetLogoScoring {
+      height: 38px;
+      width: auto;
+      display: none;
     }
 
-    #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px; font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0; }
+    .topbar-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #7eb8f7;
+      letter-spacing: 1px;
+      flex: 1;
+    }
+    .nav-home {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 18px;
+      text-decoration: none;
+    }
+
+    #offlineBanner {
+      display: none;
+      background: #dc3545;
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+      padding: 6px 12px;
+      flex-shrink: 0;
+    }
     #offlineBanner.show { display: block; }
-    #queueBanner { display: none; background: #856404; color: #fff3cd; font-size: 12px; text-align: center; padding: 5px 12px; flex-shrink: 0; }
+    #queueBanner {
+      display: none;
+      background: #856404;
+      color: #fff3cd;
+      font-size: 12px;
+      text-align: center;
+      padding: 5px 12px;
+      flex-shrink: 0;
+    }
     #queueBanner.show { display: block; }
 
-    #flightBarStrip { 
-      display: none; 
-      background: #1e3a1e; 
-      color: white; 
-      padding: 8px 12px; 
-      flex-shrink: 0; 
-      align-items: center; 
-      gap: 10px; 
-      flex-wrap: wrap; 
+    #flightBarStrip {
+      display: none;
+      background: #1e3a1e;
+      color: white;
+      padding: 8px 12px;
+      flex-shrink: 0;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
     #flightBarStrip.show { display: flex; }
 
-    .nav-bar { background: #0d1b2a; display: flex; align-items: center; padding: 10px 12px; border-bottom: 2px solid #1a3a5c; flex-shrink: 0; gap: 12px; }
-    .nav-bar button { background: none; border: 1px solid white; color: white; flex: 1; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+    .nav-bar {
+      background: #0d1b2a;
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 2px solid #1a3a5c;
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .nav-bar button {
+      background: none;
+      border: 1px solid white;
+      color: white;
+      flex: 1;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
     .nav-bar button.active { background: white; color: #0d1b2a; font-weight: bold; }
 
-    /* Your full original scoring CSS goes here (ath-btn, card, attempt-slot, checkInPanel, vmark-grid, etc.) */
-    /* Paste the rest of your CSS from the original file below this comment */
+    /* Paste the rest of your original scoring CSS below this line */
+    /* (ath-btn, card, attempt-slot, checkInPanel, vmark-grid, etc.) */
 
   </style>
 </head>
@@ -88,14 +138,13 @@
 <div id="queueBanner"></div>
 
 <div class="topbar">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
-       alt="Ironclad Logo" style="height:42px; width:auto;">
-
-  <!-- Dynamic Avatar -->
-  <img id="userAvatar" 
-       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG" 
-       alt="Avatar" 
-       style="height:42px; width:42px; border-radius:50%; object-fit:cover; border:2px solid #1e3a5f;">
+  <!-- Logo lockup: Ironclad (logos bucket) always left, meet logo (avatars bucket) right if uploaded -->
+  <div class="topbar-logos">
+    <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
+         alt="Ironclad Athletics" class="ironclad-logo">
+    <div class="topbar-logo-divider" id="scoringDivider"></div>
+    <img src="" alt="Meet Logo" id="meetLogoScoring">
+  </div>
 
   <div class="topbar-title">FIELD EVENTS PRO — SCORING</div>
   <a href="index.html" class="nav-home">⌂</a>
@@ -113,36 +162,38 @@
 </div>
 
 <div id="tabScore" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-  <!-- Your full original scoring content (header, athlete list, entry panels, etc.) goes here -->
-  <!-- Paste everything from your original <div class="header"> down to the end of the right-panel -->
+  <!-- Paste your original scoring content here -->
+  <!-- (event header, athlete list, entry panels, etc.) -->
 </div>
 
 <script>
-// Supabase client
+// ── Logo system ───────────────────────────────────────────────────────────────
+// logos bucket   = Ironclad company logo — hardcoded, never changes
+// avatars bucket = meet/school logo uploaded per meet via Admin, URL in localStorage
+(function applyMeetLogo() {
+  const url = localStorage.getItem('fep_meet_logo_url');
+  if (!url) return;
+  const img = document.getElementById('meetLogoScoring');
+  const div = document.getElementById('scoringDivider');
+  img.src = url;
+  img.style.display = 'block';
+  div.style.display = 'block';
+})();
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
 const supabase = Supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
 );
 
-// Load avatar on page load
 window.onload = () => {
-  // Default avatar (you can make this dynamic later)
-  document.getElementById('userAvatar').src = "https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG";
-  
-  // Your original onload code (loadEvents, updateBanners, etc.)
   updateBanners();
-  // ... rest of your original init code
+  // ... rest of your original init code (loadEvents, etc.)
 };
 
-// Image upload function (if you want upload capability in scoring too)
-async function uploadAvatar() {
-  // You can add a small upload button if needed, or keep it only in admin
-  console.log("Avatar upload can be added here if desired");
-}
-
-// Keep all your original functions (loadEvent, renderAthleteList, submitV, etc.) below this line
-// They remain unchanged except for the Supabase calls you already have
-
+// Paste all your original functions below:
+// loadEvent, renderAthleteList, submitV, submitH,
+// incFlightBar, setFlightBar, updateBanners, etc.
 </script>
 </body>
 </html>

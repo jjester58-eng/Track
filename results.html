@@ -23,6 +23,7 @@
       overflow: hidden;
     }
 
+    /* ── Topbar ── */
     .topbar {
       background: #0d1b2a;
       border-bottom: 2px solid #1e3a5f;
@@ -32,10 +33,27 @@
       gap: 14px;
       flex-shrink: 0;
     }
-    .topbar img.logo {
-      height: 42px;
+    /* Logo lockup inside topbar */
+    .topbar-logos {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .topbar-logos img {
+      height: 38px;
       width: auto;
     }
+    .topbar-logo-divider {
+      width: 1px;
+      height: 28px;
+      background: #1e3a5f;
+      display: none;
+    }
+    #meetLogoResults {
+      display: none;
+    }
+
     .topbar-title {
       font-size: 19px;
       font-weight: 800;
@@ -72,11 +90,7 @@
     }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-    .main {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
+    .main { display: flex; flex: 1; overflow: hidden; }
 
     .leaderboard {
       flex: 1;
@@ -84,7 +98,6 @@
       padding: 16px;
       border-right: 2px solid #1e3a5f;
     }
-
     .status-panel {
       width: 300px;
       flex-shrink: 0;
@@ -93,7 +106,6 @@
       overflow-y: auto;
       border-left: 2px solid #1e3a5f;
     }
-
     .section-title {
       font-size: 11px;
       font-weight: 700;
@@ -102,11 +114,7 @@
       text-transform: uppercase;
       margin-bottom: 12px;
     }
-
-    .lb-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    .lb-table { width: 100%; border-collapse: collapse; }
     .lb-table th {
       background: #111d2e;
       color: #4a7aaa;
@@ -120,9 +128,7 @@
       border-bottom: 1px solid #141f30;
       font-size: 14px;
     }
-    .lb-table tr:hover {
-      background: #111d2e;
-    }
+    .lb-table tr:hover { background: #111d2e; }
 
     .place-badge {
       display: inline-block;
@@ -140,8 +146,8 @@
     .pT  { background: #3a3a5a; color: #aab; font-style: italic; }
     .pNM { background: #1a1a2a; color: #445; }
 
-    .ath-name { font-weight: 600; color: #d0e4ff; }
-    .ath-team { font-size: 12px; color: #4a6a8a; }
+    .ath-name  { font-weight: 600; color: #d0e4ff; }
+    .ath-team  { font-size: 12px; color: #4a6a8a; }
     .best-mark { font-size: 16px; font-weight: 800; color: #7eb8f7; }
 
     .status-card {
@@ -166,7 +172,6 @@
       text-align: center;
       padding: 8px 0;
     }
-
     .no-event-msg {
       color: #2a4a6a;
       font-size: 15px;
@@ -178,8 +183,14 @@
 <body>
 
 <div class="topbar">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
-       alt="Ironclad Logo" style="height:42px; width:auto;">
+  <!-- Logo lockup: Ironclad (logos bucket) always left, meet logo (avatars bucket) right if uploaded -->
+  <div class="topbar-logos">
+    <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
+         alt="Ironclad Athletics">
+    <div class="topbar-logo-divider" id="resultsDivider"></div>
+    <img src="" alt="Meet Logo" id="meetLogoResults">
+  </div>
+
   <div class="topbar-title">FIELD EVENTS PRO — PRESSBOX</div>
   <a href="index.html" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 12px;border-radius:6px;font-size:15px;text-decoration:none;">⌂ Home</a>
 </div>
@@ -206,7 +217,20 @@
 </div>
 
 <script>
-// Supabase client
+// ── Logo system ───────────────────────────────────────────────────────────────
+// logos bucket   = Ironclad company logo — hardcoded, never changes
+// avatars bucket = meet/school logo uploaded per meet via Admin, URL in localStorage
+(function applyMeetLogo() {
+  const url = localStorage.getItem('fep_meet_logo_url');
+  if (!url) return;
+  const img = document.getElementById('meetLogoResults');
+  const div = document.getElementById('resultsDivider');
+  img.src = url;
+  img.style.display = 'block';
+  div.style.display = 'block';
+})();
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
 const supabase = Supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
@@ -218,32 +242,22 @@ let isVertical = false;
 let athleteList = [];
 let attemptsData = [];
 
-// Load events on start
 window.onload = async () => {
   const { data, error } = await supabase
     .from('events')
     .select('*')
     .order('name');
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  const sel = document.getElementById('eventSelect') || document.createElement('select'); // fallback if missing
-  // If you have the select in topbar, populate it here
-  // For now, we'll assume you add <select id="eventSelect"> in topbar if needed
+  if (error) { console.error(error); return; }
+  // Populate event selector / kick off your existing load logic here
 };
 
-// Event change handler (add select to topbar if you want dropdown)
 async function onEventChange() {
-  // Your existing event loading logic here
-  // ... (keep your fetchAll, renderHLeaderboard, renderVLeaderboard, etc.)
+  // Your existing fetchAll, renderHLeaderboard, renderVLeaderboard, etc.
 }
 
-// Keep all your existing helper functions:
-// calcHPlaces, calcVPlaces, getBestMark, getVBest, parseMark, isEliminated, placeBadge, renderStatusPanel, etc.
-
+// Paste all your existing helper functions below:
+// calcHPlaces, calcVPlaces, getBestMark, getVBest, parseMark,
+// isEliminated, placeBadge, renderStatusPanel, etc.
 </script>
 </body>
 </html>
