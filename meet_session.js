@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   SHARED UTILITIES & SUPABASE INIT (DEBUG VERSION)
+   SHARED UTILITIES & SUPABASE INIT
 ───────────────────────────────────────────── */
 
 const IRONCLAD_LOGO = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
@@ -91,20 +91,3 @@ export function applyMeetBranding(meet) {
     topMeetName.textContent = meet.name || 'Current Meet';
   }
 }
-
-// Page-specific init placeholder
-export async function initPage() {
-  log('initPage() placeholder called.');
-}
-
-// Auto-run on load
-window.addEventListener('DOMContentLoaded', async () => {
-  console.log("[FEP] DOMContentLoaded triggered.");
-  // Make functions globally available for inline event handlers (like onchange)
-  window.loadEvent = (await import('./index.html')).loadEvent; 
-  // Note: This is tricky with modules. Better to attach to window in the page script.
-  
-  if (typeof window.initPage === 'function') {
-    await window.initPage();
-  }
-});

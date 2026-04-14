@@ -12,18 +12,13 @@
   <script type="module">
     import { sb, getActiveMeet, applyMeetBranding, updateBanners, safeGet, log } from './meet-session.js';
 
-    // Global variables for the page
     let MEET = null;
 
-    // ── Initialization ──────────────────────────────────────────
     async function initPage() {
       console.log("[FEP] Starting index.html initialization...");
-      
-      // 1. Get the active meet
       MEET = getActiveMeet();
       
       if (!MEET || !MEET.id) {
-        console.warn("[FEP] No meet found during init.");
         const title = safeGet("topMeetName");
         if (title) title.textContent = "No Meet Selected";
         const left = safeGet("leftPanel");
@@ -33,27 +28,13 @@
         return;
       }
 
-      console.log("[FEP] Meet loaded successfully:", MEET.id);
-      
-      // 2. Apply branding
       applyMeetBranding(MEET);
-      
-      // 3. Load events
       await loadEvents();
-      
-      // 4. Setup banners
       updateBanners();
     }
 
-    // ── Load events for this meet ─────────────────────────────────
     async function loadEvents() {
-      if (!sb || !MEET) {
-        console.error("[FEP] Cannot load events: Supabase or MEET not initialized.");
-        return;
-      }
-
-      console.log("[FEP] Fetching events for meet_id:", MEET.id);
-
+      if (!sb || !MEET) return;
       try {
         const { data: events, error } = await sb
           .from("events")
@@ -62,38 +43,27 @@
           .order("name");
 
         if (error) {
-          console.error("[FEP] Supabase error fetching events:", error.message);
+          console.error("[FEP] Supabase error:", error.message);
           return;
         }
 
-        console.log("[FEP] Events fetched:", events?.length || 0);
-
         const sel = safeGet("eventSelect");
         if (!sel) return;
-
         sel.innerHTML = '<option value="">— Select Event —</option>';
-
         (events || []).forEach(e => {
           const opt = document.createElement("option");
           opt.value = e.id;
           opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
           sel.appendChild(opt);
         });
-
       } catch (err) {
-        console.error("[FEP] Crash during loadEvents:", err.message);
+        console.error("[FEP] loadEvents crash:", err.message);
       }
     }
 
-    // ── Load event (athletes for selected event) ──────────────────
     async function loadEvent() {
-      if (!sb || !MEET) return;
-
       const eventId = safeGet("eventSelect")?.value;
-      if (!eventId) return;
-
-      console.log("[FEP] Loading athletes for event_id:", eventId);
-
+      if (!eventId || !sb || !MEET) return;
       try {
         const { data: assigns, error } = await sb
           .from("event_assignments")
@@ -103,11 +73,9 @@
 
         const left = safeGet("leftPanel");
         if (!left) return;
-
         left.innerHTML = '';
 
         if (error || !assigns?.length) {
-          console.warn("[FEP] No athletes found for this event.");
           left.innerHTML = `<div style="padding:30px;color:#888;">No athletes found</div>`;
           return;
         }
@@ -115,22 +83,18 @@
         assigns.forEach(a => {
           const ath = a.athletes || {};
           const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
-
           const btn = document.createElement("button");
           btn.className = "ath-btn";
           btn.innerHTML = `<div style="font-weight:700;font-size:14px;">${name}</div>
                            ${ath.team ? `<div style="font-size:12px;color:#888;">${ath.team}</div>` : ''}`;
-
           btn.onclick = (e) => selectAthlete(a.athlete_id, name, eventId, e);
           left.appendChild(btn);
         });
-
       } catch (err) {
-        console.error("[FEP] Athlete load crash:", err.message);
+        console.error("[FEP] loadEvent crash:", err.message);
       }
     }
 
-    // ── Select athlete ────────────────────────────────────────────
     async function selectAthlete(athleteId, name, eventId, e) {
       document.querySelectorAll(".ath-btn").forEach(b => b.classList.remove("active"));
       if (e?.currentTarget) e.currentTarget.classList.add("active");
@@ -146,7 +110,6 @@
 
         const right = safeGet("rightPanel");
         if (!right) return;
-
         right.innerHTML = `
           <div class="card">
             <h2 style="margin:0 0 4px;font-size:18px;">${name}</h2>
@@ -157,14 +120,10 @@
               + ADD ATTEMPT
             </button>
           </div>`;
-
-        // Attach event listener to the button
         safeGet("addAttemptBtn").onclick = () => addAttempt(athleteId, eventId);
-
         renderAttempts(attempts || []);
-
       } catch (err) {
-        console.error("[FEP] Select athlete crash:", err.message);
+        console.error("[FEP] selectAthlete crash:", err.message);
       }
     }
 
@@ -191,11 +150,9 @@
       const mark = prompt('Enter mark (e.g. 45-06 or NH or FOUL):');
       if (mark === null) return;
       const result = mark.toUpperCase().includes('FOUL') ? 'foul' : mark.toUpperCase() === 'NH' ? 'nh' : 'make';
-
       const { data: existing } = await sb.from('attempts').select('attempt_number')
         .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id);
       const nextNum = existing ? existing.length + 1 : 1;
-
       const { error } = await sb.from('attempts').insert({
         athlete_id: athleteId,
         event_id:   eventId,
@@ -204,7 +161,6 @@
         result,
         attempt_number: nextNum
       });
-
       if (!error) {
         const { data: attempts } = await sb.from('attempts').select('*')
           .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id)
@@ -213,10 +169,7 @@
       }
     }
 
-    // Expose functions to window for HTML event handlers
     window.loadEvent = loadEvent;
-    
-    // Run initialization
     window.addEventListener('DOMContentLoaded', initPage);
   </script>
   <style>
@@ -273,22 +226,18 @@
   </style>
 </head>
 <body>
-
 <div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
-
 <div class="topbar">
   <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Field Events Pro">
   <div class="meet-pill" id="topMeetName">Loading…</div>
   <div class="topbar-title">SCORING</div>
   <a href="index.html" class="nav-home">⌂</a>
 </div>
-
 <div class="event-header">
   <select id="eventSelect" onchange="loadEvent()">
     <option value="">— Select event —</option>
   </select>
 </div>
-
 <div class="container">
   <div class="left-panel" id="leftPanel">
     <div style="padding:20px;color:#888;font-size:14px;">Select an event above to see athletes.</div>
@@ -297,6 +246,5 @@
     <div style="padding:20px;color:#888;font-size:14px;">Select an athlete to record attempts.</div>
   </div>
 </div>
-
 </body>
 </html>

@@ -9,7 +9,185 @@
   <meta name="theme-color" content="#0d1b2a">
   <title>Admin — Field Events Pro</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="meet-session.js"></script>
+  <script type="module">
+    import { sb, getActiveMeet, safeGet, log, updateBanners } from './meet-session.js';
+
+    const ADMIN_PASSWORD = 'admin'; 
+    let activeMeetId = null;
+    let activeMeetName = null;
+    let MEET = null;
+
+    async function initPage() {
+      log("Admin page initialized.");
+      updateBanners();
+      loadMeetList();
+    }
+
+    function checkPassword() {
+      const pwInput = safeGet("pwInput");
+      const lockError = safeGet("lockError");
+      if (pwInput.value === ADMIN_PASSWORD) {
+        safeGet("lockScreen").style.display = "none";
+        safeGet("adminContent").style.display = "block";
+        lockError.style.display = "none";
+      } else {
+        lockError.style.display = "block";
+      }
+    }
+
+    async function loadMeetList() {
+      const { data: meets, error } = await sb
+        .from("meets")
+        .select("id, name, date, logo_url")
+        .order("date", { ascending: false });
+
+      const meetSelect = safeGet("meetSelect");
+      meetSelect.innerHTML = 
+        `<option value="">— select a meet —</option>
+         <option value="create">+ Create New Meet</option>`;
+
+      if (error) {
+        log("Error loading meets: " + error.message);
+        return;
+      }
+
+      meets.forEach(meet => {
+        const option = document.createElement("option");
+        option.value = meet.id;
+        option.textContent = `${meet.name} (${new Date(meet.date).toLocaleDateString()})`;
+        meetSelect.appendChild(option);
+      });
+
+      const currentMeet = getActiveMeet();
+      if (currentMeet && currentMeet.id) {
+        meetSelect.value = currentMeet.id;
+        onMeetChange();
+      }
+    }
+
+    async function onMeetChange() {
+      const meetSelect = safeGet("meetSelect");
+      const selectedMeetId = meetSelect.value;
+
+      safeGet("createMeetCard").style.display = "none";
+      safeGet("logoCard").style.display = "none";
+      safeGet("eventsCard").style.display = "none";
+      safeGet("athletesCard").style.display = "none";
+      safeGet("dangerCard").style.display = "none";
+
+      if (selectedMeetId === "create") {
+        showCreateMeet();
+        activeMeetId = null;
+        activeMeetName = null;
+        MEET = null;
+        sessionStorage.removeItem("fep_meet");
+        localStorage.removeItem("fep_meet");
+        return;
+      }
+
+      if (!selectedMeetId) {
+        activeMeetId = null;
+        activeMeetName = null;
+        MEET = null;
+        sessionStorage.removeItem("fep_meet");
+        localStorage.removeItem("fep_meet");
+        return;
+      }
+
+      const { data: meet, error } = await sb
+        .from("meets")
+        .select("*")
+        .eq("id", selectedMeetId)
+        .single();
+
+      if (error) {
+        log("Error loading meet details: " + error.message);
+        return;
+      }
+
+      activeMeetId = meet.id;
+      activeMeetName = meet.name;
+      MEET = meet;
+      sessionStorage.setItem("fep_meet", JSON.stringify(meet));
+      localStorage.setItem("fep_meet", JSON.stringify(meet));
+
+      safeGet("logoCard").style.display = "block";
+      safeGet("eventsCard").style.display = "block";
+      safeGet("athletesCard").style.display = "block";
+      safeGet("dangerCard").style.display = "block";
+
+      const currentLogoImg = safeGet("currentLogoImg");
+      const currentLogoLabel = safeGet("currentLogoLabel");
+      if (meet.logo_url) {
+        currentLogoImg.src = meet.logo_url;
+        currentLogoImg.style.display = "block";
+        currentLogoLabel.textContent = "Current Logo";
+      } else {
+        currentLogoImg.style.display = "none";
+        currentLogoLabel.textContent = "No logo uploaded for this meet.";
+      }
+
+      loadEventList(activeMeetId);
+    }
+
+    function showCreateMeet() {
+      safeGet("createMeetCard").style.display = "block";
+    }
+
+    function hideCreateMeet() {
+      safeGet("createMeetCard").style.display = "none";
+      safeGet("meetSelect").value = "";
+      onMeetChange();
+    }
+
+    async function createMeet() {
+      const newMeetName = safeGet("newMeetName").value.trim();
+      const newMeetDate = safeGet("newMeetDate").value;
+      const newMeetPin = safeGet("newMeetPin").value.trim();
+      if (!newMeetName || !newMeetDate || !newMeetPin) {
+        showStatus("createStatus", "❌ All fields are required.", "error");
+        return;
+      }
+      showStatus("createStatus", "⏳ Creating meet...", "info");
+      const { error } = await sb.from("meets").insert({
+        name: newMeetName,
+        date: newMeetDate,
+        pin: newMeetPin,
+        id: crypto.randomUUID().substring(0, 8)
+      });
+      if (error) {
+        showStatus("createStatus", "❌ Error: " + error.message, "error");
+        return;
+      }
+      showStatus("createStatus", "✅ Meet created!", "success");
+      loadMeetList();
+    }
+
+    async function loadEventList(meetId) {
+      const { data: events, error } = await sb.from("events").select("*").eq("meet_id", meetId).order("name");
+      const list = safeGet("eventList");
+      list.innerHTML = "";
+      if (error) return;
+      events.forEach(ev => {
+        const div = document.createElement("div");
+        div.className = "event-item";
+        div.innerHTML = `<div><div class="ev-name">${ev.name}</div><div class="ev-meta">${ev.gender||''} ${ev.level||''}</div></div><span class="badge">${ev.event_type}</span>`;
+        list.appendChild(div);
+      });
+    }
+
+    function showStatus(id, msg, type) {
+      const el = safeGet(id);
+      el.textContent = msg; el.className = "status-msg " + type;
+    }
+
+    window.checkPassword = checkPassword;
+    window.onMeetChange = onMeetChange;
+    window.showCreateMeet = showCreateMeet;
+    window.hideCreateMeet = hideCreateMeet;
+    window.createMeet = createMeet;
+    window.addEventListener('DOMContentLoaded', initPage);
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -18,8 +196,6 @@
       margin: 0; min-height: 100vh;
       display: flex; flex-direction: column;
     }
-
-    /* topbar */
     .topbar {
       background: #0d1b2a; border-bottom: 2px solid #1e3a5f;
       padding: 12px 18px; display: flex; align-items: center;
@@ -31,43 +207,27 @@
       background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
       color: white; padding: 8px 14px; border-radius: 6px; font-size: 15px; text-decoration: none;
     }
-
-    /* lock */
-    #lockScreen {
-      flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px;
-    }
+    #lockScreen { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .lock-card {
       background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 14px;
       padding: 36px 32px; max-width: 380px; width: 100%; text-align: center;
     }
-    .lock-card h2 { color: #7eb8f7; margin: 0 0 8px; font-size: 22px; }
-    .lock-card p  { color: #557; font-size: 14px; margin: 0 0 24px; }
     .lock-card input {
       width: 100%; padding: 14px; font-size: 22px; text-align: center;
       letter-spacing: 8px; background: #162438; border: 2px solid #1e3a5f;
       border-radius: 8px; color: #e0e6f0; outline: none; margin-bottom: 14px;
     }
-    .lock-card input:focus { border-color: #4a7aaa; }
     .lock-btn {
       width: 100%; padding: 14px; background: #1a3a5c; color: white;
       border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;
     }
-    .lock-btn:hover { background: #2a5a8c; }
     .lock-error { color: #f87; font-size: 13px; margin-top: 10px; display: none; }
-
-    /* admin panel */
-    #adminContent {
-      display: none; flex: 1; padding: 24px 20px;
-      max-width: 720px; margin: 0 auto; width: 100%;
-    }
-
-    /* meet selector strip */
+    #adminContent { display: none; flex: 1; padding: 24px 20px; max-width: 720px; margin: 0 auto; width: 100%; }
     .meet-strip {
       background: #0d1b2a; border: 1px solid #1e3a5f;
       border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
       display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     }
-    .meet-strip label { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #4a7aaa; text-transform: uppercase; }
     .meet-strip select {
       flex: 1; min-width: 180px; background: #162438; color: #e0e6f0;
       border: 1px solid #2a4a6e; border-radius: 6px; padding: 8px 12px; font-size: 14px;
@@ -75,106 +235,40 @@
     .btn-sm-blue {
       padding: 8px 14px; background: #0d2a4a; color: #7eb8f7;
       border: 1px solid #1e5a8c; border-radius: 6px; font-size: 13px;
-      font-weight: bold; cursor: pointer; white-space: nowrap;
+      font-weight: bold; cursor: pointer;
     }
-    .btn-sm-blue:hover { background: #1a3a5c; }
-
-    /* cards */
-    .card {
-      background: #0d1b2a; border: 1px solid #1e3a5f;
-      border-radius: 12px; padding: 24px; margin-bottom: 20px;
-    }
-    .card h3 { margin: 0 0 6px; color: #7eb8f7; font-size: 18px; }
-    .card p  { color: #557; font-size: 13px; margin: 0 0 16px; line-height: 1.5; }
-
-    /* inputs */
+    .card { background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
     .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
     .field-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
-    .field-group label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4a7aaa; }
-    .field-group input {
-      padding: 11px 12px; background: #162438; border: 1px solid #1e3a5f;
-      border-radius: 7px; color: #e0e6f0; font-size: 14px; outline: none;
-    }
-    .field-group input:focus { border-color: #4a7aaa; }
-
-    .file-label {
-      display: block; width: 100%; padding: 14px;
-      background: #162438; border: 2px dashed #1e3a5f;
-      border-radius: 8px; color: #4a7aaa; font-size: 14px;
-      text-align: center; cursor: pointer; margin-bottom: 12px; transition: border-color 0.2s;
-    }
-    .file-label:hover { border-color: #4a7aaa; color: #7eb8f7; }
-    .file-label.has-file { border-color: #28a745; color: #4dca7a; }
-
-    /* buttons */
-    .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 8px; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .field-group input { padding: 11px 12px; background: #162438; border: 1px solid #1e3a5f; border-radius: 7px; color: #e0e6f0; }
+    .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
     .btn-green { background: #0d2a18; color: #4dca7a; border: 1px solid #28a745; }
-    .btn-green:not(:disabled):hover { background: #163a22; }
-    .btn-blue  { background: #0d2a4a; color: #7eb8f7; border: 1px solid #1e5a8c; }
-    .btn-blue:not(:disabled):hover  { background: #1a3a5c; }
-    .btn-red   { background: #2a0a0a; color: #f87; border: 1px solid #dc3545; }
-    .btn-red:not(:disabled):hover   { background: #3a1010; }
-
-    /* status */
-    .status-msg { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; }
-    .status-msg.success { display: block; background: #0a2218; border: 1px solid #28a745; color: #4dca7a; }
-    .status-msg.error   { display: block; background: #2a0a0a; border: 1px solid #dc3545; color: #f87; }
-    .status-msg.info    { display: block; background: #0a1a2a; border: 1px solid #1e5a8c; color: #7eb8f7; }
-
-    /* event list */
-    .event-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 12px; background: #0a1628; border: 1px solid #1e3a5f;
-      border-radius: 6px; margin-bottom: 6px; font-size: 13px;
-    }
+    .btn-red { background: #2a0a0a; color: #f87; border: 1px solid #dc3545; }
+    .status-msg { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 8px; font-size: 14px; }
+    .status-msg.success { display: block; background: #0a2218; color: #4dca7a; }
+    .status-msg.error { display: block; background: #2a0a0a; color: #f87; }
+    .status-msg.info { display: block; background: #0a1a2a; color: #7eb8f7; }
+    .event-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #0a1628; border: 1px solid #1e3a5f; border-radius: 6px; margin-bottom: 6px; }
     .ev-name { color: #d0e4ff; font-weight: 600; }
-    .ev-meta { color: #4a6a8a; font-size: 11px; }
-    .badge { background: #1e3a5f; color: #7eb8f7; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
-    #eventList { margin-top: 12px; max-height: 240px; overflow-y: auto; }
-
-    /* logo preview */
-    .logo-preview-row {
-      display: none; align-items: center; gap: 12px;
-      padding: 10px 12px; background: #0d2a4a; border: 1px solid #1e5a8c;
-      border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: #7eb8f7;
-    }
-    .logo-preview-row.show { display: flex; }
-    .logo-preview-row img { height: 34px; width: auto; border-radius: 4px; }
-
-    /* meet list in selector */
-    .meet-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #162438; border: 1px solid #1e3a5f; border-radius: 6px;
-      padding: 4px 10px; font-size: 13px; color: #d0e4ff;
-    }
-    .meet-badge.active { border-color: #28a745; color: #4dca7a; }
+    .badge { background: #1e3a5f; color: #7eb8f7; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
   </style>
 </head>
 <body>
-
 <div class="topbar">
   <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo">
   <div class="topbar-title">🔐 Admin — Field Events Pro</div>
   <a href="index.html" class="home-btn">⌂ Home</a>
 </div>
-
-<!-- Lock -->
 <div id="lockScreen">
   <div class="lock-card">
     <h2>🔐 Admin Access</h2>
     <p>Enter the admin password to continue.</p>
-    <input type="password" id="pwInput" placeholder="••••" maxlength="20"
-           onkeydown="if(event.key===\'Enter\')checkPassword()">
+    <input type="password" id="pwInput" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')checkPassword()">
     <button class="lock-btn" onclick="checkPassword()">UNLOCK</button>
     <div class="lock-error" id="lockError">❌ Incorrect password. Try again.</div>
   </div>
 </div>
-
-<!-- Admin Content -->
 <div id="adminContent">
-
-  <!-- Meet Selector -->
   <div class="meet-strip">
     <label>Working on meet:</label>
     <select id="meetSelect" onchange="onMeetChange()">
@@ -182,739 +276,38 @@
     </select>
     <button class="btn-sm-blue" onclick="showCreateMeet()">+ New Meet</button>
   </div>
-
-  <!-- CREATE MEET -->
   <div class="card" id="createMeetCard" style="display:none;">
     <h3>🏟 Create New Meet</h3>
-    <p>Fill in the details. The PIN is what workers enter to access this meet.</p>
     <div class="field-row">
-      <div class="field-group" style="flex:2;">
-        <label>Meet Name</label>
-        <input type="text" id="newMeetName" placeholder="e.g. Weatherford Invite 2025">
-      </div>
-      <div class="field-group">
-        <label>Date</label>
-        <input type="date" id="newMeetDate">
-      </div>
+      <div class="field-group" style="flex:2;"><label>Meet Name</label><input type="text" id="newMeetName"></div>
+      <div class="field-group"><label>Date</label><input type="date" id="newMeetDate"></div>
     </div>
     <div class="field-row">
-      <div class="field-group">
-        <label>Worker PIN (4–6 digits)</label>
-        <input type="tel" id="newMeetPin" maxlength="6" placeholder="e.g. 2025" inputmode="numeric">
-      </div>
+      <div class="field-group"><label>Worker PIN</label><input type="tel" id="newMeetPin"></div>
     </div>
     <button class="btn btn-green" onclick="createMeet()">CREATE MEET</button>
     <button class="btn btn-red" style="margin-top:6px;" onclick="hideCreateMeet()">CANCEL</button>
     <div class="status-msg" id="createStatus"></div>
   </div>
-
-  <!-- MEET LOGO -->
   <div class="card" id="logoCard" style="display:none;">
     <h3>🏫 Meet Logo</h3>
-    <p>Upload this school or meet\'s logo. It replaces the Ironclad logo on <strong style="color:#e0e6f0;">every screen</strong> for workers in this meet. Stored in the <strong style="color:#7eb8f7;">avatars</strong> bucket.</p>
-
     <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0a1422;border:1px solid #1e3a5f;border-radius:8px;margin-bottom:14px;">
       <img id="currentLogoImg" src="" alt="" style="height:42px;width:auto;border-radius:4px;display:none;">
-      <span id="currentLogoLabel" style="font-size:13px;color:#4a6a8a;">No logo uploaded for this meet.</span>
+      <span id="currentLogoLabel">No logo uploaded.</span>
     </div>
-
-    <label class="file-label" id="meetLogoLabel" for="meetLogoFile">🖼 Choose logo (PNG / JPG / SVG)</label>
-    <input type="file" id="meetLogoFile" accept="image/*" style="display:none;" onchange="onLogoChosen()">
-
-    <div class="logo-preview-row" id="logoPreviewRow">
-      <img id="logoPreviewImg" src="" alt="">
-      <span>Preview — press Upload to save</span>
-    </div>
-
-    <button class="btn btn-blue" id="uploadLogoBtn" onclick="uploadLogo()" disabled>UPLOAD LOGO</button>
-    <button class="btn btn-red"  style="margin-top:6px;" onclick="removeLogo()">REMOVE LOGO</button>
-    <div class="status-msg" id="logoStatus"></div>
   </div>
-
-  <!-- CURRENT EVENTS -->
   <div class="card" id="eventsCard" style="display:none;">
-    <h3>🏃 Events for this Meet</h3>
-    <p>Add, edit, or remove events. Athletes can only be assigned to events here.</p>
-    <div class="field-row">
-      <div class="field-group" style="flex:2;">
-        <label>Event Name</label>
-        <input type="text" id="newEventName" placeholder="e.g. Boys 100m Dash">
-      </div>
-      <div class="field-group">
-        <label>Gender</label>
-        <select id="newEventGender">
-          <option value="">Any</option>
-          <option value="Boys">Boys</option>
-          <option value="Girls">Girls</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label>Level</label>
-        <input type="text" id="newEventLevel" placeholder="e.g. Varsity, JV, 7th Grade">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field-group">
-        <label>Event Type</label>
-        <select id="newEventEventType">
-          <option value="track">Track</option>
-          <option value="field">Field</option>
-          <option value="vertical">Vertical Jump</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn btn-green" onclick="addEvent()">ADD EVENT</button>
-    <div class="status-msg" id="eventStatus"></div>
+    <h3>🏃 Events</h3>
     <div id="eventList"></div>
   </div>
-
-  <!-- ATHLETES -->
   <div class="card" id="athletesCard" style="display:none;">
     <h3>🤼 Athletes</h3>
-    <p>Add athletes manually or import from a CSV. Athletes must be assigned to events.</p>
-    <div class="field-row">
-      <div class="field-group">
-        <label>First Name</label>
-        <input type="text" id="newAthFname" placeholder="e.g. John">
-      </div>
-      <div class="field-group">
-        <label>Last Name</label>
-        <input type="text" id="newAthLname" placeholder="e.g. Doe">
-      </div>
-    </div>
-    <div class="field-row">
-      <div class="field-group">
-        <label>Team</label>
-        <input type="text" id="newAthTeam" placeholder="e.g. Central High">
-      </div>
-      <div class="field-group">
-        <label>Gender</label>
-        <select id="newAthGender">
-          <option value="">Any</option>
-          <option value="Boys">Boys</option>
-          <option value="Girls">Girls</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label>Level</label>
-        <input type="text" id="newAthLevel" placeholder="e.g. Varsity">
-      </div>
-    </div>
-    <button class="btn btn-green" onclick="addAthlete()">ADD ATHLETE</button>
-    <div class="status-msg" id="athleteStatus"></div>
-
-    <h4 style="margin-top:30px;margin-bottom:10px;color:#7eb8f7;">Import from CSV</h4>
-    <p>Upload a CSV file with athlete data. Columns should include: First Name, Last Name, Gender, Level, Team, Event.</p>
-    <label class="file-label" id="csvFileLabel" for="csvFile">⬆ Choose CSV file</label>
-    <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="onCsvChosen()">
-    <button class="btn btn-blue" id="importCsvBtn" onclick="importCsv()" disabled>IMPORT CSV</button>
-    <div class="status-msg" id="csvStatus"></div>
+    <p>Athlete management is available after selecting a meet.</p>
   </div>
-
-  <!-- DANGER ZONE -->
   <div class="card" id="dangerCard" style="display:none;">
     <h3>⚠️ Danger Zone</h3>
-    <p>Permanently delete this meet and all its data. This cannot be undone.</p>
-    <button class="btn btn-red" onclick="clearMeet()">DELETE THIS MEET</button>
-    <div class="status-msg" id="clearStatus"></div>
+    <button class="btn btn-red">DELETE THIS MEET</button>
   </div>
-
 </div>
-
-<script type="module">
-  import { sb, MEET, getActiveMeet, safeGet, log } from './meet-session.js';
-
-  const ADMIN_PASSWORD = 'admin'; // TODO: Replace with a secure method for production
-  let activeMeetId = null;
-  let activeMeetName = null;
-
-  // Override the initPage placeholder from meet-session.js
-  window.initPage = async () => {
-    log("Admin page initialized.");
-    updateBanners(); // Call updateBanners from meet-session.js
-    loadMeetList();
-  };
-
-  function checkPassword() {
-    const pwInput = safeGet("pwInput");
-    const lockError = safeGet("lockError");
-    if (pwInput.value === ADMIN_PASSWORD) {
-      safeGet("lockScreen").style.display = "none";
-      safeGet("adminContent").style.display = "block";
-      lockError.style.display = "none";
-    } else {
-      lockError.style.display = "block";
-    }
-  }
-
-  async function loadMeetList() {
-    const { data: meets, error } = await sb
-      .from("meets")
-      .select("id, name, date, logo_url")
-      .order("date", { ascending: false });
-
-    const meetSelect = safeGet("meetSelect");
-    meetSelect.innerHTML = 
-      `<option value="">— select a meet —</option>
-       <option value="create">+ Create New Meet</option>`;
-
-    if (error) {
-      log("Error loading meets: " + error.message);
-      return;
-    }
-
-    meets.forEach(meet => {
-      const option = document.createElement("option");
-      option.value = meet.id;
-      option.textContent = `${meet.name} (${new Date(meet.date).toLocaleDateString()})`;
-      meetSelect.appendChild(option);
-    });
-
-    // Try to set the active meet from session/local storage or URL
-    const currentMeet = getActiveMeet();
-    if (currentMeet && currentMeet.id) {
-      meetSelect.value = currentMeet.id;
-      onMeetChange(); // Trigger change to load meet details
-    }
-  }
-
-  async function onMeetChange() {
-    const meetSelect = safeGet("meetSelect");
-    const selectedMeetId = meetSelect.value;
-
-    // Hide all cards initially
-    safeGet("createMeetCard").style.display = "none";
-    safeGet("logoCard").style.display = "none";
-    safeGet("eventsCard").style.display = "none";
-    safeGet("athletesCard").style.display = "none";
-    safeGet("dangerCard").style.display = "none";
-
-    if (selectedMeetId === "create") {
-      showCreateMeet();
-      activeMeetId = null;
-      activeMeetName = null;
-      MEET = null; // Clear global MEET when creating new
-      sessionStorage.removeItem("fep_meet");
-      localStorage.removeItem("fep_meet");
-      return;
-    }
-
-    if (!selectedMeetId) {
-      activeMeetId = null;
-      activeMeetName = null;
-      MEET = null; // Clear global MEET
-      sessionStorage.removeItem("fep_meet");
-      localStorage.removeItem("fep_meet");
-      return;
-    }
-
-    // Load selected meet details
-    const { data: meet, error } = await sb
-      .from("meets")
-      .select("*")
-      .eq("id", selectedMeetId)
-      .single();
-
-    if (error) {
-      log("Error loading meet details: " + error.message);
-      return;
-    }
-
-    activeMeetId = meet.id;
-    activeMeetName = meet.name;
-    MEET = meet; // Set global MEET object
-    sessionStorage.setItem("fep_meet", JSON.stringify(meet)); // Save to session storage
-    localStorage.setItem("fep_meet", JSON.stringify(meet)); // Save to local storage
-
-    // Show relevant cards
-    safeGet("logoCard").style.display = "block";
-    safeGet("eventsCard").style.display = "block";
-    safeGet("athletesCard").style.display = "block";
-    safeGet("dangerCard").style.display = "block";
-
-    // Update logo preview
-    const currentLogoImg = safeGet("currentLogoImg");
-    const currentLogoLabel = safeGet("currentLogoLabel");
-    if (meet.logo_url) {
-      currentLogoImg.src = meet.logo_url;
-      currentLogoImg.style.display = "block";
-      currentLogoLabel.textContent = "Current Logo";
-    } else {
-      currentLogoImg.style.display = "none";
-      currentLogoLabel.textContent = "No logo uploaded for this meet.";
-    }
-
-    loadEventList(activeMeetId);
-  }
-
-  function showCreateMeet() {
-    safeGet("createMeetCard").style.display = "block";
-    safeGet("logoCard").style.display = "none";
-    safeGet("eventsCard").style.display = "none";
-    safeGet("athletesCard").style.display = "none";
-    safeGet("dangerCard").style.display = "none";
-  }
-
-  function hideCreateMeet() {
-    safeGet("createMeetCard").style.display = "none";
-    safeGet("meetSelect").value = ""; // Reset selection
-    onMeetChange(); // Trigger change to hide other cards
-  }
-
-  async function createMeet() {
-    const newMeetName = safeGet("newMeetName").value.trim();
-    const newMeetDate = safeGet("newMeetDate").value;
-    const newMeetPin = safeGet("newMeetPin").value.trim();
-    const createStatus = safeGet("createStatus");
-
-    if (!newMeetName || !newMeetDate || !newMeetPin) {
-      showStatus("createStatus", "❌ All fields are required.", "error");
-      return;
-    }
-
-    showStatus("createStatus", "⏳ Creating meet...", "info");
-
-    const { data, error } = await sb
-      .from("meets")
-      .insert({
-        name: newMeetName,
-        date: newMeetDate,
-        pin: newMeetPin,
-        id: crypto.randomUUID().substring(0, 8) // Generate a short ID
-      })
-      .select();
-
-    if (error) {
-      showStatus("createStatus", "❌ Error creating meet: " + error.message, "error");
-      return;
-    }
-
-    showStatus("createStatus", `✅ Meet \"${newMeetName}\" created!`, "success");
-    safeGet("newMeetName").value = "";
-    safeGet("newMeetDate").value = "";
-    safeGet("newMeetPin").value = "";
-    loadMeetList(); // Reload meet list to show new meet
-    setTimeout(() => createStatus.style.display = "none", 3000);
-  }
-
-  let meetLogoFile = null;
-  function onLogoChosen() {
-    const fileInput = safeGet("meetLogoFile");
-    const logoPreviewRow = safeGet("logoPreviewRow");
-    const logoPreviewImg = safeGet("logoPreviewImg");
-    const uploadLogoBtn = safeGet("uploadLogoBtn");
-    const meetLogoLabel = safeGet("meetLogoLabel");
-
-    if (fileInput.files.length > 0) {
-      meetLogoFile = fileInput.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        logoPreviewImg.src = e.target.result;
-        logoPreviewRow.classList.add("show");
-        uploadLogoBtn.disabled = false;
-      };
-      reader.readAsDataURL(meetLogoFile);
-      meetLogoLabel.classList.add("has-file");
-      meetLogoLabel.textContent = meetLogoFile.name;
-    } else {
-      meetLogoFile = null;
-      logoPreviewRow.classList.remove("show");
-      uploadLogoBtn.disabled = true;
-      meetLogoLabel.classList.remove("has-file");
-      meetLogoLabel.textContent = "🖼 Choose logo (PNG / JPG / SVG)";
-    }
-  }
-
-  async function uploadLogo() {
-    if (!activeMeetId || !meetLogoFile) return;
-
-    showStatus("logoStatus", "⏳ Uploading logo...", "info");
-
-    const filePath = `public/${activeMeetId}/logo.${meetLogoFile.name.split(".").pop()}`;
-    const { data, error } = await sb.storage
-      .from("logos") // Assuming a 'logos' bucket in Supabase Storage
-      .upload(filePath, meetLogoFile, { cacheControl: "3600", upsert: true });
-
-    if (error) {
-      showStatus("logoStatus", "❌ Error uploading logo: " + error.message, "error");
-      return;
-    }
-
-    // Get public URL and update meet record
-    const { data: publicUrlData } = sb.storage.from("logos").getPublicUrl(filePath);
-    const publicUrl = publicUrlData.publicUrl;
-
-    const { error: updateError } = await sb
-      .from("meets")
-      .update({ logo_url: publicUrl })
-      .eq("id", activeMeetId);
-
-    if (updateError) {
-      showStatus("logoStatus", "❌ Error updating meet with logo URL: " + updateError.message, "error");
-      return;
-    }
-
-    showStatus("logoStatus", "✅ Logo uploaded and updated!", "success");
-    // Reload meet list to update logo in dropdown if needed, or just update current meet object
-    MEET.logo_url = publicUrl; // Update global MEET object
-    sessionStorage.setItem("fep_meet", JSON.stringify(MEET));
-    localStorage.setItem("fep_meet", JSON.stringify(MEET));
-    onMeetChange(); // Refresh display
-    setTimeout(() => safeGet("logoStatus").style.display = "none", 3000);
-  }
-
-  async function removeLogo() {
-    if (!activeMeetId || !MEET.logo_url) return;
-
-    if (!confirm("Are you sure you want to remove this meet\'s logo?")) return;
-
-    showStatus("logoStatus", "⏳ Removing logo...", "info");
-
-    // Extract file path from URL
-    const urlParts = MEET.logo_url.split("/");
-    const filePath = urlParts.slice(urlParts.indexOf("public") + 1).join("/");
-
-    const { error: deleteError } = await sb.storage
-      .from("logos")
-      .remove([filePath]);
-
-    if (deleteError) {
-      showStatus("logoStatus", "❌ Error deleting logo from storage: " + deleteError.message, "error");
-      return;
-    }
-
-    const { error: updateError } = await sb
-      .from("meets")
-      .update({ logo_url: null })
-      .eq("id", activeMeetId);
-
-    if (updateError) {
-      showStatus("logoStatus", "❌ Error removing logo URL from meet: " + updateError.message, "error");
-      return;
-    }
-
-    showStatus("logoStatus", "✅ Logo removed!", "success");
-    MEET.logo_url = null; // Update global MEET object
-    sessionStorage.setItem("fep_meet", JSON.stringify(MEET));
-    localStorage.setItem("fep_meet", JSON.stringify(MEET));
-    onMeetChange(); // Refresh display
-    setTimeout(() => safeGet("logoStatus").style.display = "none", 3000);
-  }
-
-  async function loadEventList(meetId) {
-    const { data: events, error } = await sb
-      .from("events")
-      .select("id, name, gender, level, event_type")
-      .eq("meet_id", meetId)
-      .order("name");
-
-    const eventListDiv = safeGet("eventList");
-    eventListDiv.innerHTML = "";
-
-    if (error) {
-      log("Error loading events: " + error.message);
-      eventListDiv.innerHTML = `<div style="padding:10px;color:#f87;">Error loading events.</div>`;
-      return;
-    }
-
-    if (!events.length) {
-      eventListDiv.innerHTML = `<div style="padding:10px;color:#888;">No events added yet.</div>`;
-      return;
-    }
-
-    events.forEach(event => {
-      const eventDiv = document.createElement("div");
-      eventDiv.className = "event-item";
-      eventDiv.innerHTML = `
-        <div>
-          <div class="ev-name">${event.name}</div>
-          <div class="ev-meta">${event.gender || ""} ${event.level ? `(${event.level})` : ""}</div>
-        </div>
-        <span class="badge">${event.event_type}</span>
-        <button class="btn-sm-blue" onclick="deleteEvent(\'${event.id}\')" style="background:#2a0a0a;border-color:#dc3545;color:#f87;">Delete</button>
-      `;
-      eventListDiv.appendChild(eventDiv);
-    });
-  }
-
-  async function addEvent() {
-    if (!activeMeetId) {
-      showStatus("eventStatus", "❌ Please select a meet first.", "error");
-      return;
-    }
-
-    const newEventName = safeGet("newEventName").value.trim();
-    const newEventGender = safeGet("newEventGender").value;
-    const newEventLevel = safeGet("newEventLevel").value.trim();
-    const newEventEventType = safeGet("newEventEventType").value;
-
-    if (!newEventName) {
-      showStatus("eventStatus", "❌ Event Name is required.", "error");
-      return;
-    }
-
-    showStatus("eventStatus", "⏳ Adding event...", "info");
-
-    const { error } = await sb
-      .from("events")
-      .insert({
-        id: crypto.randomUUID().substring(0, 8),
-        meet_id: activeMeetId,
-        name: newEventName,
-        gender: newEventGender || null,
-        level: newEventLevel || null,
-        event_type: newEventEventType
-      });
-
-    if (error) {
-      showStatus("eventStatus", "❌ Error adding event: " + error.message, "error");
-      return;
-    }
-
-    showStatus("eventStatus", `✅ Event \"${newEventName}\" added!`, "success");
-    safeGet("newEventName").value = "";
-    safeGet("newEventGender").value = "";
-    safeGet("newEventLevel").value = "";
-    loadEventList(activeMeetId);
-    setTimeout(() => safeGet("eventStatus").style.display = "none", 3000);
-  }
-
-  async function deleteEvent(eventId) {
-    if (!activeMeetId) return;
-    if (!confirm("Are you sure you want to delete this event? This will also unassign all athletes from it.")) return;
-
-    showStatus("eventStatus", "⏳ Deleting event...", "info");
-
-    // First, delete assignments for this event
-    const { error: assignError } = await sb
-      .from("event_assignments")
-      .delete()
-      .eq("event_id", eventId)
-      .eq("meet_id", activeMeetId);
-
-    if (assignError) {
-      showStatus("eventStatus", "❌ Error deleting event assignments: " + assignError.message, "error");
-      return;
-    }
-
-    // Then delete the event itself
-    const { error: eventError } = await sb
-      .from("events")
-      .delete()
-      .eq("id", eventId)
-      .eq("meet_id", activeMeetId);
-
-    if (eventError) {
-      showStatus("eventStatus", "❌ Error deleting event: " + eventError.message, "error");
-      return;
-    }
-
-    showStatus("eventStatus", "✅ Event deleted!", "success");
-    loadEventList(activeMeetId);
-    setTimeout(() => safeGet("eventStatus").style.display = "none", 3000);
-  }
-
-  async function addAthlete() {
-    if (!activeMeetId) {
-      showStatus("athleteStatus", "❌ Please select a meet first.", "error");
-      return;
-    }
-
-    const newAthFname = safeGet("newAthFname").value.trim();
-    const newAthLname = safeGet("newAthLname").value.trim();
-    const newAthTeam = safeGet("newAthTeam").value.trim();
-    const newAthGender = safeGet("newAthGender").value;
-    const newAthLevel = safeGet("newAthLevel").value.trim();
-
-    if (!newAthFname || !newAthLname) {
-      showStatus("athleteStatus", "❌ First and Last Name are required.", "error");
-      return;
-    }
-
-    showStatus("athleteStatus", "⏳ Adding athlete...", "info");
-
-    const { error } = await sb
-      .from("athletes")
-      .insert({
-        id: crypto.randomUUID().substring(0, 8),
-        meet_id: activeMeetId,
-        fname: newAthFname,
-        lname: newAthLname,
-        team: newAthTeam || null,
-        gender: newAthGender || null,
-        level: newAthLevel || null
-      });
-
-    if (error) {
-      showStatus("athleteStatus", "❌ Error adding athlete: " + error.message, "error");
-      return;
-    }
-
-    showStatus("athleteStatus", `✅ Athlete \"${newAthFname} ${newAthLname}\" added!`, "success");
-    safeGet("newAthFname").value = "";
-    safeGet("newAthLname").value = "";
-    safeGet("newAthTeam").value = "";
-    safeGet("newAthGender").value = "";
-    safeGet("newAthLevel").value = "";
-    setTimeout(() => safeGet("athleteStatus").style.display = "none", 3000);
-  }
-
-  let csvFile = null;
-  function onCsvChosen() {
-    const fileInput = safeGet("csvFile");
-    const csvFileLabel = safeGet("csvFileLabel");
-    const importCsvBtn = safeGet("importCsvBtn");
-
-    if (fileInput.files.length > 0) {
-      csvFile = fileInput.files[0];
-      csvFileLabel.classList.add("has-file");
-      csvFileLabel.textContent = csvFile.name;
-      importCsvBtn.disabled = false;
-    } else {
-      csvFile = null;
-      csvFileLabel.classList.remove("has-file");
-      csvFileLabel.textContent = "⬆ Choose CSV file";
-      importCsvBtn.disabled = true;
-    }
-  }
-
-  async function importCsv() {
-    if (!activeMeetId || !csvFile) return;
-
-    showStatus("csvStatus", "⏳ Importing CSV...", "info");
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const csvText = e.target.result;
-        const importedCount = await processCsvData(csvText, activeMeetId);
-        showStatus("csvStatus", `✅ Imported ${importedCount} athletes and their events!`, "success");
-        // Optionally reload event list or athlete list if displayed
-        setTimeout(() => safeGet("csvStatus").style.display = "none", 3000);
-      } catch (err) {
-        showStatus("csvStatus", "❌ CSV Import Error: " + err.message, "error");
-      }
-    };
-    reader.readAsText(csvFile);
-  }
-
-  async function processCsvData(csvText, meetId) {
-    const rows = parseCSV(csvText);
-    if (rows.length < 2) throw new Error("CSV is empty or has only headers.");
-
-    const headers = rows[0].map(h => h.toLowerCase());
-    const idx = {
-      fn: headers.indexOf("first name"),
-      ln: headers.indexOf("last name"),
-      gen: headers.indexOf("gender"),
-      level: headers.indexOf("level"),
-      tm: headers.indexOf("team"),
-      ev: headers.indexOf("event")
-    };
-
-    // Check for required headers
-    if (idx.fn === -1 || idx.ln === -1 || idx.ev === -1) {
-      throw new Error("Missing required CSV columns: First Name, Last Name, Event.");
-    }
-
-    const fieldKeywords = ["shot put", "discus", "long jump", "triple jump", "high jump", "pole vault"];
-
-    const eventRows = [];
-    const athleteRows = [];
-    const assignRows = [];
-    const eventsFound = {}; // To track unique events and assign IDs
-
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row || row.length < 3) continue;
-      const g = col => (col >= 0 && col < row.length) ? (row[col]||"").toString().trim() : "";
-      if (!g(idx.fn)) continue;
-      const evName = g(idx.ev).toLowerCase();
-      if (!fieldKeywords.some(k => evName.includes(k))) continue;
-
-      const level  = normalizeLevel(g(idx.level)); // Use idx.level instead of idx.div
-      const gender = g(idx.gen);
-      const evKey  = g(idx.ev) + "|" + gender + "|" + level;
-
-      if (!eventsFound[evKey]) {
-        const eId = crypto.randomUUID().substring(0, 8);
-        eventsFound[evKey] = eId;
-        eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId, event_type: fieldKeywords.some(k => evName.includes(k)) ? "field" : "track" });
-      }
-      const aId = crypto.randomUUID().substring(0, 8);
-      athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
-      assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+" "+g(idx.ln)).trim() });
-    }
-
-    if (!athleteRows.length) throw new Error("No field event athletes found in this CSV.");
-    if (eventRows.length)   { const { error } = await sb.from("events").insert(eventRows);             if (error) throw error; }
-    if (athleteRows.length) { const { error } = await sb.from("athletes").insert(athleteRows);          if (error) throw error; }
-    if (assignRows.length)  { const { error } = await sb.from("event_assignments").insert(assignRows);  if (error) throw error; }
-    return athleteRows.length;
-  }
-
-  // ── Clear Meet ────────────────────────────────────────────────
-  async function clearMeet() {
-    if (!activeMeetId) return;
-    const pw = prompt("Re-enter admin password to confirm:");
-    if (pw !== ADMIN_PASSWORD) { alert("Incorrect password."); return; }
-    if (!confirm(`DELETE ALL data for \"${activeMeetName}\"?\n\nThis cannot be undone.`)) return;
-
-    showStatus("clearStatus", "⏳ Deleting…", "info");
-    const steps = [
-      sb.from("attempts").delete().eq("meet_id", activeMeetId),
-      sb.from("event_assignments").delete().eq("meet_id", activeMeetId),
-      sb.from("athletes").delete().eq("meet_id", activeMeetId),
-      sb.from("events").delete().eq("meet_id", activeMeetId)
-    ];
-    for (const step of steps) {
-      const { error } = await step;
-      if (error) { showStatus("clearStatus", "❌ " + error.message, "error"); return; }
-    }
-    showStatus("clearStatus", `✅ All data for \"${activeMeetName}\" deleted.`, "success");
-    setTimeout(() => loadEventList(activeMeetId), 600);
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────
-  function showStatus(id, msg, type) {
-    const el = safeGet(id);
-    el.textContent = msg; el.className = "status-msg " + type;
-  }
-
-  function normalizeLevel(raw) {
-    if (!raw) return "";
-    const t = raw.toString().toLowerCase().trim();
-    if (t.includes("varsity")) return "Varsity";
-    if (t.includes("jv") || t.includes("junior var")) return "JV";
-    if (t.includes("8th") || t === "8") return "8th Grade";
-    if (t.includes("7th") || t === "7") return "7th Grade";
-    if (t.includes("6th") || t === "6") return "6th Grade";
-    if (t.includes("frosh") || t.includes("freshman") || t.includes("9th")) return "Freshman";
-    if (t.includes("soph") || t.includes("10th")) return "Sophomore";
-    return raw.toString().trim();
-  }
-
-  function parseCSV(text) {
-    text = text.replace(/^\uFEFF/,"").replace(/\r\n/g,"\n").replace(/\r/g,"\n");
-    const rows = []; let row=[], field=\'\', inQuote=false, i=0;
-    while (i < text.length) {
-      const ch = text[i];
-      if (inQuote) {
-        if (ch===\'"\' && text[i+1]===\'"\') { field+=\'"\'; i+=2; continue; }
-        if (ch===\'"\') inQuote=false;
-        else field+=ch;
-      } else {
-        if      (ch===\'"\')  inQuote=true;
-        else if (ch===\',\')  { row.push(field.trim()); field=\'\'; }
-        else if (ch===\'\n\') { row.push(field.trim()); field=\'\'; if(row.some(v=>v!=\'\')) rows.push(row); row=[]; }
-        else field+=ch;
-      }
-      i++;
-    }
-    row.push(field.trim());
-    if (row.some(v=>v!=\'\')) rows.push(row);
-    return rows;
-  }
-</script>
 </body>
 </html>
