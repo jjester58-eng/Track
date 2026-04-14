@@ -1,78 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0d1b2a">
-  <title>Field Events Pro — Scoring</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, sans-serif;
-      background: #f0f2f5; margin: 0;
-      display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-    }
-    .topbar {
-      background: #0d1b2a; border-bottom: 2px solid #1e3a5f;
-      padding: 10px 16px; display: flex; align-items: center;
-      gap: 12px; flex-shrink: 0;
-    }
-    #topLogo { height: 36px; width: auto; }
-    .meet-pill {
-      background: #162438; border: 1px solid #1e3a5f; border-radius: 20px;
-      padding: 4px 12px; font-size: 13px; font-weight: 700; color: #7eb8f7;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .topbar-title { font-size: 17px; font-weight: 800; color: #7eb8f7; letter-spacing: 1px; flex: 1; }
-    .nav-home {
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-      color: white; padding: 7px 12px; border-radius: 6px; text-decoration: none;
-    }
-    #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px; font-weight: bold; text-align: center; padding: 6px 12px; }
-    #offlineBanner.show { display: block; }
-    .container { display: flex; flex: 1; overflow: hidden; }
-    .left-panel { width: 40%; border-right: 2px solid #ddd; overflow-y: auto; background: white; padding: 10px; }
-    .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
-    .ath-btn { width: 100%; text-align: left; padding: 14px; border: none; border-bottom: 1px solid #eee; background: white; cursor: pointer; margin-bottom: 4px; }
-    .ath-btn:hover { background: #f0f4ff; }
-    .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
-    .event-header { background: #0d1b2a; color: white; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
-    .event-header select { flex: 1; background: #162438; color: white; border: 1px solid #2a4a6e; border-radius: 6px; padding: 10px; }
-    .debug { font-size: 12px; color: #c00; padding: 10px; background: #fee; border-radius: 6px; margin: 8px; display: none; }
-  </style>
-</head>
-<body>
-
-<div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
-
-<div class="topbar">
-  <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo" style="height:38px;">
-  <div class="meet-pill" id="topMeetName">Loading meet...</div>
-  <div class="topbar-title">SCORING</div>
-  <a href="index.html" class="nav-home">⌂</a>
-</div>
-
-<div class="event-header">
-  <select id="eventSelect" onchange="loadEvent()">
-    <option value="">— Select Event —</option>
-  </select>
-</div>
-
-<div class="container">
-  <div class="left-panel" id="leftPanel">
-    <div style="padding:40px;text-align:center;color:#666;">Select an event above</div>
-  </div>
-  <div class="right-panel" id="rightPanel">
-    <div style="padding:40px;text-align:center;color:#666;">Select an athlete to begin scoring</div>
-  </div>
-</div>
-
-<div id="debug" class="debug"></div>
-
 <script>
 /* ─────────────────────────────────────────────
    SAFE MEET LOADER
@@ -83,9 +8,6 @@ function getActiveMeet() {
     if (stored) return JSON.parse(stored);
     const local = localStorage.getItem('fep_meet');
     if (local) return JSON.parse(local);
-    const params = new URLSearchParams(window.location.search);
-    const meetId = params.get('meet');
-    if (meetId) return { id: meetId };
     return null;
   } catch (e) {
     console.error('Meet parse error:', e);
@@ -98,17 +20,19 @@ function getActiveMeet() {
 ───────────────────────────────────────────── */
 const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-const sb = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let MEET = null;
 
 /* ─────────────────────────────────────────────
    DEBUG HELPER
 ───────────────────────────────────────────── */
 function log(msg) {
-  console.log(msg);
-  const d = document.getElementById('debug');
-  d.style.display = 'block';
-  d.innerHTML += '→ ' + msg + '<br>';
+  console.log('[Scoring]', msg);
+  const debugEl = document.getElementById('debug');
+  if (debugEl) {
+    debugEl.style.display = 'block';
+    debugEl.innerHTML += '→ ' + msg + '<br>';
+  }
 }
 
 /* ─────────────────────────────────────────────
@@ -116,19 +40,20 @@ function log(msg) {
 ───────────────────────────────────────────── */
 window.onload = async () => {
   MEET = getActiveMeet();
+
   if (!MEET || !MEET.id) {
     log('No meet found in sessionStorage');
     document.getElementById('topMeetName').textContent = "No Meet Selected";
     document.getElementById('leftPanel').innerHTML = 
       `<div style="padding:30px;color:#c00;text-align:center;">
-        No meet selected.<br><a href="index.html">← Go back to home page</a>
+        No meet selected.<br><a href="index.html" style="color:#7eb8f7;">← Go back to home page</a>
       </div>`;
     return;
   }
 
   log(`Meet loaded: ${MEET.name || MEET.id}`);
 
-  // Apply branding
+  // Update top bar branding
   document.getElementById('topLogo').src = MEET.logo_url || 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
   document.getElementById('topMeetName').textContent = MEET.name || 'Current Meet';
 
@@ -140,7 +65,7 @@ window.onload = async () => {
    LOAD EVENTS
 ───────────────────────────────────────────── */
 async function loadEvents() {
-  log("Loading events for meet...");
+  log("Fetching events...");
   const { data: events, error } = await sb
     .from('events')
     .select('*')
@@ -162,17 +87,17 @@ async function loadEvents() {
     sel.appendChild(opt);
   });
 
-  if (!events || events.length === 0) log("No events found. Import roster from Admin.");
+  if (!events || events.length === 0) log("No events found for this meet.");
 }
 
 /* ─────────────────────────────────────────────
-   LOAD EVENT ATHLETES
+   LOAD ATHLETES
 ───────────────────────────────────────────── */
 async function loadEvent() {
   const eventId = document.getElementById('eventSelect').value;
   if (!eventId) return;
 
-  log(`Loading athletes for event ${eventId}`);
+  log(`Loading athletes for event: ${eventId}`);
 
   const { data: assigns, error } = await sb
     .from('event_assignments')
@@ -184,7 +109,7 @@ async function loadEvent() {
   left.innerHTML = '';
 
   if (error || !assigns || assigns.length === 0) {
-    left.innerHTML = `<div style="padding:40px;text-align:center;color:#888;">No athletes in this event yet.<br>Use Admin → Import Roster</div>`;
+    left.innerHTML = `<div style="padding:40px;text-align:center;color:#888;">No athletes in this event yet.<br>Use Admin to import roster.</div>`;
     return;
   }
 
@@ -214,8 +139,7 @@ async function selectAthlete(athleteId, name, eventId) {
     .eq('meet_id', MEET.id)
     .order('attempt_number');
 
-  const right = document.getElementById('rightPanel');
-  right.innerHTML = `
+  document.getElementById('rightPanel').innerHTML = `
     <div class="card">
       <h2>${name}</h2>
       <button onclick="addAttempt('${athleteId}','${eventId}')" 
@@ -235,7 +159,7 @@ function renderAttempts(attempts) {
         <div style="padding:12px;background:#f8f9fa;border-radius:8px;margin:8px 0;">
           Attempt ${a.attempt_number} — <strong>${a.mark || '—'}</strong>
         </div>`).join('')
-    : '<p style="color:#888;text-align:center;">No attempts yet</p>';
+    : '<p style="color:#888;text-align:center;">No attempts recorded yet</p>';
 }
 
 async function addAttempt(athleteId, eventId) {
@@ -256,14 +180,14 @@ async function addAttempt(athleteId, eventId) {
     result
   });
 
-  // Refresh
+  // Refresh list
   const { data: attempts } = await sb.from('attempts').select('*')
     .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id);
   renderAttempts(attempts || []);
 }
 
 /* ─────────────────────────────────────────────
-   BANNERS
+   OFFLINE BANNER
 ───────────────────────────────────────────── */
 function updateBanners() {
   const banner = document.getElementById('offlineBanner');
@@ -273,5 +197,3 @@ function updateBanners() {
   window.addEventListener('offline', toggle);
 }
 </script>
-</body>
-</html>
