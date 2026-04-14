@@ -1,241 +1,173 @@
-<script>
-const sb = supabase.createClient(
-  'https://qjomrnguhbqfluzwuntz.supabase.co',
-  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
-);
+<script type="module">
+import { sb, initPage, MEET, log } from './meet-session.js';
 
 let currentMeet = null;
 
-/* ─────────────────────────────
-   DEBUG
-───────────────────────────── */
-function log(msg) {
-  console.log('[Scoring]', msg);
-  const d = document.getElementById('debug');
-  if (d) {
-    d.style.display = 'block';
-    d.innerHTML += '→ ' + msg + '<br>';
-  }
-}
-
-/* ─────────────────────────────
+/* -----------------------------
    BOOT
-───────────────────────────── */
-window.onload = async () => {
-  log("=== SCORING PAGE LOADED ===");
+------------------------------*/
+window.addEventListener('DOMContentLoaded', async () => {
+  log("SCORING PAGE BOOT");
 
-  const stored = sessionStorage.getItem('fep_meet');
+  currentMeet = await initPage();
+  if (!currentMeet) return;
 
-  if (!stored) {
-    log("ERROR: No meet found");
-    document.getElementById('topMeetName').textContent = "No Meet Selected";
-    return;
-  }
-
-  currentMeet = JSON.parse(stored);
-  log(`Meet loaded: ${currentMeet.name} (${currentMeet.id})`);
-
-  document.getElementById('topMeetName').textContent = currentMeet.name;
+  document.getElementById('topMeetName').textContent =
+    currentMeet.name;
 
   await loadEvents();
-};
+});
 
-/* ─────────────────────────────
+/* -----------------------------
    LOAD EVENTS
-───────────────────────────── */
+------------------------------*/
 async function loadEvents() {
-  log("Fetching events...");
+  log("Loading events...");
 
-  const { data: events, error } = await sb
+  const { data, error } = await sb
     .from('events')
     .select('id, name, gender, level')
     .eq('meet_id', currentMeet.id)
     .order('name');
 
-  if (error) {
-    log("Events error: " + error.message);
-    return;
-  }
+  if (error) return log(error.message);
 
   const sel = document.getElementById('eventSelect');
   sel.innerHTML = '<option value="">— Select Event —</option>';
 
-  (events || []).forEach(e => {
+  (data || []).forEach(e => {
     const opt = document.createElement('option');
     opt.value = e.id;
     opt.textContent =
-      `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
+      `${e.name}` +
+      (e.gender ? ` — ${e.gender}` : '') +
+      (e.level ? ` (${e.level})` : '');
+
     sel.appendChild(opt);
   });
 }
 
-/* ─────────────────────────────
-   LOAD EVENT ATHLETES
-   (FIXED: NO SUPABASE EMBED JOINS)
-───────────────────────────── */
-async function loadEvent() {
+/* -----------------------------
+   LOAD EVENT ATHLETES (SAFE 2 STEP)
+------------------------------*/
+window.loadEvent = async function () {
   const eventId = document.getElementById('eventSelect').value;
   if (!eventId) return;
 
-  log(`Loading athletes for event ${eventId}`);
+  log("Loading event athletes...");
 
-  // 1. get assignments only
   const { data: assigns, error } = await sb
     .from('event_assignments')
     .select('athlete_id, athlete_name')
     .eq('event_id', eventId)
     .eq('meet_id', currentMeet.id);
 
+  if (error) return log(error.message);
+
+  const ids = assigns.map(a => a.athlete_id);
+
+  const { data: athletes } = await sb
+    .from('athletes')
+    .select('id, fname, lname, team')
+    .in('id', ids);
+
+  const map = {};
+  (athletes || []).forEach(a => (map[a.id] = a));
+
   const left = document.getElementById('leftPanel');
   left.innerHTML = '';
 
-  if (error) {
-    log("Assignment error: " + error.message);
-    return;
-  }
-
-  if (!assigns || assigns.length === 0) {
-    left.innerHTML = `<div style="padding:40px;text-align:center;color:#888;">
-      No athletes in this event yet.
-    </div>`;
-    return;
-  }
-
-  // 2. fetch athlete details separately (NO JOINS = SAFE)
-  const athleteIds = assigns.map(a => a.athlete_id);
-
-  const { data: athletes, error: athError } = await sb
-    .from('athletes')
-    .select('id, fname, lname, team')
-    .in('id', athleteIds);
-
-  if (athError) {
-    log("Athlete fetch error: " + athError.message);
-  }
-
-  const map = {};
-  (athletes || []).forEach(a => map[a.id] = a);
-
-  // 3. render
   assigns.forEach(a => {
     const ath = map[a.athlete_id] || {};
-    const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
-    const team = ath.team || '';
+    const name = ath.fname
+      ? `${ath.fname} ${ath.lname}`
+      : a.athlete_name;
 
     const btn = document.createElement('button');
     btn.className = 'ath-btn';
 
+    btn.onclick = (e) =>
+      selectAthlete(a.athlete_id, name, eventId, e);
+
     btn.innerHTML = `
       <div style="font-weight:700;">${name}</div>
-      ${team ? `<div style="font-size:13px;color:#666;">${team}</div>` : ''}
+      ${ath.team ? `<div style="font-size:13px;color:#666;">${ath.team}</div>` : ''}
     `;
 
-    btn.onclick = (e) => selectAthlete(a.athlete_id, name, eventId, e);
     left.appendChild(btn);
   });
-}
+};
 
-/* ─────────────────────────────
+/* -----------------------------
    SELECT ATHLETE
-───────────────────────────── */
-async function selectAthlete(athleteId, name, eventId, e) {
+------------------------------*/
+async function selectAthlete(id, name, eventId, e) {
   document.querySelectorAll('.ath-btn')
     .forEach(b => b.classList.remove('active'));
 
-  if (e?.currentTarget) {
-    e.currentTarget.classList.add('active');
-  }
+  if (e?.currentTarget) e.currentTarget.classList.add('active');
 
-  const { data: attempts } = await sb
+  const { data } = await sb
     .from('attempts')
     .select('*')
-    .eq('athlete_id', athleteId)
+    .eq('athlete_id', id)
     .eq('event_id', eventId)
     .eq('meet_id', currentMeet.id)
     .order('attempt_number');
 
   document.getElementById('rightPanel').innerHTML = `
-    <div class="card">
+    <div>
       <h2>${name}</h2>
-
-      <button onclick="addAttempt('${athleteId}','${eventId}')"
-        style="width:100%;padding:16px;background:#155724;color:white;border:none;border-radius:8px;margin:12px 0;cursor:pointer;">
+      <button onclick="addAttempt('${id}','${eventId}')"
+        style="width:100%;padding:14px;background:#155724;color:white;border:none;border-radius:8px;">
         + Add Attempt
       </button>
-
       <div id="attemptList"></div>
-    </div>`;
+    </div>
+  `;
 
-  renderAttempts(attempts || []);
+  renderAttempts(data || []);
 }
 
-/* ─────────────────────────────
-   RENDER ATTEMPTS
-───────────────────────────── */
+/* -----------------------------
+   RENDER
+------------------------------*/
 function renderAttempts(attempts) {
   const el = document.getElementById('attemptList');
-
   el.innerHTML = attempts.length
-    ? attempts.map(a => `
-        <div style="padding:12px;background:#f8f9fa;border-radius:8px;margin:8px 0;">
-          Attempt ${a.attempt_number} — <strong>${a.mark || '—'}</strong>
-        </div>
-      `).join('')
-    : `<p style="color:#888;text-align:center;">No attempts yet</p>`;
+    ? attempts.map(a =>
+        `<div style="padding:8px;border-bottom:1px solid #eee;">
+          Attempt ${a.attempt_number} — <b>${a.mark}</b>
+        </div>`
+      ).join('')
+    : `<div>No attempts yet</div>`;
 }
 
-/* ─────────────────────────────
+/* -----------------------------
    ADD ATTEMPT
-───────────────────────────── */
-async function addAttempt(athleteId, eventId) {
-  const mark = prompt('Enter mark (e.g. 42-06, FOUL, PASS):');
+------------------------------*/
+window.addAttempt = async function (athleteId, eventId) {
+  const mark = prompt('Enter mark');
   if (!mark) return;
 
-  const result = mark.toUpperCase().includes('FOUL') ? 'foul' : 'make';
-
-  const { data: existing } = await sb
+  const { data } = await sb
     .from('attempts')
     .select('attempt_number')
     .eq('athlete_id', athleteId)
     .eq('event_id', eventId)
     .eq('meet_id', currentMeet.id);
 
-  const nextNum = (existing?.length || 0) + 1;
+  const next = (data?.length || 0) + 1;
 
-  const { error } = await sb.from('attempts').insert({
+  await sb.from('attempts').insert({
     meet_id: currentMeet.id,
     event_id: eventId,
     athlete_id: athleteId,
-    attempt_number: nextNum,
-    mark: mark.trim(),
-    result
+    attempt_number: next,
+    mark,
+    result: mark.toUpperCase().includes('FOUL') ? 'foul' : 'make'
   });
 
-  if (error) {
-    log("Insert error: " + error.message);
-    return;
-  }
-
-  // refresh
-  const { data: attempts } = await sb
-    .from('attempts')
-    .select('*')
-    .eq('athlete_id', athleteId)
-    .eq('event_id', eventId)
-    .eq('meet_id', currentMeet.id)
-    .order('attempt_number');
-
-  renderAttempts(attempts || []);
-}
-
-/* ─────────────────────────────
-   OFFLINE BANNER
-───────────────────────────── */
-function updateBanners() {
-  const banner = document.getElementById('offlineBanner');
-  const toggle = () => banner.classList.toggle('show', !navigator.onLine);
-  toggle();
-  window.addEventListener('online', toggle);
-  window.addEventListener('offline', toggle);
-}
+  selectAthlete(athleteId, 'Updated', eventId, null);
+};
 </script>
