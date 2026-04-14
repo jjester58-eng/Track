@@ -29,6 +29,8 @@
     .nav-home { color: white; text-decoration: none; font-size: 20px; }
     #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; flex-shrink: 0; }
     #offlineBanner.show { display: block; }
+    #queueBanner { display: none; background: #856404; color: #fff3cd; padding: 6px; text-align: center; font-size: 12px; }
+    #queueBanner.show { display: block; }
     .event-header { background: #0d1b2a; color: white; padding: 10px 14px; flex-shrink: 0; }
     .event-header select { width: 100%; padding: 10px; background: #162438; color: white; border-radius: 6px; font-size: 14px; }
     .container { display: flex; flex: 1; overflow: hidden; }
@@ -41,6 +43,7 @@
     }
     .ath-btn:hover { background: #eef4ff; }
     .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
+    .ath-btn.eliminated { background: #fff5f5; }
     .attempt-row {
       display: flex; align-items: center; gap: 10px;
       padding: 11px 14px; background: #f8f9fa;
@@ -108,7 +111,11 @@ const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/pub
 let currentMeet = null;
 let currentAth = null;
 let currentEventId = '';
+let currentEventName = '';
 let isVertical = false;
+let hPhase = '3att';
+let maxAttempts = 3;
+let vPhase = 'Prelims';
 let flightBarHeight = '';
 let checkinStatus = {};   // athleteId → { status: 'accepted'|'passed', entryHeight: string }
 let attemptsCache = {};
@@ -160,6 +167,8 @@ async function loadEvent() {
 
   currentEventId = eventId;
   currentAth = null;
+  currentEventName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
+  isVertical = currentEventName.includes('high jump') || currentEventName.includes('pole vault');
 
   const left = document.getElementById('leftPanel');
   left.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Loading athletes...</div>';
