@@ -5,12 +5,9 @@
   <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Field Events Pro — Pressbox">
   <meta name="theme-color" content="#0d1b2a">
   <title>Field Events Pro — Pressbox</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="meet-session.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -19,7 +16,6 @@
       margin: 0; display: flex; flex-direction: column;
       height: 100vh; overflow: hidden;
     }
-
     .topbar {
       background: #0d1b2a; border-bottom: 2px solid #1e3a5f;
       padding: 12px 18px; display: flex; align-items: center;
@@ -28,17 +24,17 @@
     #topLogo { height: 38px; width: auto; }
     .meet-pill {
       background: #162438; border: 1px solid #1e3a5f; border-radius: 20px;
-      padding: 3px 10px; font-size: 12px; font-weight: 700; color: #4a7aaa;
+      padding: 4px 12px; font-size: 13px; font-weight: 700; color: #7eb8f7;
       white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis;
     }
     .topbar-title {
       font-size: 19px; font-weight: 800; color: #7eb8f7;
-      letter-spacing: 1px; flex: 1; white-space: nowrap;
+      letter-spacing: 1px; flex: 1;
     }
     .topbar select {
       flex: 1; background: #162438; color: #e0e6f0;
       border: 1px solid #2a4a6e; border-radius: 6px;
-      padding: 8px 12px; font-size: 15px; max-width: 380px;
+      padding: 8px 12px; font-size: 15px;
     }
     .refresh-info {
       font-size: 13px; color: #4a7aaa; white-space: nowrap;
@@ -90,9 +86,6 @@
       font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
       color: #4a7aaa; text-transform: uppercase; margin-bottom: 6px;
     }
-    .bar-height-display {
-      font-size: 42px; font-weight: 900; color: #7eb8f7; text-align: center; padding: 8px 0;
-    }
     .no-event-msg {
       color: #2a4a6a; font-size: 15px; text-align: center; margin-top: 80px;
     }
@@ -101,13 +94,12 @@
 <body>
 
 <div class="topbar">
-  <!-- Single logo: meet logo if uploaded, otherwise Ironclad -->
   <img id="topLogo"
        src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-       alt="Field Events Pro">
+       alt="Logo">
   <div class="meet-pill" id="topMeetName">Loading…</div>
 
-  <select id="eventSelect" class="topbar" onchange="onEventChange()" style="flex:1;max-width:380px;background:#162438;color:#e0e6f0;border:1px solid #2a4a6e;border-radius:6px;padding:8px 12px;font-size:15px;">
+  <select id="eventSelect" onchange="onEventChange()">
     <option value="">— Select event —</option>
   </select>
 
@@ -119,7 +111,7 @@
   <div class="leaderboard" id="leaderboard">
     <div class="no-event-msg">Select an event above to view the live leaderboard.</div>
   </div>
-  <div class="status-panel" id="statusPanel">
+  <div class="status-panel">
     <div class="status-card">
       <div class="sc-label">Now Competing</div>
       <div id="nowCompeting" style="color:#2a4a6a;font-size:14px;">—</div>
@@ -128,82 +120,91 @@
       <div class="sc-label">Up Next</div>
       <div id="upNext" style="color:#2a4a6a;font-size:14px;">—</div>
     </div>
-    <div class="status-card" id="barHeightCard" style="display:none;">
-      <div class="sc-label">Current Bar Height</div>
-      <div class="bar-height-display" id="barHeightDisplay">—</div>
-    </div>
   </div>
 </div>
 
 <script>
-// ── lowercase supabase.createClient (critical — capital S breaks everything) ──
-const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(
+  'https://qjomrnguhbqfluzwuntz.supabase.co',
+  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
+);
 
-// Get active meet (redirects to index.html if none)
-const MEET = getActiveMeet();
+let currentMeet = null;
 let refreshTimer = null;
 
-window.onload = () => {
-  if (!MEET) return;
-  applyMeetBranding(MEET);
-  loadEvents();
+window.onload = async () => {
+  const stored = sessionStorage.getItem('fep_meet');
+  if (!stored) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  currentMeet = JSON.parse(stored);
+
+  // Apply custom logo or fallback to Ironclad
+  document.getElementById('topLogo').src = currentMeet.logo_url || 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
+  document.getElementById('topMeetName').textContent = currentMeet.name;
+
+  await loadEvents();
 };
 
-// ── Load events for this meet ─────────────────────────────────
+// Load events for this meet
 async function loadEvents() {
-  const { data: events } = await sb
-    .from('events').select('id, name, gender, level')
-    .eq('meet_id', MEET.id).order('name');
+  const { data: events, error } = await sb
+    .from('events')
+    .select('id, name, gender, level')
+    .eq('meet_id', currentMeet.id)
+    .order('name');
 
   const sel = document.getElementById('eventSelect');
   sel.innerHTML = '<option value="">— Select event —</option>';
+
   (events || []).forEach(e => {
     const opt = document.createElement('option');
     opt.value = e.id;
-    opt.textContent = e.name
-      + (e.gender ? ' — ' + e.gender : '')
-      + (e.level  ? ' (' + e.level + ')' : '');
+    opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
     sel.appendChild(opt);
   });
 }
 
-// ── Event change ──────────────────────────────────────────────
+// When event changes
 async function onEventChange() {
   clearInterval(refreshTimer);
   const eventId = document.getElementById('eventSelect').value;
   if (!eventId) {
-    document.getElementById('leaderboard').innerHTML =
-      '<div class="no-event-msg">Select an event above to view the live leaderboard.</div>';
+    document.getElementById('leaderboard').innerHTML = '<div class="no-event-msg">Select an event above.</div>';
     return;
   }
   await renderLeaderboard(eventId);
-  // Auto-refresh every 15 seconds
-  refreshTimer = setInterval(() => renderLeaderboard(eventId), 15000);
+  refreshTimer = setInterval(() => renderLeaderboard(eventId), 15000); // auto refresh
 }
 
-// ── Render leaderboard ────────────────────────────────────────
+// Render leaderboard
 async function renderLeaderboard(eventId) {
-  // Get all athletes assigned to this event
-  const { data: assigns } = await sb
+  // Get assignments with explicit join to avoid ambiguous relationship error
+  const { data: assigns, error: assignErr } = await sb
     .from('event_assignments')
-    .select('athlete_id, athlete_name, athletes(fname, lname, team)')
+    .select(`
+      athlete_id,
+      athlete_name,
+      athletes!event_assignments_athlete_id_fkey (fname, lname, team)
+    `)
     .eq('event_id', eventId)
-    .eq('meet_id', MEET.id);
+    .eq('meet_id', currentMeet.id);
 
-  if (!assigns || !assigns.length) {
-    document.getElementById('leaderboard').innerHTML =
-      '<div class="no-event-msg">No athletes in this event yet.</div>';
+  if (assignErr || !assigns || assigns.length === 0) {
+    document.getElementById('leaderboard').innerHTML = '<div class="no-event-msg">No athletes in this event yet.</div>';
     return;
   }
 
   // Get all attempts for this event
   const { data: attempts } = await sb
-    .from('attempts').select('*')
-    .eq('event_id', eventId).eq('meet_id', MEET.id);
+    .from('attempts')
+    .select('*')
+    .eq('event_id', eventId)
+    .eq('meet_id', currentMeet.id);
 
-  // Build per-athlete best mark
+  // Build best mark per athlete
   const bestByAthlete = {};
   (attempts || []).forEach(a => {
     if (a.result !== 'make') return;
@@ -213,70 +214,69 @@ async function renderLeaderboard(eventId) {
     }
   });
 
-  // Sort: athletes with a mark first (best to worst), then no-mark athletes
+  // Build rows
   const rows = assigns.map(a => {
-    const ath  = a.athletes || {};
-    const name = ath.fname ? ath.fname + ' ' + ath.lname : a.athlete_name;
+    const ath = a.athletes || {};
+    const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
     const team = ath.team || '';
     const best = bestByAthlete[a.athlete_id];
-    return { name, team, mark: best ? best.mark : null, parsed: best ? best.parsed : -1 };
+    return {
+      name,
+      team,
+      mark: best ? best.mark : null,
+      parsed: best ? best.parsed : -1
+    };
   });
 
   rows.sort((a, b) => b.parsed - a.parsed);
 
-  // Assign places (ties share place)
+  // Simple place assignment
   let place = 1;
   rows.forEach((r, i) => {
-    if (r.parsed < 0) { r.place = null; return; }
+    if (r.parsed < 0) {
+      r.place = null;
+      return;
+    }
     if (i > 0 && rows[i-1].parsed === r.parsed) r.place = rows[i-1].place;
-    else { r.place = place; }
-    place++;
+    else r.place = place++;
   });
 
-  document.getElementById('leaderboard').innerHTML = `
-    <table class="lb-table">
-      <thead><tr>
-        <th style="width:40px;">#</th>
-        <th>Athlete</th>
-        <th style="text-align:right;">Best Mark</th>
-      </tr></thead>
-      <tbody>
-        ${rows.map(r => `
-          <tr>
-            <td>${r.place ? placeBadge(r.place) : '<span class="place-badge pNM">—</span>'}</td>
-            <td>
-              <div class="ath-name">${r.name}</div>
-              ${r.team ? `<div class="ath-team">${r.team}</div>` : ''}
-            </td>
-            <td style="text-align:right;" class="best-mark">${r.mark || '<span style="color:#2a4a6a;">—</span>'}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
+  // Render table
+  let html = `<table class="lb-table">
+    <thead><tr><th>#</th><th>Athlete</th><th style="text-align:right;">Best Mark</th></tr></thead>
+    <tbody>`;
 
-  // Status panel: who's up
-  const withAttempts = new Set((attempts||[]).map(a => a.athlete_id));
+  rows.forEach(r => {
+    const placeHtml = r.place 
+      ? `<span class="place-badge ${r.place === 1 ? 'p1' : r.place === 2 ? 'p2' : r.place === 3 ? 'p3' : 'p4'}">${r.place}</span>`
+      : '<span class="place-badge pNM">—</span>';
+
+    html += `
+      <tr>
+        <td>${placeHtml}</td>
+        <td>
+          <div class="ath-name">${r.name}</div>
+          ${r.team ? `<div class="ath-team">${r.team}</div>` : ''}
+        </td>
+        <td style="text-align:right;" class="best-mark">${r.mark || '<span style="color:#2a4a6a;">—</span>'}</td>
+      </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  document.getElementById('leaderboard').innerHTML = html;
+
+  // Simple status panel
   const stillCompeting = rows.filter(r => !r.mark);
-  const nowEl   = document.getElementById('nowCompeting');
-  const nextEl  = document.getElementById('upNext');
-  nowEl.textContent  = stillCompeting[0]?.name || '—';
-  nextEl.textContent = stillCompeting[1]?.name || '—';
-  nowEl.style.color  = stillCompeting[0] ? '#e0e6f0' : '#2a4a6a';
-  nextEl.style.color = stillCompeting[1] ? '#e0e6f0' : '#2a4a6a';
+  document.getElementById('nowCompeting').textContent = stillCompeting[0]?.name || '—';
+  document.getElementById('upNext').textContent = stillCompeting[1]?.name || '—';
 }
 
-// ── Helpers ───────────────────────────────────────────────────
+// Helper: parse mark like "42-06" to inches
 function parseMark(mark) {
   if (!mark) return -1;
-  const ft = mark.match(/^(\d+)-(\d{2})(?:\.(\d+))?$/);
-  if (ft) return parseInt(ft[1]) * 12 + parseInt(ft[2]) + (ft[3] ? parseFloat('0.' + ft[3]) : 0);
-  const m = mark.match(/^(\d+(?:\.\d+)?)m?$/);
-  if (m) return parseFloat(m[1]);
-  return -1;
-}
-
-function placeBadge(p) {
-  const cls = p === 1 ? 'p1' : p === 2 ? 'p2' : p === 3 ? 'p3' : p <= 8 ? 'p4' : 'pNM';
-  return `<span class="place-badge ${cls}">${p}</span>`;
+  const m = mark.match(/^(\d+)-(\d{1,2})(?:\.\d+)?$/);
+  if (m) return parseInt(m[1]) * 12 + parseInt(m[2]);
+  return parseFloat(mark) || -1;
 }
 </script>
 </body>
