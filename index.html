@@ -18,94 +18,25 @@
       display: flex; flex-direction: column;
       align-items: center; padding: 40px 20px 60px;
     }
-
-    .app-logo {
-      height: 80px; width: auto; margin-bottom: 20px;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
-    }
+    .app-logo { height: 80px; width: auto; margin-bottom: 20px; }
     h1 { color: #7eb8f7; font-size: 28px; font-weight: 900; letter-spacing: 1.5px; margin: 0 0 6px; }
     .subtitle { color: #4a6a8a; font-size: 14px; margin: 0 0 48px; }
 
-    .section-label {
-      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; color: #4a6a8a;
-      width: 100%; max-width: 460px; margin-bottom: 12px;
-    }
-    .meet-list {
-      width: 100%; max-width: 460px;
-      display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;
-    }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #4a6a8a; width: 100%; max-width: 460px; margin-bottom: 12px; }
+    .meet-list { width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
     .meet-card {
       background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 14px;
-      padding: 18px 20px; cursor: pointer;
-      display: flex; align-items: center; gap: 16px;
-      transition: border-color 0.15s, background 0.15s;
+      padding: 18px 20px; cursor: pointer; display: flex; align-items: center; gap: 16px;
     }
     .meet-card:hover { background: #111d2e; border-color: #2a5a8c; }
-    .meet-logo {
-      width: 52px; height: 52px; border-radius: 10px;
-      object-fit: contain; background: #0a1422;
-      border: 1px solid #1e3a5f; padding: 4px; flex-shrink: 0;
-    }
-    .meet-logo-placeholder {
-      width: 52px; height: 52px; border-radius: 10px;
-      background: #0a1422; border: 1px solid #1e3a5f;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
-    }
-    .meet-info { flex: 1; min-width: 0; }
-    .meet-name {
-      font-size: 17px; font-weight: 700; color: #d0e4ff; margin-bottom: 3px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
+    .meet-logo { width: 52px; height: 52px; border-radius: 10px; object-fit: contain; background: #0a1422; border: 1px solid #1e3a5f; padding: 4px; }
+    .meet-logo-placeholder { width: 52px; height: 52px; border-radius: 10px; background: #0a1422; border: 1px solid #1e3a5f; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .meet-info { flex: 1; }
+    .meet-name { font-size: 17px; font-weight: 700; color: #d0e4ff; margin-bottom: 3px; }
     .meet-date { font-size: 13px; color: #4a6a8a; }
-    .meet-arrow { color: #2a5a8c; font-size: 20px; flex-shrink: 0; }
 
-    /* Modal */
-    .modal-bg {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.75); z-index: 100;
-      align-items: center; justify-content: center; padding: 20px;
-    }
-    .modal-bg.show { display: flex; }
-    .modal {
-      background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 16px;
-      padding: 32px 28px; max-width: 340px; width: 100%; text-align: center;
-    }
-    .modal-logo { height: 64px; width: auto; max-width: 200px; margin-bottom: 14px; object-fit: contain; }
-    .modal h2 { color: #7eb8f7; margin: 0 0 4px; font-size: 20px; }
-    .modal-date { color: #4a6a8a; font-size: 13px; margin: 0 0 24px; }
-
-    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .role-btn {
-      padding: 20px 10px; border-radius: 12px; border: 1px solid transparent;
-      font-size: 15px; font-weight: 700; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-    }
-    .role-btn .icon { font-size: 28px; }
-    .role-scoring { background: #0d2a4a; border-color: #1e5a8c; color: #7eb8f7; }
-    .role-scoring:hover { background: #113455; }
-    .role-results { background: #0a2a18; border-color: #1a5a30; color: #4dca7a; }
-    .role-results:hover { background: #0d3a22; }
-    .role-sub { font-size: 11px; font-weight: 400; opacity: 0.7; }
-
-    .pin-input {
-      width: 100%; padding: 14px; font-size: 28px; text-align: center;
-      letter-spacing: 12px; background: #162438; border: 2px solid #1e3a5f;
-      border-radius: 8px; color: #e0e6f0; outline: none; margin-bottom: 12px;
-    }
-    .modal-btn {
-      width: 100%; padding: 13px; background: #1a3a5c; color: white;
-      border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
-      cursor: pointer; margin-bottom: 8px;
-    }
-    .modal-back { background: none; border: none; color: #4a6a8a; font-size: 13px; cursor: pointer; }
-    .pin-error { color: #f87; font-size: 13px; margin-top: 6px; min-height: 18px; }
-
-    .admin-link {
-      margin-top: 8px; color: #2a4a6a; font-size: 13px;
-      text-decoration: none; display: flex; align-items: center; gap: 6px;
-    }
+    .debug { background: #2a0a0a; color: #ff9; padding: 12px; border-radius: 8px; font-size: 13px; max-width: 460px; margin: 20px; white-space: pre-wrap; display: none; }
+    .empty-msg { color: #888; text-align: center; padding: 40px; background: #0d1b2a; border: 1px dashed #444; border-radius: 12px; width: 100%; max-width: 460px; }
   </style>
 </head>
 <body>
@@ -119,38 +50,9 @@
     <div class="loading-msg">Loading meets…</div>
   </div>
 
-  <a href="admin.html" class="admin-link">🔐 Admin / Director access</a>
+  <a href="admin.html" class="admin-link" style="color:#4a7aaa;margin-top:20px;">🔐 Admin / Director access</a>
 
-  <!-- Modal -->
-  <div class="modal-bg" id="modal">
-    <div class="modal">
-      <img id="modalLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Meet Logo" class="modal-logo">
-      <h2 id="modalName"></h2>
-      <p class="modal-date" id="modalDate"></p>
-
-      <div id="roleStep">
-        <div class="role-grid">
-          <button class="role-btn role-results" onclick="goLeaderboard()">
-            <span class="icon">📊</span> Leaderboard<br>
-            <span class="role-sub">Public view</span>
-          </button>
-          <button class="role-btn role-scoring" onclick="showPinStep()">
-            <span class="icon">🏃</span> Scoring<br>
-            <span class="role-sub">PIN required</span>
-          </button>
-        </div>
-        <button class="modal-back" style="margin-top:20px;" onclick="closeModal()">← Back to meets</button>
-      </div>
-
-      <div id="pinStep" style="display:none;">
-        <p>Enter the scoring PIN for this meet.</p>
-        <input type="tel" id="pinInput" class="pin-input" maxlength="6" placeholder="······" onkeydown="if(event.key==='Enter') submitPin()">
-        <button class="modal-btn" onclick="submitPin()">ENTER SCORING</button>
-        <button class="modal-back" onclick="showRoleStep()">← Back</button>
-        <div class="pin-error" id="pinError"></div>
-      </div>
-    </div>
-  </div>
+  <div id="debug" class="debug"></div>
 
 <script>
 const sb = Supabase.createClient(
@@ -161,92 +63,74 @@ const sb = Supabase.createClient(
 const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
 let selectedMeet = null;
 
-// New function you requested
+function log(msg) {
+  console.log(msg);
+  const d = document.getElementById('debug');
+  d.style.display = 'block';
+  d.innerHTML += '→ ' + msg + '\n';
+}
+
+// Load meets
+window.onload = async () => {
+  log("Starting to load meets...");
+
+  try {
+    const { data: meets, error } = await sb
+      .from('meets')
+      .select('id, name, date, logo_url')
+      .eq('is_active', true)
+      .order('date', { ascending: true });
+
+    if (error) {
+      log("Supabase Error: " + error.message);
+      document.getElementById('meetList').innerHTML = `<div class="empty-msg">Database error: ${error.message}</div>`;
+      return;
+    }
+
+    log(`Found ${meets ? meets.length : 0} active meets`);
+
+    const list = document.getElementById('meetList');
+    if (!meets || meets.length === 0) {
+      list.innerHTML = `<div class="empty-msg">No active meets found.<br><br>Go to Admin and create one first.</div>`;
+      return;
+    }
+
+    list.innerHTML = meets.map(m => {
+      const logo = m.logo_url 
+        ? `<img src="${m.logo_url}" class="meet-logo">` 
+        : `<div class="meet-logo-placeholder">🏟</div>`;
+      const dateStr = m.date 
+        ? new Date(m.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }) 
+        : 'Date TBD';
+
+      return `
+        <div class="meet-card" onclick='openMeet(${JSON.stringify(m).replace(/"/g, '&quot;')})'>
+          ${logo}
+          <div class="meet-info">
+            <div class="meet-name">${m.name}</div>
+            <div class="meet-date">${dateStr}</div>
+          </div>
+          <div class="meet-arrow">›</div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    log("Unexpected error: " + err.message);
+  }
+};
+
+function openMeet(meet) {
+  selectedMeet = meet;
+  document.getElementById('appLogo').src = meet.logo_url || IRONCLAD;
+  // You can expand modal later if needed
+  if (confirm(`Open ${meet.name}?\n\nScoring or Leaderboard?`)) {
+    openScoring(meet);
+  }
+}
+
 function openScoring(meet) {
   sessionStorage.setItem('fep_meet', JSON.stringify(meet));
   window.location.href = 'scoring.html';
 }
-
-// ── Load meets ────────────────────────────────────────────────
-window.onload = async () => {
-  const { data: meets } = await sb
-    .from('meets')
-    .select('id, name, date, logo_url')
-    .eq('is_active', true)
-    .order('date', { ascending: true });
-
-  const list = document.getElementById('meetList');
-  if (!meets || meets.length === 0) {
-    list.innerHTML = '<div class="empty-msg">No active meets found.<br>An admin needs to create one first.</div>';
-    return;
-  }
-
-  list.innerHTML = meets.map(m => {
-    const logo = m.logo_url ? `<img src="${m.logo_url}" class="meet-logo">` : `<div class="meet-logo-placeholder">🏟</div>`;
-    const dateStr = m.date ? new Date(m.date).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}) : 'Date TBD';
-    return `
-      <div class="meet-card" onclick='openMeet(${JSON.stringify(m).replace(/"/g, '&quot;')})'>
-        ${logo}
-        <div class="meet-info">
-          <div class="meet-name">${m.name}</div>
-          <div class="meet-date">${dateStr}</div>
-        </div>
-        <div class="meet-arrow">›</div>
-      </div>`;
-  }).join('');
-};
-
-// ── Modal functions ───────────────────────────────────────────
-function openMeet(meet) {
-  selectedMeet = meet;
-  document.getElementById('appLogo').src = meet.logo_url || IRONCLAD;
-  document.getElementById('modalLogo').src = meet.logo_url || IRONCLAD;
-  document.getElementById('modalName').textContent = meet.name;
-  document.getElementById('modalDate').textContent = meet.date ? new Date(meet.date).toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'}) : '';
-  showRoleStep();
-  document.getElementById('modal').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('show');
-  document.getElementById('appLogo').src = IRONCLAD;
-}
-
-function showRoleStep() {
-  document.getElementById('roleStep').style.display = 'block';
-  document.getElementById('pinStep').style.display = 'none';
-}
-
-function showPinStep() {
-  document.getElementById('roleStep').style.display = 'none';
-  document.getElementById('pinStep').style.display = 'block';
-  document.getElementById('pinInput').focus();
-}
-
-function goLeaderboard() {
-  sessionStorage.setItem('fep_meet', JSON.stringify(selectedMeet));
-  window.location.href = 'results.html';
-}
-
-async function submitPin() {
-  const entered = document.getElementById('pinInput').value.trim();
-  if (!entered) return;
-
-  const { data } = await sb.from('meets').select('pin').eq('id', selectedMeet.id).single();
-
-  if (entered === (data ? data.pin : '')) {
-    openScoring(selectedMeet);   // ← Uses your requested function
-  } else {
-    document.getElementById('pinError').textContent = '❌ Incorrect PIN';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
-  }
-}
-
-// Close modal on backdrop click
-document.getElementById('modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('modal')) closeModal();
-});
 </script>
 </body>
 </html>
