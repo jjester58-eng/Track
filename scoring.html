@@ -9,7 +9,216 @@
   <meta name="theme-color" content="#0d1b2a">
   <title>Field Events Pro — Scoring</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module" src="meet-session.js"></script>
+  <script type="module">
+    import { sb, getActiveMeet, applyMeetBranding, updateBanners, safeGet, log } from './meet-session.js';
+
+    // Global variables for the page
+    let MEET = null;
+
+    // ── Initialization ──────────────────────────────────────────
+    async function initPage() {
+      console.log("[FEP] Starting index.html initialization...");
+      
+      // 1. Get the active meet
+      MEET = getActiveMeet();
+      
+      if (!MEET || !MEET.id) {
+        console.warn("[FEP] No meet found during init.");
+        const title = safeGet("topMeetName");
+        if (title) title.textContent = "No Meet Selected";
+        const left = safeGet("leftPanel");
+        if (left) {
+          left.innerHTML = `<div style="padding:30px;color:#c00;text-align:center;">No meet selected.<br><a href="index.html" style="color:#7eb8f7;">← Go back</a></div>`;
+        }
+        return;
+      }
+
+      console.log("[FEP] Meet loaded successfully:", MEET.id);
+      
+      // 2. Apply branding
+      applyMeetBranding(MEET);
+      
+      // 3. Load events
+      await loadEvents();
+      
+      // 4. Setup banners
+      updateBanners();
+    }
+
+    // ── Load events for this meet ─────────────────────────────────
+    async function loadEvents() {
+      if (!sb || !MEET) {
+        console.error("[FEP] Cannot load events: Supabase or MEET not initialized.");
+        return;
+      }
+
+      console.log("[FEP] Fetching events for meet_id:", MEET.id);
+
+      try {
+        const { data: events, error } = await sb
+          .from("events")
+          .select("*")
+          .eq("meet_id", MEET.id)
+          .order("name");
+
+        if (error) {
+          console.error("[FEP] Supabase error fetching events:", error.message);
+          return;
+        }
+
+        console.log("[FEP] Events fetched:", events?.length || 0);
+
+        const sel = safeGet("eventSelect");
+        if (!sel) return;
+
+        sel.innerHTML = '<option value="">— Select Event —</option>';
+
+        (events || []).forEach(e => {
+          const opt = document.createElement("option");
+          opt.value = e.id;
+          opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
+          sel.appendChild(opt);
+        });
+
+      } catch (err) {
+        console.error("[FEP] Crash during loadEvents:", err.message);
+      }
+    }
+
+    // ── Load event (athletes for selected event) ──────────────────
+    async function loadEvent() {
+      if (!sb || !MEET) return;
+
+      const eventId = safeGet("eventSelect")?.value;
+      if (!eventId) return;
+
+      console.log("[FEP] Loading athletes for event_id:", eventId);
+
+      try {
+        const { data: assigns, error } = await sb
+          .from("event_assignments")
+          .select("athlete_id, athlete_name, athletes(id, fname, lname, team)")
+          .eq("event_id", eventId)
+          .eq("meet_id", MEET.id);
+
+        const left = safeGet("leftPanel");
+        if (!left) return;
+
+        left.innerHTML = '';
+
+        if (error || !assigns?.length) {
+          console.warn("[FEP] No athletes found for this event.");
+          left.innerHTML = `<div style="padding:30px;color:#888;">No athletes found</div>`;
+          return;
+        }
+
+        assigns.forEach(a => {
+          const ath = a.athletes || {};
+          const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
+
+          const btn = document.createElement("button");
+          btn.className = "ath-btn";
+          btn.innerHTML = `<div style="font-weight:700;font-size:14px;">${name}</div>
+                           ${ath.team ? `<div style="font-size:12px;color:#888;">${ath.team}</div>` : ''}`;
+
+          btn.onclick = (e) => selectAthlete(a.athlete_id, name, eventId, e);
+          left.appendChild(btn);
+        });
+
+      } catch (err) {
+        console.error("[FEP] Athlete load crash:", err.message);
+      }
+    }
+
+    // ── Select athlete ────────────────────────────────────────────
+    async function selectAthlete(athleteId, name, eventId, e) {
+      document.querySelectorAll(".ath-btn").forEach(b => b.classList.remove("active"));
+      if (e?.currentTarget) e.currentTarget.classList.add("active");
+
+      try {
+        const { data: attempts } = await sb
+          .from("attempts")
+          .select("*")
+          .eq("athlete_id", athleteId)
+          .eq("event_id", eventId)
+          .eq("meet_id", MEET.id)
+          .order("attempt_number");
+
+        const right = safeGet("rightPanel");
+        if (!right) return;
+
+        right.innerHTML = `
+          <div class="card">
+            <h2 style="margin:0 0 4px;font-size:18px;">${name}</h2>
+            <p style="margin:0 0 16px;color:#888;font-size:13px;">Recording attempts for this event</p>
+            <div id="attemptSlots"></div>
+            <button id="addAttemptBtn"
+              style="width:100%;padding:14px;background:#155724;color:#4dca7a;border:1px solid #28a745;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px;">
+              + ADD ATTEMPT
+            </button>
+          </div>`;
+
+        // Attach event listener to the button
+        safeGet("addAttemptBtn").onclick = () => addAttempt(athleteId, eventId);
+
+        renderAttempts(attempts || []);
+
+      } catch (err) {
+        console.error("[FEP] Select athlete crash:", err.message);
+      }
+    }
+
+    function renderAttempts(attempts) {
+      const el = safeGet("attemptSlots");
+      if (!el) return;
+      if (!attempts.length) {
+        el.innerHTML = '<div style="color:#aaa;font-size:13px;margin-bottom:12px;">No attempts recorded yet.</div>';
+        return;
+      }
+      el.innerHTML = attempts.map(a => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:700;color:#666;">ATT ${a.attempt_number}</span>
+          <span style="flex:1;font-size:16px;font-weight:700;">${a.mark || '—'}</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;font-weight:bold;
+            background:${a.result==='make'?'#0a2a18':a.result==='foul'?'#2a0a0a':'#1a2a3a'};
+            color:${a.result==='make'?'#4dca7a':a.result==='foul'?'#f87':'#7eb8f7'};">
+            ${(a.result||'pending').toUpperCase()}
+          </span>
+        </div>`).join('');
+    }
+
+    async function addAttempt(athleteId, eventId) {
+      const mark = prompt('Enter mark (e.g. 45-06 or NH or FOUL):');
+      if (mark === null) return;
+      const result = mark.toUpperCase().includes('FOUL') ? 'foul' : mark.toUpperCase() === 'NH' ? 'nh' : 'make';
+
+      const { data: existing } = await sb.from('attempts').select('attempt_number')
+        .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id);
+      const nextNum = existing ? existing.length + 1 : 1;
+
+      const { error } = await sb.from('attempts').insert({
+        athlete_id: athleteId,
+        event_id:   eventId,
+        meet_id:    MEET.id,
+        mark:       mark.trim(),
+        result,
+        attempt_number: nextNum
+      });
+
+      if (!error) {
+        const { data: attempts } = await sb.from('attempts').select('*')
+          .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id)
+          .order('attempt_number');
+        renderAttempts(attempts || []);
+      }
+    }
+
+    // Expose functions to window for HTML event handlers
+    window.loadEvent = loadEvent;
+    
+    // Run initialization
+    window.addEventListener('DOMContentLoaded', initPage);
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -17,16 +226,14 @@
       background: #f0f2f5; margin: 0;
       display: flex; flex-direction: column; height: 100vh; overflow: hidden;
     }
-
-    /* ── Topbar ── */
     .topbar {
-      background: #0d1b2a; border-bottom: 2px solid #1e3a5c;
+      background: #0d1b2a; border-bottom: 2px solid #1e3a5f;
       padding: 10px 16px; display: flex; align-items: center;
       gap: 12px; flex-shrink: 0;
     }
     #topLogo { height: 36px; width: auto; }
     .meet-pill {
-      background: #162438; border: 1px solid #1e3a5c; border-radius: 20px;
+      background: #162438; border: 1px solid #1e3a5f; border-radius: 20px;
       padding: 3px 10px; font-size: 12px; font-weight: 700; color: #4a7aaa;
       white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis;
     }
@@ -37,37 +244,24 @@
       background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
       color: white; padding: 7px 12px; border-radius: 6px; font-size: 16px; text-decoration: none;
     }
-
     #offlineBanner {
       display: none; background: #dc3545; color: white; font-size: 13px;
       font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0;
     }
     #offlineBanner.show { display: block; }
-
-    #flightBarStrip {
-      display: none; background: #1e3a1e; color: white; padding: 8px 12px;
-      flex-shrink: 0; align-items: center; gap: 10px; flex-wrap: wrap;
-    }
-    #flightBarStrip.show { display: flex; }
-
     .container { display: flex; flex: 1; overflow: hidden; }
     .left-panel  { width: 38%; border-right: 2px solid #ddd; overflow-y: auto; background: white; }
     .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
-
     .ath-btn {
       width: 100%; text-align: left; padding: 12px 14px;
       border: none; border-bottom: 1px solid #eee; background: white; cursor: pointer;
     }
     .ath-btn:hover { background: #f5f8ff; }
     .ath-btn.active { background: #eef4ff; border-left: 4px solid #1a3a5c; }
-
     .card {
       background: white; border-radius: 10px; padding: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px;
     }
-    .hidden { display: none; }
-
-    /* event select header */
     .event-header {
       background: #0d1b2a; color: white; padding: 10px 14px;
       display: flex; align-items: center; gap: 10px; flex-shrink: 0;
@@ -83,31 +277,16 @@
 <div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
 
 <div class="topbar">
-  <!-- Single logo: meet logo if set, else Ironclad -->
-  <img id="topLogo"
-       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-       alt="Field Events Pro">
+  <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Field Events Pro">
   <div class="meet-pill" id="topMeetName">Loading…</div>
   <div class="topbar-title">SCORING</div>
   <a href="index.html" class="nav-home">⌂</a>
 </div>
 
-<!-- Event selector -->
 <div class="event-header">
   <select id="eventSelect" onchange="loadEvent()">
     <option value="">— Select event —</option>
   </select>
-</div>
-
-<!-- Flight Bar (shown for vertical events) -->
-<div id="flightBarStrip">
-  <label style="font-size:12px;font-weight:700;">FLIGHT BAR:</label>
-  <input type="text" id="flightBarInput" placeholder="e.g. 7-00" style="width:80px;padding:6px 8px;background:#162438;color:white;border:1px solid #2a4a6e;border-radius:4px;">
-  <button onclick="incFlightBar(2)"  style="padding:6px 10px;background:#1e3a1e;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;">+2"</button>
-  <button onclick="incFlightBar(6)"  style="padding:6px 10px;background:#1e3a1e;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;">+6"</button>
-  <button onclick="incFlightBar(12)" style="padding:6px 10px;background:#1e3a1e;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;">+1\'"></button>
-  <button onclick="setFlightBar()"   style="padding:6px 12px;background:#155724;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;font-weight:bold;">SET BAR ▶</button>
-  <span id="flightBarDisplay" style="color:#4dca7a;font-weight:bold;"></span>
 </div>
 
 <div class="container">
@@ -119,223 +298,5 @@
   </div>
 </div>
 
-<script type="module">
-  import { sb, MEET, getActiveMeet, applyMeetBranding, updateBanners, initPage, safeGet, log } from './meet-session.js';
-
-  // Override the initPage placeholder from meet-session.js
-  window.initPage = async () => {
-    const currentMeet = getActiveMeet();
-
-    if (!currentMeet || !currentMeet.id) {
-      log("No meet found");
-      const title = safeGet("topMeetName");
-      if (title) title.textContent = "No Meet Selected";
-      const left = safeGet("leftPanel");
-      if (left) {
-        left.innerHTML =
-          `<div style="padding:30px;color:#c00;text-align:center;">
-            No meet selected.<br>
-            <a href="index.html" style="color:#7eb8f7;">← Go back</a>
-          </div>`;
-      }
-      return;
-    }
-
-    log("Meet loaded: " + (currentMeet.name || currentMeet.id));
-    applyMeetBranding(currentMeet);
-    await loadEvents();
-    updateBanners();
-  };
-
-  // ── Load events for this meet ─────────────────────────────────
-  async function loadEvents() {
-    if (!sb || !MEET) return;
-
-    log("Loading events...");
-
-    try {
-      const { data: events, error } = await sb
-        .from("events")
-        .select("*")
-        .eq("meet_id", MEET.id)
-        .order("name");
-
-      if (error) {
-        log("Events error: " + error.message);
-        return;
-      }
-
-      const sel = safeGet("eventSelect");
-      if (!sel) return;
-
-      sel.innerHTML = '<option value="">— Select Event —</option>';
-
-      (events || []).forEach(e => {
-        const opt = document.createElement("option");
-        opt.value = e.id;
-        opt.dataset.type = e.event_type || '';
-        opt.textContent =
-          `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
-        sel.appendChild(opt);
-      });
-
-    } catch (err) {
-      log("Events crash: " + err.message);
-    }
-  }
-
-  // ── Load event (athletes for selected event) ──────────────────
-  async function loadEvent() {
-    if (!sb || !MEET) return;
-
-    const eventId = document.getElementById("eventSelect")?.value;
-    if (!eventId) return;
-
-    log("Loading athletes...");
-
-    try {
-      const { data: assigns, error } = await sb
-        .from("event_assignments")
-        .select("athlete_id, athlete_name, athletes(id, fname, lname, team)")
-        .eq("event_id", eventId)
-        .eq("meet_id", MEET.id);
-
-      const left = safeGet("leftPanel");
-      if (!left) return;
-
-      left.innerHTML = '';
-
-      if (error || !assigns?.length) {
-        left.innerHTML = `<div style="padding:30px;color:#888;">No athletes found</div>`;
-        return;
-      }
-
-      assigns.forEach(a => {
-        const ath = a.athletes || {};
-        const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
-
-        const btn = document.createElement("button");
-        btn.className = "ath-btn";
-        btn.innerHTML = `<div style="font-weight:700;font-size:14px;">${name}</div>
-                         ${ath.team ? `<div style="font-size:12px;color:#888;">${ath.team}</div>` : ''}`;
-
-        btn.onclick = (e) => selectAthlete(a.athlete_id, name, eventId, e);
-        left.appendChild(btn);
-      });
-
-    } catch (err) {
-      log("Athlete load crash: " + err.message);
-    }
-  }
-
-  // ── Select athlete ────────────────────────────────────────────
-  async function selectAthlete(athleteId, name, eventId, e) {
-    document.querySelectorAll(".ath-btn")
-      .forEach(b => b.classList.remove("active"));
-
-    if (e?.currentTarget) e.currentTarget.classList.add("active");
-
-    try {
-      const { data: attempts } = await sb
-        .from("attempts")
-        .select("*")
-        .eq("athlete_id", athleteId)
-        .eq("event_id", eventId)
-        .eq("meet_id", MEET.id)
-        .order("attempt_number");
-
-      const right = safeGet("rightPanel");
-      if (!right) return;
-
-      right.innerHTML = `
-        <div class="card">
-          <h2 style="margin:0 0 4px;font-size:18px;">${name}</h2>
-          <p style="margin:0 0 16px;color:#888;font-size:13px;">Recording attempts for this event</p>
-          <div id="attemptSlots"></div>
-          <button onclick="addAttempt('${athleteId}','${eventId}')"
-            style="width:100%;padding:14px;background:#155724;color:#4dca7a;border:1px solid #28a745;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px;">
-            + ADD ATTEMPT
-          </button>
-        </div>`;
-
-      renderAttempts(attempts || [], athleteId, eventId);
-
-    } catch (err) {
-      log("Select athlete crash: " + err.message);
-    }
-  }
-
-  // ── Render attempts ───────────────────────────────────────────
-  function renderAttempts(attempts, athleteId, eventId) {
-    const el = safeGet("attemptSlots");
-    if (!el) return;
-    if (!attempts.length) {
-      el.innerHTML = '<div style="color:#aaa;font-size:13px;margin-bottom:12px;">No attempts recorded yet.</div>';
-      return;
-    }
-    el.innerHTML = attempts.map(a => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:6px;">
-        <span style="font-size:12px;font-weight:700;color:#666;">ATT ${a.attempt_number}</span>
-        <span style="flex:1;font-size:16px;font-weight:700;">${a.mark || '—'}</span>
-        <span style="font-size:11px;padding:2px 8px;border-radius:4px;font-weight:bold;
-          background:${a.result==='make'?'#0a2a18':a.result==='foul'?'#2a0a0a':'#1a2a3a'};
-          color:${a.result==='make'?'#4dca7a':a.result==='foul'?'#f87':'#7eb8f7'};">
-          ${(a.result||'pending').toUpperCase()}
-        </span>
-      </div>`).join('');
-  }
-
-  // ── Add attempt ───────────────────────────────────────────────
-  async function addAttempt(athleteId, eventId) {
-    if (!sb || !MEET) return;
-
-    const mark = prompt('Enter mark (e.g. 45-06 or NH or FOUL):');
-    if (mark === null) return;
-    const result = mark.toUpperCase().includes('FOUL') ? 'foul'
-                 : mark.toUpperCase() === 'NH' ? 'nh' : 'make';
-
-    // Next attempt number
-    const { data: existing } = await sb.from('attempts').select('attempt_number')
-      .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id);
-    const nextNum = existing ? existing.length + 1 : 1;
-
-    const { error } = await sb.from('attempts').insert({
-      athlete_id: athleteId,
-      event_id:   eventId,
-      meet_id:    MEET.id,
-      mark:       mark.trim(),
-      result,
-      attempt_number: nextNum
-    });
-
-    if (!error) {
-      // Reload
-      const { data: attempts } = await sb.from('attempts').select('*')
-        .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id)
-        .order('attempt_number');
-      renderAttempts(attempts || [], athleteId, eventId);
-    }
-  }
-
-  // ── Flight bar helpers ────────────────────────────────────────
-  function feetInchesToInches(str) {
-    const m = str.match(/^(\d+)-(\d{2})$/);
-    return m ? parseInt(m[1]) * 12 + parseInt(m[2]) : null;
-  }
-  function inchesToFeetInches(total) {
-    return Math.floor(total / 12) + '-' + String(total % 12).padStart(2, '0');
-  }
-  function incFlightBar(inches) {
-    const cur = document.getElementById('flightBarInput').value.trim();
-    const total = feetInchesToInches(cur);
-    if (total === null) return;
-    document.getElementById('flightBarInput').value = inchesToFeetInches(total + inches);
-  }
-  async function setFlightBar() {
-    const val = document.getElementById('flightBarInput').value.trim();
-    document.getElementById('flightBarDisplay').textContent = val ? '→ ' + val : '';
-    // Optionally write to a meets config field here
-  }
-</script>
 </body>
 </html>
