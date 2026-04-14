@@ -11,40 +11,23 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, sans-serif;
-      background: #f0f2f5; margin: 0;
-      display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-    }
-    .topbar {
-      background: #0d1b2a; border-bottom: 2px solid #1e3a5f;
-      padding: 10px 16px; display: flex; align-items: center;
-      gap: 12px; flex-shrink: 0;
-    }
+    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .topbar { background: #0d1b2a; border-bottom: 2px solid #1e3a5f; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     #topLogo { height: 36px; width: auto; }
-    .meet-pill {
-      background: #162438; border: 1px solid #1e3a5f; border-radius: 20px;
-      padding: 3px 10px; font-size: 12px; font-weight: 700; color: #4a7aaa;
-      white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis;
-    }
+    .meet-pill { background: #162438; border: 1px solid #1e3a5f; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: #7eb8f7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .topbar-title { font-size: 17px; font-weight: 800; color: #7eb8f7; letter-spacing: 1px; flex: 1; }
-    .nav-home {
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-      color: white; padding: 7px 12px; border-radius: 6px; font-size: 16px; text-decoration: none;
-    }
-    #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px; font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0; }
+    .nav-home { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 7px 12px; border-radius: 6px; text-decoration: none; }
+    #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px; font-weight: bold; text-align: center; padding: 6px 12px; }
     #offlineBanner.show { display: block; }
-    #flightBarStrip { display: none; background: #1e3a1e; color: white; padding: 8px 12px; flex-shrink: 0; align-items: center; gap: 10px; flex-wrap: wrap; }
-    #flightBarStrip.show { display: flex; }
     .container { display: flex; flex: 1; overflow: hidden; }
-    .left-panel  { width: 38%; border-right: 2px solid #ddd; overflow-y: auto; background: white; }
+    .left-panel { width: 40%; border-right: 2px solid #ddd; overflow-y: auto; background: white; padding: 10px; }
     .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
-    .ath-btn { width: 100%; text-align: left; padding: 12px 14px; border: none; border-bottom: 1px solid #eee; background: white; cursor: pointer; }
-    .ath-btn:hover { background: #f5f8ff; }
-    .ath-btn.active { background: #eef4ff; border-left: 4px solid #1a3a5c; }
-    .card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 15px; }
-    .event-header { background: #0d1b2a; color: white; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-    .event-header select { flex: 1; background: #162438; color: #e0e6f0; border: 1px solid #2a4a6e; border-radius: 6px; padding: 7px 10px; font-size: 14px; }
+    .ath-btn { width: 100%; text-align: left; padding: 14px; border: none; border-bottom: 1px solid #eee; background: white; cursor: pointer; margin-bottom: 4px; }
+    .ath-btn:hover { background: #f0f4ff; }
+    .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
+    .event-header { background: #0d1b2a; color: white; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .event-header select { flex: 1; background: #162438; color: white; border: 1px solid #2a4a6e; border-radius: 6px; padding: 10px; }
+    .debug { font-size: 12px; color: #c00; padding: 8px; background: #fee; border-radius: 6px; margin: 8px; display: none; }
   </style>
 </head>
 <body>
@@ -52,77 +35,75 @@
 <div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
 
 <div class="topbar">
-  <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo" style="height:36px;width:auto;">
-  <div class="meet-pill" id="topMeetName">No Meet</div>
+  <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo" style="height:38px;">
+  <div class="meet-pill" id="topMeetName">Loading meet...</div>
   <div class="topbar-title">SCORING</div>
   <a href="index.html" class="nav-home">⌂</a>
 </div>
 
 <div class="event-header">
   <select id="eventSelect" onchange="loadEvent()">
-    <option value="">— Select event —</option>
+    <option value="">— Select Event —</option>
   </select>
-</div>
-
-<div id="flightBarStrip">
-  <label style="font-size:12px;font-weight:700;">FLIGHT BAR:</label>
-  <input type="text" id="flightBarInput" placeholder="e.g. 7-00" style="width:80px;padding:6px 8px;background:#162438;color:white;border:1px solid #2a4a6e;border-radius:4px;">
-  <button onclick="incFlightBar(2)" style="padding:6px 10px;background:#1e3a1e;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;">+2"</button>
-  <button onclick="incFlightBar(6)" style="padding:6px 10px;background:#1e3a1e;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;">+6"</button>
-  <button onclick="incFlightBar(12)" style="padding:6px 10px;background:#1e3a1e;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;">+1'</button>
-  <button onclick="setFlightBar()" style="padding:6px 12px;background:#155724;color:#4dca7a;border:1px solid #28a745;border-radius:4px;cursor:pointer;font-weight:bold;">SET BAR ▶</button>
-  <span id="flightBarDisplay" style="color:#4dca7a;font-weight:bold;"></span>
 </div>
 
 <div class="container">
   <div class="left-panel" id="leftPanel">
-    <div style="padding:30px;color:#888;text-align:center;">Select an event above</div>
+    <div style="padding:40px;text-align:center;color:#666;">Select an event to load athletes</div>
   </div>
   <div class="right-panel" id="rightPanel">
-    <div style="padding:30px;color:#888;text-align:center;">Select an athlete to begin scoring</div>
+    <div style="padding:40px;text-align:center;color:#666;">Select an athlete to start scoring</div>
   </div>
 </div>
 
+<div id="debug" class="debug"></div>
+
 <script>
-const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-const sb = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = Supabase.createClient(
+  'https://qjomrnguhbqfluzwuntz.supabase.co',
+  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
+);
 
 let currentMeet = null;
 
-// Get active meet from sessionStorage (set on index.html)
-function getActiveMeet() {
-  const stored = sessionStorage.getItem('fep_meet');
-  return stored ? JSON.parse(stored) : null;
+function log(msg) {
+  console.log(msg);
+  const d = document.getElementById('debug');
+  d.style.display = 'block';
+  d.innerHTML += '• ' + msg + '<br>';
 }
 
 window.onload = async () => {
-  currentMeet = getActiveMeet();
-  
-  if (!currentMeet) {
-    document.getElementById('topMeetName').textContent = "No Meet Selected";
-    document.getElementById('leftPanel').innerHTML = `<div style="padding:30px;color:#c00;text-align:center;">Please go back to the home page and select a meet first.</div>`;
+  const stored = sessionStorage.getItem('fep_meet');
+  if (!stored) {
+    log("No meet in sessionStorage - go back to home page");
+    document.getElementById('leftPanel').innerHTML = `<div style="padding:40px;color:red;text-align:center;">No meet selected.<br><a href="index.html">← Go back to home</a></div>`;
     return;
   }
 
-  // Apply meet branding
+  currentMeet = JSON.parse(stored);
+  log(`Meet loaded: ${currentMeet.name}`);
+
+  // Update top bar
   document.getElementById('topLogo').src = currentMeet.logo_url || 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
   document.getElementById('topMeetName').textContent = currentMeet.name;
 
   await loadEvents();
-  updateBanners();
 };
 
-// Load events for current meet
+// Load events
 async function loadEvents() {
-  const { data: events } = await sb
+  log("Fetching events for meet...");
+  const { data: events, error } = await sb
     .from('events')
     .select('*')
     .eq('meet_id', currentMeet.id)
     .order('name');
 
+  if (error) return log("Error: " + error.message);
+
   const sel = document.getElementById('eventSelect');
-  sel.innerHTML = '<option value="">— Select event —</option>';
+  sel.innerHTML = '<option value="">— Select Event —</option>';
 
   (events || []).forEach(e => {
     const opt = document.createElement('option');
@@ -130,28 +111,28 @@ async function loadEvents() {
     opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
     sel.appendChild(opt);
   });
+
+  if (!events || events.length === 0) log("No events found. Import a roster from Admin first.");
 }
 
-// Load athletes for selected event
+// Load athletes
 async function loadEvent() {
   const eventId = document.getElementById('eventSelect').value;
   if (!eventId) return;
 
-  const { data: assigns } = await sb
+  log(`Loading athletes for event ${eventId}`);
+
+  const { data: assigns, error } = await sb
     .from('event_assignments')
-    .select(`
-      athlete_id,
-      athlete_name,
-      athletes (fname, lname, team)
-    `)
+    .select(`athlete_id, athlete_name, athletes(fname, lname, team)`)
     .eq('event_id', eventId)
     .eq('meet_id', currentMeet.id);
 
   const left = document.getElementById('leftPanel');
   left.innerHTML = '';
 
-  if (!assigns || !assigns.length) {
-    left.innerHTML = `<div style="padding:30px;color:#888;text-align:center;">No athletes in this event yet.</div>`;
+  if (error || !assigns || assigns.length === 0) {
+    left.innerHTML = `<div style="padding:40px;text-align:center;color:#666;">No athletes in this event yet.<br>Use Admin → Import Roster</div>`;
     return;
   }
 
@@ -167,7 +148,6 @@ async function loadEvent() {
 }
 
 async function selectAthlete(athleteId, name, eventId) {
-  // Highlight
   document.querySelectorAll('.ath-btn').forEach(b => b.classList.remove('active'));
   event.currentTarget.classList.add('active');
 
@@ -182,25 +162,19 @@ async function selectAthlete(athleteId, name, eventId) {
   const right = document.getElementById('rightPanel');
   right.innerHTML = `
     <div class="card">
-      <h2 style="margin:0 0 8px 0;">${name}</h2>
-      <button onclick="addAttempt('${athleteId}','${eventId}')" 
-        style="width:100%;padding:14px;background:#155724;color:white;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
-        + Add Attempt
-      </button>
-      <div id="attemptList" style="margin-top:16px;"></div>
+      <h2>${name}</h2>
+      <button onclick="addAttempt('${athleteId}','${eventId}')" style="width:100%;padding:16px;background:#155724;color:white;border:none;border-radius:8px;margin:12px 0;cursor:pointer;">+ Add Attempt</button>
+      <div id="attemptList"></div>
     </div>`;
-
   renderAttempts(attempts || [], athleteId, eventId);
 }
 
 function renderAttempts(attempts, athleteId, eventId) {
-  const container = document.getElementById('attemptList');
-  container.innerHTML = attempts.map(a => `
-    <div style="padding:10px;background:#f8f9fa;border-radius:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-      <span><strong>Attempt ${a.attempt_number}</strong> — ${a.mark || '—'}</span>
-      <span style="font-size:12px;padding:2px 10px;border-radius:999px;background:#ddd;">${(a.result||'pending').toUpperCase()}</span>
-    </div>
-  `).join('');
+  const el = document.getElementById('attemptList');
+  el.innerHTML = attempts.length ? attempts.map(a => `
+    <div style="padding:12px;background:#f8f9fa;border-radius:8px;margin:8px 0;">
+      Attempt ${a.attempt_number} — <strong>${a.mark}</strong>
+    </div>`).join('') : '<p style="color:#888;text-align:center;">No attempts yet</p>';
 }
 
 async function addAttempt(athleteId, eventId) {
@@ -208,28 +182,15 @@ async function addAttempt(athleteId, eventId) {
   if (!mark) return;
 
   const result = mark.toUpperCase().includes('FOUL') ? 'foul' : 'make';
-
   const { data: existing } = await sb.from('attempts').select('attempt_number').eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id);
   const nextNum = (existing ? existing.length : 0) + 1;
 
-  await sb.from('attempts').insert({
-    athlete_id: athleteId,
-    event_id: eventId,
-    meet_id: currentMeet.id,
-    attempt_number: nextNum,
-    mark: mark.trim(),
-    result
-  });
+  await sb.from('attempts').insert({ meet_id: currentMeet.id, event_id: eventId, athlete_id: athleteId, attempt_number: nextNum, mark: mark.trim(), result });
 
-  // Refresh attempts
-  const { data: attempts } = await sb.from('attempts').select('*')
-    .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id).order('attempt_number');
-  renderAttempts(attempts, athleteId, eventId);
+  // Refresh
+  const { data: attempts } = await sb.from('attempts').select('*').eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id);
+  renderAttempts(attempts || [], athleteId, eventId);
 }
-
-// Flight bar helpers
-function incFlightBar(inc) { /* your existing logic */ }
-function setFlightBar() { /* your existing logic */ }
 
 function updateBanners() {
   const banner = document.getElementById('offlineBanner');
