@@ -6,194 +6,114 @@
   <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Field Events Pro">
   <meta name="theme-color" content="#0d1b2a">
   <title>Field Events Pro — Scoring</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+    body { 
+      font-family: -apple-system, sans-serif; 
+      background: #f0f2f5; 
+      margin: 0; 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; 
+      overflow: hidden; 
+    }
+    .topbar { 
+      background: #0d1b2a; 
+      border-bottom: 2px solid #1e3a5f; 
+      padding: 12px 18px; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      flex-shrink: 0; 
+    }
+    .topbar img.logo { height: 42px; width: auto; }
+    .topbar img.avatar { 
+      height: 42px; width: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #1e3a5f; 
+    }
+    .topbar-title { 
+      font-size: 19px; font-weight: 800; color: #7eb8f7; letter-spacing: 1px; flex: 1; 
+    }
+    .nav-home { 
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); 
+      color: white; padding: 8px 12px; border-radius: 6px; font-size: 18px; text-decoration: none; 
     }
 
-    /* ── Topbar ── */
-    .topbar {
-      background: #0d1b2a;
-      border-bottom: 2px solid #1e3a5f;
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-    /* Logo lockup */
-    .topbar-logos {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .topbar-logos img.ironclad-logo {
-      height: 38px;
-      width: auto;
-    }
-    .topbar-logo-divider {
-      width: 1px;
-      height: 28px;
-      background: #1e3a5f;
-      display: none;
-    }
-    #meetLogoScoring {
-      height: 38px;
-      width: auto;
-      display: none;
-    }
-
-    .topbar-title {
-      font-size: 19px;
-      font-weight: 800;
-      color: #7eb8f7;
-      letter-spacing: 1px;
-      flex: 1;
-    }
-    .nav-home {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 18px;
-      text-decoration: none;
-    }
-
-    #offlineBanner {
-      display: none;
-      background: #dc3545;
-      color: white;
-      font-size: 13px;
-      font-weight: bold;
-      text-align: center;
-      padding: 6px 12px;
-      flex-shrink: 0;
-    }
+    #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px; font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0; }
     #offlineBanner.show { display: block; }
-    #queueBanner {
-      display: none;
-      background: #856404;
-      color: #fff3cd;
-      font-size: 12px;
-      text-align: center;
-      padding: 5px 12px;
-      flex-shrink: 0;
-    }
-    #queueBanner.show { display: block; }
 
-    #flightBarStrip {
-      display: none;
-      background: #1e3a1e;
-      color: white;
-      padding: 8px 12px;
-      flex-shrink: 0;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+    #flightBarStrip { 
+      display: none; background: #1e3a1e; color: white; padding: 8px 12px; 
+      flex-shrink: 0; align-items: center; gap: 10px; flex-wrap: wrap; 
     }
     #flightBarStrip.show { display: flex; }
 
-    .nav-bar {
-      background: #0d1b2a;
-      display: flex;
-      align-items: center;
-      padding: 10px 12px;
-      border-bottom: 2px solid #1a3a5c;
-      flex-shrink: 0;
-      gap: 12px;
-    }
-    .nav-bar button {
-      background: none;
-      border: 1px solid white;
-      color: white;
-      flex: 1;
-      padding: 8px 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .nav-bar button.active { background: white; color: #0d1b2a; font-weight: bold; }
+    .container { display: flex; flex: 1; overflow: hidden; }
+    .left-panel { width: 38%; border-right: 2px solid #ddd; overflow-y: auto; background: white; }
+    .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
 
-    /* Paste the rest of your original scoring CSS below this line */
-    /* (ath-btn, card, attempt-slot, checkInPanel, vmark-grid, etc.) */
+    .ath-btn { width: 100%; text-align: left; padding: 12px; border: none; border-bottom: 1px solid #eee; background: white; cursor: pointer; }
+    .ath-btn.active { background: #eef4ff; border-left: 5px solid #1a3a5c; }
 
+    .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
 
 <div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
-<div id="queueBanner"></div>
 
 <div class="topbar">
-  <!-- Logo lockup: Ironclad (logos bucket) always left, meet logo (avatars bucket) right if uploaded -->
-  <div class="topbar-logos">
-    <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-         alt="Ironclad Athletics" class="ironclad-logo">
-    <div class="topbar-logo-divider" id="scoringDivider"></div>
-    <img src="" alt="Meet Logo" id="meetLogoScoring">
-  </div>
+  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" 
+       alt="Ironclad Logo" style="height:42px; width:auto;">
+
+  <img id="userAvatar" 
+       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/avatars/Roo%20W.JPG" 
+       alt="Avatar" 
+       style="height:42px; width:42px; border-radius:50%; object-fit:cover; border:2px solid #1e3a5f;">
 
   <div class="topbar-title">FIELD EVENTS PRO — SCORING</div>
-  <a href="index.html" class="nav-home">⌂</a>
+  <a href="index.html" class="nav-home">⌂ Home</a>
 </div>
 
-<!-- Flight Bar -->
-<div id="flightBarStrip">
+<div id="flightBarStrip" class="show">
   <label>FLIGHT BAR:</label>
   <input type="text" id="flightBarInput" placeholder="e.g. 7-00">
-  <button class="fbar-inc" onclick="incFlightBar(2)">+2"</button>
-  <button class="fbar-inc" onclick="incFlightBar(6)">+6"</button>
-  <button class="fbar-inc" onclick="incFlightBar(12)">+1'</button>
-  <button id="flightBarSet" onclick="setFlightBar()">SET BAR ▶</button>
-  <span id="flightBarDisplay"></span>
+  <button onclick="alert('Flight bar logic coming soon')">+2"</button>
+  <button onclick="alert('Flight bar logic coming soon')">+6"</button>
+  <button onclick="alert('Flight bar logic coming soon')">SET BAR</button>
 </div>
 
-<div id="tabScore" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-  <!-- Paste your original scoring content here -->
-  <!-- (event header, athlete list, entry panels, etc.) -->
+<div class="container">
+  <div class="left-panel">
+    <div id="athleteList" style="padding:15px;">
+      <p>Select an event to begin scoring.</p>
+    </div>
+  </div>
+  <div class="right-panel">
+    <div id="entryUI" class="hidden">
+      <div class="card">
+        <h2 id="currentAthName">Athlete Name</h2>
+        <p>Scoring panel will appear here once you select an athlete.</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-// ── Logo system ───────────────────────────────────────────────────────────────
-// logos bucket   = Ironclad company logo — hardcoded, never changes
-// avatars bucket = meet/school logo uploaded per meet via Admin, URL in localStorage
-(function applyMeetLogo() {
-  const url = localStorage.getItem('fep_meet_logo_url');
-  if (!url) return;
-  const img = document.getElementById('meetLogoScoring');
-  const div = document.getElementById('scoringDivider');
-  img.src = url;
-  img.style.display = 'block';
-  div.style.display = 'block';
-})();
-
-// ── Supabase ──────────────────────────────────────────────────────────────────
+// Supabase
 const supabase = Supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
 );
 
+// Simple load
 window.onload = () => {
-  updateBanners();
-  // ... rest of your original init code (loadEvents, etc.)
+  console.log('✅ Scoring page loaded');
+  // You can add your full loadEvents() here later
 };
-
-// Paste all your original functions below:
-// loadEvent, renderAthleteList, submitV, submitH,
-// incFlightBar, setFlightBar, updateBanners, etc.
 </script>
 </body>
 </html>
