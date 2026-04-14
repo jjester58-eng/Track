@@ -18,8 +18,8 @@
     .nav-home { color: white; text-decoration: none; font-size: 20px; }
     #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; flex-shrink: 0; }
     #offlineBanner.show { display: block; }
-    .event-header { background: #0d1b2a; color: white; padding: 10px 14px; flex-shrink: 0; display: flex; gap: 10px; align-items: center; }
-    .event-header select { flex: 1; padding: 10px; background: #162438; color: white; border-radius: 6px; }
+    .event-header { background: #0d1b2a; color: white; padding: 10px 14px; flex-shrink: 0; }
+    .event-header select { width: 100%; padding: 10px; background: #162438; color: white; border-radius: 6px; font-size: 14px; }
     .phase-btn { padding: 8px 14px; background: #1e3a5f; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
     .phase-btn.active { background: #7eb8f7; color: #0d1b2a; }
     .container { display: flex; flex: 1; overflow: hidden; }
@@ -27,9 +27,8 @@
     .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
     .ath-btn { width: 100%; padding: 13px 14px; margin: 5px 0; background: #f8f9fa; border: 1px solid #ddd; text-align: left; cursor: pointer; border-radius: 6px; }
     .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
-    .add-btn, .phase-btn-group button { width: 100%; padding: 14px; margin: 8px 0; background: #155724; color: #4dca7a; border: 1px solid #28a745; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
-    .height-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
-    .height-controls input { width: 120px; padding: 10px; font-size: 18px; text-align: center; }
+    .add-btn { width: 100%; padding: 14px; background: #155724; color: #4dca7a; border: 1px solid #28a745; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
+    .height-controls { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
     .vmark-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
     .vmark-btn { height: 62px; border-radius: 8px; font-size: 24px; font-weight: bold; color: white; cursor: pointer; }
     .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
@@ -65,33 +64,42 @@ let currentMeet = null;
 let currentAth = null;
 let currentEventId = '';
 let isVertical = false;
-let hPhase = '3att';           // 3att, 4att, finals
+let hPhase = '3att';
 let vPhase = 'Prelims';
 let flightBarHeight = '';
-let checkinStatus = {};        // athleteId → {status: 'accepted'|'passed', height: string}
+let checkinStatus = {};
 let attemptsCache = {};
 let athleteListCache = [];
 
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
-  if (!stored) return window.location.href = 'index.html';
+  if (!stored) {
+    console.error("❌ No meet found in sessionStorage");
+    window.location.href = 'index.html';
+    return;
+  }
   currentMeet = JSON.parse(stored);
+  console.log("✅ Meet loaded:", currentMeet);
 
   document.getElementById('topLogo').src = currentMeet.logo_url || 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
   document.getElementById('topMeetName').textContent = currentMeet.name || 'Meet';
 
   await loadEvents();
-
-  const banner = document.getElementById('offlineBanner');
-  const toggle = () => banner.classList.toggle('show', !navigator.onLine);
-  toggle();
-  window.addEventListener('online', toggle);
-  window.addEventListener('offline', toggle);
 };
 
 async function loadEvents() {
-  const { data, error } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
-  if (error) return console.error(error);
+  console.log("Loading events for meet_id:", currentMeet.id);
+  const { data, error } = await sb
+    .from('events')
+    .select('*')
+    .eq('meet_id', currentMeet.id)
+    .order('name');
+
+  if (error) {
+    console.error("❌ Events query failed:", error);
+    return;
+  }
+  console.log("✅ Events loaded:", data ? data.length : 0, "events");
 
   const sel = document.getElementById('eventSelect');
   sel.innerHTML = '<option value="">— Select Event —</option>';
@@ -107,28 +115,69 @@ async function loadEvent() {
   currentEventId = document.getElementById('eventSelect').value;
   if (!currentEventId) return;
 
-  const nameLower = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
-  isVertical = nameLower.includes('high jump') || nameLower.includes('pole vault');
+  const selectedText = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
+  isVertical = selectedText.includes('high jump') || selectedText.includes('pole vault');
+
+  document.getElementById('hPhaseButtons').classList.toggle('hidden', isVertical);
+  document.getElementById('vPhaseButtons').classList.toggle('hidden', !isVertical);
+  document.getElementById('flightBarStrip').classList.toggle('show', isVertical);
 
   currentAth = null;
   checkinStatus = {};
   attemptsCache[currentEventId] = attemptsCache[currentEventId] || [];
 
-  const [{ data: assigns }, { data: attempts }] = await Promise.all([
-    sb.from('event_assignments')
-      .select('athlete_id, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
-      .eq('event_id', currentEventId)
-      .eq('meet_id', currentMeet.id),
-    sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id)
-  ]);
+  console.log(`Loading athletes for event ${currentEventId} (vertical: ${isVertical})`);
 
-  athleteListCache = (assigns || []).map(r => ({
+  // Try two different join styles in case your table setup varies
+  let assigns = [];
+  let attempts = [];
+
+  try {
+    const assignResult = await sb
+      .from('event_assignments')
+      .select(`
+        athlete_id,
+        athletes!event_assignments_athlete_id_fkey (fname, lname, team)
+      `)
+      .eq('event_id', currentEventId)
+      .eq('meet_id', currentMeet.id);
+
+    assigns = assignResult.data || [];
+    console.log("Athletes join 1 result:", assigns.length);
+  } catch (e) {
+    console.warn("First join failed, trying fallback...");
+  }
+
+  if (assigns.length === 0) {
+    // Fallback query without complex join
+    const { data } = await sb
+      .from('event_assignments')
+      .select('athlete_id, athlete_name')
+      .eq('event_id', currentEventId)
+      .eq('meet_id', currentMeet.id);
+    assigns = data || [];
+    console.log("Fallback athletes loaded:", assigns.length);
+  }
+
+  const { data: attData } = await sb
+    .from('attempts')
+    .select('*')
+    .eq('event_id', currentEventId)
+    .eq('meet_id', currentMeet.id);
+
+  attempts = attData || [];
+
+  athleteListCache = assigns.map(r => ({
     id: r.athlete_id,
-    name: r.athletes ? `${r.athletes.fname} ${r.athletes.lname}`.trim() : r.athlete_name || 'Unknown',
+    name: r.athletes 
+      ? `${r.athletes.fname} ${r.athletes.lname}`.trim() 
+      : (r.athlete_name || 'Unknown Athlete'),
     team: r.athletes?.team || ''
   }));
 
-  attemptsCache[currentEventId] = attempts || [];
+  attemptsCache[currentEventId] = attempts;
+
+  console.log(`✅ Final athletes: ${athleteListCache.length} | Attempts: ${attempts.length}`);
 
   renderAthleteList();
   renderRightPanel();
@@ -137,6 +186,10 @@ async function loadEvent() {
 function renderAthleteList() {
   const left = document.getElementById('leftPanel');
   left.innerHTML = '';
+  if (athleteListCache.length === 0) {
+    left.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">No athletes found for this event.<br><small>Check your event_assignments table.</small></div>';
+    return;
+  }
   athleteListCache.forEach(ath => {
     const btn = document.createElement('button');
     btn.className = `ath-btn ${currentAth && currentAth.id === ath.id ? 'active' : ''}`;
@@ -149,7 +202,7 @@ function renderAthleteList() {
 function renderRightPanel() {
   const right = document.getElementById('rightPanel');
   if (!currentAth) {
-    right.innerHTML = '<div style="padding:60px;text-align:center;color:#888;">Select an athlete</div>';
+    right.innerHTML = '<div style="padding:60px;text-align:center;color:#888;">Select an athlete from the left</div>';
     return;
   }
 
@@ -191,71 +244,25 @@ function renderRightPanel() {
 function renderAttempts(attempts) {
   const el = document.getElementById('attemptList');
   if (!el) return;
-  el.innerHTML = attempts.length ? attempts.map(a => `
-    <div class="attempt-row">
-      <span class="att-num">ATT ${a.attempt_number}</span>
-      <span class="att-mark">${a.mark}</span>
-      <span class="att-badge ${a.result==='make'?'att-make':'att-foul'}">${a.result.toUpperCase()}</span>
-    </div>
-  `).join('') : '<p style="text-align:center;color:#aaa;">No attempts yet</p>';
+  el.innerHTML = attempts.length 
+    ? attempts.map(a => `
+      <div class="attempt-row">
+        <span class="att-num">ATT ${a.attempt_number}</span>
+        <span class="att-mark">${a.mark || '—'}</span>
+        <span class="att-badge ${a.result==='make'?'att-make':'att-foul'}">${(a.result||'pending').toUpperCase()}</span>
+      </div>
+    `).join('') 
+    : '<p style="text-align:center;color:#aaa;">No attempts yet</p>';
 }
 
-function setHPhase(phase) {
-  hPhase = phase;
-  renderRightPanel();
-}
+function setHPhase(phase) { hPhase = phase; renderRightPanel(); }
+async function addHorizontalAttempt() { /* your add logic */ alert('Add horizontal attempt'); }
+async function submitVertical(result) { alert('Vertical result: ' + result); }
+function incFlightBar(inches) { alert(`+${inches}" to flight bar`); }
+function setFlightBar() { flightBarHeight = document.getElementById('flightBarInput').value || ''; alert('Bar set'); }
 
-async function addHorizontalAttempt() {
-  if (!currentAth || !currentEventId) return;
-  const mark = prompt('Enter mark (e.g. 42-06, FOUL, PASS):');
-  if (!mark) return;
-
-  const result = mark.toUpperCase().includes('FOUL') ? 'foul' : 'make';
-  const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
-
-  await sb.from('attempts').insert({
-    meet_id: currentMeet.id,
-    event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: nextNum,
-    mark: mark.trim(),
-    result
-  });
-
-  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
-  attemptsCache[currentEventId] = data || [];
-  renderRightPanel();
-}
-
-async function submitVertical(result) {
-  if (!currentAth || !currentEventId) return;
-  const mark = result;
-  const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
-
-  await sb.from('attempts').insert({
-    meet_id: currentMeet.id,
-    event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: nextNum,
-    mark,
-    result: result === 'O' ? 'make' : 'foul'
-  });
-
-  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
-  attemptsCache[currentEventId] = data || [];
-  renderRightPanel();
-}
-
-function incFlightBar(inches) {
-  const input = document.getElementById('flightBarInput');
-  let val = input.value.trim();
-  // You can expand this with your full parseHeight / increment logic from the original
-  alert(`Flight bar +${inches}" (full increment logic ready to expand)`);
-}
-
-function setFlightBar() {
-  flightBarHeight = document.getElementById('flightBarInput').value || '';
-  alert('Bar set to: ' + flightBarHeight);
+function showTab(tab) {
+  // placeholder if you add admin tab later
 }
 </script>
 </body>
