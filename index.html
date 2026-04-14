@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="apple-touch-icon" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
-  <link rel="icon" type="image/png" href="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png">
+  <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
+  <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d1b2a">
@@ -13,273 +13,174 @@
     *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: -apple-system, 'Segoe UI', sans-serif;
-      background: #0a0f1a;
-      color: #e0e6f0;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px 60px;
+      background: #0a0f1a; color: #e0e6f0;
+      margin: 0; min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; padding: 40px 20px 60px;
     }
 
-    /* ── Logo ── */
     .app-logo {
-      height: 80px;
-      width: auto;
-      margin-bottom: 20px;
+      height: 80px; width: auto; margin-bottom: 20px;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
     }
-    h1 {
-      color: #7eb8f7;
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      margin: 0 0 6px;
-    }
-    .subtitle {
-      color: #4a6a8a;
-      font-size: 14px;
-      margin: 0 0 48px;
-    }
+    h1 { color: #7eb8f7; font-size: 28px; font-weight: 900; letter-spacing: 1.5px; margin: 0 0 6px; }
+    .subtitle { color: #4a6a8a; font-size: 14px; margin: 0 0 48px; }
 
-    /* ── Meet list ── */
     .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: #4a6a8a;
-      width: 100%;
-      max-width: 460px;
-      margin-bottom: 12px;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: #4a6a8a;
+      width: 100%; max-width: 460px; margin-bottom: 12px;
     }
     .meet-list {
-      width: 100%;
-      max-width: 460px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 32px;
+      width: 100%; max-width: 460px;
+      display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;
     }
     .meet-card {
-      background: #0d1b2a;
-      border: 1px solid #1e3a5f;
-      border-radius: 14px;
-      padding: 18px 20px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 14px;
+      padding: 18px 20px; cursor: pointer;
+      display: flex; align-items: center; gap: 16px;
       transition: border-color 0.15s, background 0.15s;
-      text-decoration: none;
-      color: inherit;
     }
     .meet-card:hover { background: #111d2e; border-color: #2a5a8c; }
     .meet-logo {
-      width: 52px;
-      height: 52px;
-      border-radius: 10px;
-      object-fit: contain;
-      background: #0a1422;
-      border: 1px solid #1e3a5f;
-      padding: 4px;
-      flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 10px;
+      object-fit: contain; background: #0a1422;
+      border: 1px solid #1e3a5f; padding: 4px; flex-shrink: 0;
     }
     .meet-logo-placeholder {
-      width: 52px;
-      height: 52px;
-      border-radius: 10px;
-      background: #0a1422;
-      border: 1px solid #1e3a5f;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 10px;
+      background: #0a1422; border: 1px solid #1e3a5f;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
     }
     .meet-info { flex: 1; min-width: 0; }
     .meet-name {
-      font-size: 17px;
-      font-weight: 700;
-      color: #d0e4ff;
-      margin-bottom: 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 17px; font-weight: 700; color: #d0e4ff; margin-bottom: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .meet-date { font-size: 13px; color: #4a6a8a; }
     .meet-arrow { color: #2a5a8c; font-size: 20px; flex-shrink: 0; }
 
-    /* ── PIN modal ── */
+    /* ── Modal ── */
     .modal-bg {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75); z-index: 100;
+      align-items: center; justify-content: center; padding: 20px;
     }
     .modal-bg.show { display: flex; }
     .modal {
-      background: #0d1b2a;
-      border: 1px solid #1e3a5f;
-      border-radius: 16px;
-      padding: 32px 28px;
-      max-width: 340px;
-      width: 100%;
-      text-align: center;
+      background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 16px;
+      padding: 32px 28px; max-width: 340px; width: 100%; text-align: center;
     }
     .modal-logo {
-      height: 60px;
-      width: auto;
-      max-width: 180px;
-      margin-bottom: 16px;
-      border-radius: 8px;
-      object-fit: contain;
+      height: 64px; width: auto; max-width: 200px;
+      margin-bottom: 14px; object-fit: contain;
     }
-    .modal h2 { color: #7eb8f7; margin: 0 0 6px; font-size: 20px; }
-    .modal p  { color: #4a6a8a; font-size: 13px; margin: 0 0 20px; }
-    .modal input {
-      width: 100%;
-      padding: 14px;
-      font-size: 28px;
-      text-align: center;
-      letter-spacing: 12px;
-      background: #162438;
-      border: 2px solid #1e3a5f;
-      border-radius: 8px;
-      color: #e0e6f0;
-      outline: none;
-      margin-bottom: 14px;
+    .modal h2 { color: #7eb8f7; margin: 0 0 4px; font-size: 20px; }
+    .modal-date { color: #4a6a8a; font-size: 13px; margin: 0 0 24px; }
+
+    /* Role step */
+    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .role-btn {
+      padding: 20px 10px; border-radius: 12px; border: 1px solid transparent;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      transition: background 0.15s;
     }
-    .modal input:focus { border-color: #4a7aaa; }
+    .role-btn .icon { font-size: 28px; }
+    .role-scoring { background: #0d2a4a; border-color: #1e5a8c; color: #7eb8f7; }
+    .role-scoring:hover { background: #113455; }
+    .role-results { background: #0a2a18; border-color: #1a5a30; color: #4dca7a; }
+    .role-results:hover { background: #0d3a22; }
+    .role-sub { font-size: 11px; font-weight: 400; opacity: 0.7; }
+
+    /* PIN step */
+    #pinStep { margin-top: 4px; }
+    #pinStep p { color: #4a6a8a; font-size: 13px; margin: 0 0 14px; }
+    .pin-input {
+      width: 100%; padding: 14px; font-size: 28px; text-align: center;
+      letter-spacing: 12px; background: #162438; border: 2px solid #1e3a5f;
+      border-radius: 8px; color: #e0e6f0; outline: none; margin-bottom: 12px;
+    }
+    .pin-input:focus { border-color: #4a7aaa; }
     .modal-btn {
-      width: 100%;
-      padding: 14px;
-      background: #1a3a5c;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 10px;
+      width: 100%; padding: 13px; background: #1a3a5c; color: white;
+      border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
+      cursor: pointer; margin-bottom: 8px;
     }
     .modal-btn:hover { background: #2a5a8c; }
-    .modal-cancel {
-      background: none;
-      border: none;
-      color: #4a6a8a;
-      font-size: 14px;
-      cursor: pointer;
-      padding: 6px;
+    .modal-back {
+      background: none; border: none; color: #4a6a8a;
+      font-size: 13px; cursor: pointer; padding: 4px;
     }
-    .modal-cancel:hover { color: #7eb8f7; }
-    .pin-error { color: #f87; font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .modal-back:hover { color: #7eb8f7; }
+    .pin-error { color: #f87; font-size: 13px; margin-top: 6px; min-height: 18px; }
 
-    /* ── Role buttons (after PIN) ── */
-    .role-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 4px;
-    }
-    .role-btn {
-      padding: 16px 10px;
-      border-radius: 10px;
-      border: 1px solid transparent;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    .role-btn .icon { font-size: 24px; }
-    .role-scoring  { background: #0d2a4a; border-color: #1e5a8c; color: #7eb8f7; }
-    .role-scoring:hover  { background: #113455; }
-    .role-results  { background: #0a2a18; border-color: #1a5a30; color: #4dca7a; }
-    .role-results:hover  { background: #0d3a22; }
-
-    /* ── Admin link ── */
     .admin-link {
-      margin-top: 8px;
-      color: #2a4a6a;
-      font-size: 13px;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      margin-top: 8px; color: #2a4a6a; font-size: 13px;
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
     }
     .admin-link:hover { color: #4a7aaa; }
-
-    /* ── States ── */
     .loading-msg { color: #4a6a8a; font-size: 15px; }
     .empty-msg {
-      color: #2a4a6a;
-      font-size: 15px;
-      text-align: center;
-      padding: 32px;
-      background: #0d1b2a;
-      border: 1px dashed #1e3a5f;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 460px;
+      color: #2a4a6a; font-size: 15px; text-align: center; padding: 32px;
+      background: #0d1b2a; border: 1px dashed #1e3a5f; border-radius: 12px;
+      width: 100%; max-width: 460px;
     }
   </style>
 </head>
 <body>
 
-  <img src="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png"
+  <!-- Ironclad logo by default; replaced by meet logo after selection -->
+  <img id="appLogo"
+       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
        alt="Field Events Pro" class="app-logo">
   <h1>FIELD EVENTS PRO</h1>
   <p class="subtitle">Texas High School Track &amp; Field</p>
 
   <div class="section-label">Select Your Meet</div>
-
   <div class="meet-list" id="meetList">
     <div class="loading-msg">Loading meets…</div>
   </div>
 
   <a href="admin.html" class="admin-link">🔐 Admin / Director access</a>
 
-  <!-- PIN Entry Modal -->
-  <div class="modal-bg" id="pinModal">
+  <!-- Modal -->
+  <div class="modal-bg" id="modal">
     <div class="modal">
-      <!-- Shows meet logo if uploaded, else Ironclad -->
       <img id="modalLogo"
-           src="https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png"
+           src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
            alt="Meet Logo" class="modal-logo">
-      <h2 id="modalMeetName">Meet Name</h2>
-      <p id="modalMeetDate">Date</p>
+      <h2 id="modalName"></h2>
+      <p class="modal-date" id="modalDate"></p>
 
-      <!-- Step 1: PIN entry -->
-      <div id="pinStep">
-        <p style="color:#4a6a8a;font-size:13px;margin:0 0 16px;">Enter the worker PIN for this meet.</p>
-        <input type="tel" id="pinInput" maxlength="6" placeholder="·  ·  ·  ·"
-               inputmode="numeric" pattern="[0-9]*"
-               onkeydown="if(event.key==='Enter') submitPin()">
-        <button class="modal-btn" onclick="submitPin()">ENTER</button>
-        <button class="modal-cancel" onclick="closeModal()">Cancel</button>
-        <div class="pin-error" id="pinError"></div>
-      </div>
-
-      <!-- Step 2: Role selection (shown after correct PIN) -->
-      <div id="roleStep" style="display:none;">
-        <p style="color:#4dca7a;font-size:13px;margin:0 0 16px;">✅ PIN accepted — choose your role:</p>
+      <!-- Step 1: Choose role -->
+      <div id="roleStep">
         <div class="role-grid">
-          <button class="role-btn role-scoring" onclick="goTo('scoring.html')">
-            <span class="icon">🏃</span>Scoring
+          <button class="role-btn role-results" onclick="goLeaderboard()">
+            <span class="icon">📊</span>
+            Leaderboard
+            <span class="role-sub">No login needed</span>
           </button>
-          <button class="role-btn role-results" onclick="goTo('results.html')">
-            <span class="icon">📊</span>Leaderboard
+          <button class="role-btn role-scoring" onclick="showPinStep()">
+            <span class="icon">🏃</span>
+            Scoring
+            <span class="role-sub">PIN required</span>
           </button>
         </div>
-        <button class="modal-cancel" style="margin-top:12px;" onclick="closeModal()">Cancel</button>
+        <button class="modal-back" style="margin-top:16px;" onclick="closeModal()">← Back to meets</button>
+      </div>
+
+      <!-- Step 2: PIN for scoring only -->
+      <div id="pinStep" style="display:none;">
+        <p>Enter the scoring PIN for this meet.</p>
+        <input type="tel" id="pinInput" class="pin-input"
+               maxlength="6" inputmode="numeric" pattern="[0-9]*"
+               placeholder="· · · ·"
+               onkeydown="if(event.key==='Enter') submitPin()">
+        <button class="modal-btn" onclick="submitPin()">ENTER SCORING</button>
+        <button class="modal-back" onclick="showRoleStep()">← Back</button>
+        <div class="pin-error" id="pinError"></div>
       </div>
     </div>
   </div>
@@ -289,11 +190,10 @@ const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const IRONCLAD_LOGO = 'https://ocgmhukrxbnldlmodtwx.supabase.co/storage/v1/object/public/Photo/W.png';
-
+const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
 let selectedMeet = null;
 
-// ── Load active meets ─────────────────────────────────────────
+// ── Load meets ────────────────────────────────────────────────
 window.onload = async () => {
   const { data: meets, error } = await sb
     .from('meets')
@@ -302,79 +202,90 @@ window.onload = async () => {
     .order('date', { ascending: true });
 
   const list = document.getElementById('meetList');
-
   if (error || !meets || !meets.length) {
     list.innerHTML = '<div class="empty-msg">No active meets found.<br>An admin needs to create one first.</div>';
     return;
   }
 
   list.innerHTML = meets.map(m => {
-    const logoHtml = m.logo_url
-      ? `<img src="${m.logo_url}" alt="" class="meet-logo">`
+    const logo = m.logo_url
+      ? `<img src="${m.logo_url}" class="meet-logo" alt="">`
       : `<div class="meet-logo-placeholder">🏟</div>`;
     const dateStr = m.date
       ? new Date(m.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' })
       : 'Date TBD';
-    return `
-      <div class="meet-card" onclick="openMeet(${JSON.stringify(m).replace(/"/g, '&quot;')})">
-        ${logoHtml}
-        <div class="meet-info">
-          <div class="meet-name">${m.name}</div>
-          <div class="meet-date">${dateStr}</div>
-        </div>
-        <div class="meet-arrow">›</div>
-      </div>`;
+    return `<div class="meet-card" onclick='openMeet(${JSON.stringify(m)})'>
+      ${logo}
+      <div class="meet-info">
+        <div class="meet-name">${m.name}</div>
+        <div class="meet-date">${dateStr}</div>
+      </div>
+      <div class="meet-arrow">›</div>
+    </div>`;
   }).join('');
 };
 
-// ── Open PIN modal ────────────────────────────────────────────
+// ── Open modal ────────────────────────────────────────────────
 function openMeet(meet) {
   selectedMeet = meet;
-  document.getElementById('modalLogo').src = meet.logo_url || IRONCLAD_LOGO;
-  document.getElementById('modalMeetName').textContent = meet.name;
-  document.getElementById('modalMeetDate').textContent = meet.date
+
+  // Update landing logo to match the selected meet
+  document.getElementById('appLogo').src = meet.logo_url || IRONCLAD;
+
+  // Modal header
+  document.getElementById('modalLogo').src = meet.logo_url || IRONCLAD;
+  document.getElementById('modalName').textContent = meet.name;
+  document.getElementById('modalDate').textContent = meet.date
     ? new Date(meet.date).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' })
     : '';
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinError').textContent = '';
-  document.getElementById('pinStep').style.display = 'block';
-  document.getElementById('roleStep').style.display = 'none';
-  document.getElementById('pinModal').classList.add('show');
-  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+
+  showRoleStep();
+  document.getElementById('modal').classList.add('show');
 }
 
 function closeModal() {
-  document.getElementById('pinModal').classList.remove('show');
+  document.getElementById('modal').classList.remove('show');
+  // Restore Ironclad logo when no meet is selected
+  document.getElementById('appLogo').src = IRONCLAD;
   selectedMeet = null;
 }
 
-// ── Verify PIN ────────────────────────────────────────────────
+// ── Role steps ────────────────────────────────────────────────
+function showRoleStep() {
+  document.getElementById('roleStep').style.display = 'block';
+  document.getElementById('pinStep').style.display  = 'none';
+  document.getElementById('pinError').textContent   = '';
+  document.getElementById('pinInput').value         = '';
+}
+
+function showPinStep() {
+  document.getElementById('roleStep').style.display = 'none';
+  document.getElementById('pinStep').style.display  = 'block';
+  setTimeout(() => document.getElementById('pinInput').focus(), 80);
+}
+
+// ── Leaderboard: no PIN needed ────────────────────────────────
+function goLeaderboard() {
+  saveMeetSession();
+  window.location.href = 'results.html';
+}
+
+// ── Scoring: verify PIN first ─────────────────────────────────
 async function submitPin() {
   const entered = document.getElementById('pinInput').value.trim();
   if (!entered) return;
 
-  // Fetch the real PIN from Supabase for this meet
   const { data, error } = await sb
-    .from('meets')
-    .select('pin')
-    .eq('id', selectedMeet.id)
-    .single();
+    .from('meets').select('pin').eq('id', selectedMeet.id).single();
 
   if (error || !data) {
-    document.getElementById('pinError').textContent = '❌ Could not verify PIN. Try again.';
+    document.getElementById('pinError').textContent = '❌ Could not verify PIN.';
     return;
   }
 
   if (entered === data.pin) {
-    // Save active meet to sessionStorage — all pages read this
-    sessionStorage.setItem('fep_meet', JSON.stringify({
-      id:       selectedMeet.id,
-      name:     selectedMeet.name,
-      date:     selectedMeet.date,
-      logo_url: selectedMeet.logo_url || null
-    }));
-    document.getElementById('pinStep').style.display  = 'none';
-    document.getElementById('roleStep').style.display = 'block';
+    saveMeetSession();
+    window.location.href = 'scoring.html';
   } else {
     document.getElementById('pinError').textContent = '❌ Incorrect PIN. Try again.';
     document.getElementById('pinInput').value = '';
@@ -382,12 +293,18 @@ async function submitPin() {
   }
 }
 
-function goTo(page) {
-  window.location.href = page;
+// ── Save meet to sessionStorage ───────────────────────────────
+function saveMeetSession() {
+  sessionStorage.setItem('fep_meet', JSON.stringify({
+    id:       selectedMeet.id,
+    name:     selectedMeet.name,
+    date:     selectedMeet.date,
+    logo_url: selectedMeet.logo_url || null
+  }));
 }
 
-// Close modal if clicking outside
-document.getElementById('pinModal').addEventListener('click', function(e) {
+// Close on backdrop click
+document.getElementById('modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 </script>

@@ -10,140 +10,72 @@
   <meta name="theme-color" content="#0d1b2a">
   <title>Field Events Pro — Pressbox</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="meet-session.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
       font-family: -apple-system, 'Segoe UI', sans-serif;
-      background: #0a0f1a;
-      color: #e0e6f0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+      background: #0a0f1a; color: #e0e6f0;
+      margin: 0; display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden;
     }
 
-    /* ── Topbar ── */
     .topbar {
-      background: #0d1b2a;
-      border-bottom: 2px solid #1e3a5f;
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-shrink: 0;
+      background: #0d1b2a; border-bottom: 2px solid #1e3a5f;
+      padding: 12px 18px; display: flex; align-items: center;
+      gap: 14px; flex-shrink: 0;
     }
-    /* Logo lockup inside topbar */
-    .topbar-logos {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
+    #topLogo { height: 38px; width: auto; }
+    .meet-pill {
+      background: #162438; border: 1px solid #1e3a5f; border-radius: 20px;
+      padding: 3px 10px; font-size: 12px; font-weight: 700; color: #4a7aaa;
+      white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis;
     }
-    .topbar-logos img {
-      height: 38px;
-      width: auto;
-    }
-    .topbar-logo-divider {
-      width: 1px;
-      height: 28px;
-      background: #1e3a5f;
-      display: none;
-    }
-    #meetLogoResults {
-      display: none;
-    }
-
     .topbar-title {
-      font-size: 19px;
-      font-weight: 800;
-      color: #7eb8f7;
-      letter-spacing: 1px;
-      flex: 1;
-      white-space: nowrap;
+      font-size: 19px; font-weight: 800; color: #7eb8f7;
+      letter-spacing: 1px; flex: 1; white-space: nowrap;
     }
     .topbar select {
-      flex: 1;
-      background: #162438;
-      color: #e0e6f0;
-      border: 1px solid #2a4a6e;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 15px;
-      max-width: 420px;
+      flex: 1; background: #162438; color: #e0e6f0;
+      border: 1px solid #2a4a6e; border-radius: 6px;
+      padding: 8px 12px; font-size: 15px; max-width: 380px;
     }
     .refresh-info {
-      font-size: 13px;
-      color: #4a7aaa;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 13px; color: #4a7aaa; white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
     }
     .pulse {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background: #28a745;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
+      display: inline-block; width: 8px; height: 8px;
+      background: #28a745; border-radius: 50%; animation: pulse 2s infinite;
     }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
     .main { display: flex; flex: 1; overflow: hidden; }
-
     .leaderboard {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
+      flex: 1; overflow-y: auto; padding: 16px;
       border-right: 2px solid #1e3a5f;
     }
     .status-panel {
-      width: 300px;
-      flex-shrink: 0;
-      padding: 16px;
-      background: #0d1624;
-      overflow-y: auto;
-      border-left: 2px solid #1e3a5f;
+      width: 280px; flex-shrink: 0; padding: 16px;
+      background: #0d1624; overflow-y: auto;
     }
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: #4a7aaa;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
+
     .lb-table { width: 100%; border-collapse: collapse; }
     .lb-table th {
-      background: #111d2e;
-      color: #4a7aaa;
-      font-size: 11px;
-      text-align: left;
-      padding: 8px 10px;
-      border-bottom: 1px solid #1e3a5f;
+      background: #111d2e; color: #4a7aaa; font-size: 11px;
+      text-align: left; padding: 8px 10px; border-bottom: 1px solid #1e3a5f;
     }
-    .lb-table td {
-      padding: 10px 10px;
-      border-bottom: 1px solid #141f30;
-      font-size: 14px;
-    }
+    .lb-table td { padding: 10px; border-bottom: 1px solid #141f30; font-size: 14px; }
     .lb-table tr:hover { background: #111d2e; }
 
     .place-badge {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: bold;
-      padding: 3px 8px;
-      border-radius: 4px;
-      min-width: 32px;
-      text-align: center;
+      display: inline-block; font-size: 12px; font-weight: bold;
+      padding: 3px 8px; border-radius: 4px; min-width: 32px; text-align: center;
     }
     .p1  { background: #c8a800; color: #000; }
     .p2  { background: #8a8a8a; color: #fff; }
     .p3  { background: #7a4a1a; color: #fff; }
     .p4,.p5,.p6,.p7,.p8 { background: #1e3a5f; color: #aac; }
-    .pT  { background: #3a3a5a; color: #aab; font-style: italic; }
     .pNM { background: #1a1a2a; color: #445; }
 
     .ath-name  { font-weight: 600; color: #d0e4ff; }
@@ -151,113 +83,201 @@
     .best-mark { font-size: 16px; font-weight: 800; color: #7eb8f7; }
 
     .status-card {
-      background: #0d1624;
-      border: 1px solid #1e3a5f;
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
+      background: #0d1624; border: 1px solid #1e3a5f;
+      border-radius: 10px; padding: 14px; margin-bottom: 14px;
     }
     .sc-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: #4a7aaa;
-      text-transform: uppercase;
-      margin-bottom: 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+      color: #4a7aaa; text-transform: uppercase; margin-bottom: 6px;
     }
     .bar-height-display {
-      font-size: 42px;
-      font-weight: 900;
-      color: #7eb8f7;
-      text-align: center;
-      padding: 8px 0;
+      font-size: 42px; font-weight: 900; color: #7eb8f7; text-align: center; padding: 8px 0;
     }
     .no-event-msg {
-      color: #2a4a6a;
-      font-size: 15px;
-      text-align: center;
-      margin-top: 80px;
+      color: #2a4a6a; font-size: 15px; text-align: center; margin-top: 80px;
     }
   </style>
 </head>
 <body>
 
 <div class="topbar">
-  <!-- Logo lockup: Ironclad (logos bucket) always left, meet logo (avatars bucket) right if uploaded -->
-  <div class="topbar-logos">
-    <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-         alt="Ironclad Athletics">
-    <div class="topbar-logo-divider" id="resultsDivider"></div>
-    <img src="" alt="Meet Logo" id="meetLogoResults">
-  </div>
+  <!-- Single logo: meet logo if uploaded, otherwise Ironclad -->
+  <img id="topLogo"
+       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
+       alt="Field Events Pro">
+  <div class="meet-pill" id="topMeetName">Loading…</div>
 
-  <div class="topbar-title">FIELD EVENTS PRO — PRESSBOX</div>
+  <select id="eventSelect" class="topbar" onchange="onEventChange()" style="flex:1;max-width:380px;background:#162438;color:#e0e6f0;border:1px solid #2a4a6e;border-radius:6px;padding:8px 12px;font-size:15px;">
+    <option value="">— Select event —</option>
+  </select>
+
+  <div class="refresh-info"><span class="pulse"></span>Live</div>
   <a href="index.html" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:7px 12px;border-radius:6px;font-size:15px;text-decoration:none;">⌂ Home</a>
 </div>
 
 <div class="main">
   <div class="leaderboard" id="leaderboard">
-    <div class="no-event-msg">Select an event to view the live leaderboard.</div>
+    <div class="no-event-msg">Select an event above to view the live leaderboard.</div>
   </div>
-
   <div class="status-panel" id="statusPanel">
     <div class="status-card">
-      <div class="sc-label">NOW COMPETING</div>
-      <div id="nowCompeting" style="color:#2a4a6a; font-size:14px;">—</div>
+      <div class="sc-label">Now Competing</div>
+      <div id="nowCompeting" style="color:#2a4a6a;font-size:14px;">—</div>
     </div>
     <div class="status-card">
-      <div class="sc-label">UP NEXT</div>
-      <div id="upNext" style="color:#2a4a6a; font-size:14px;">—</div>
+      <div class="sc-label">Up Next</div>
+      <div id="upNext" style="color:#2a4a6a;font-size:14px;">—</div>
     </div>
     <div class="status-card" id="barHeightCard" style="display:none;">
-      <div class="sc-label">CURRENT BAR HEIGHT</div>
+      <div class="sc-label">Current Bar Height</div>
       <div class="bar-height-display" id="barHeightDisplay">—</div>
     </div>
   </div>
 </div>
 
 <script>
-// ── Logo system ───────────────────────────────────────────────────────────────
-// logos bucket   = Ironclad company logo — hardcoded, never changes
-// avatars bucket = meet/school logo uploaded per meet via Admin, URL in localStorage
-(function applyMeetLogo() {
-  const url = localStorage.getItem('fep_meet_logo_url');
-  if (!url) return;
-  const img = document.getElementById('meetLogoResults');
-  const div = document.getElementById('resultsDivider');
-  img.src = url;
-  img.style.display = 'block';
-  div.style.display = 'block';
-})();
+// ── lowercase supabase.createClient (critical — capital S breaks everything) ──
+const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── Supabase ──────────────────────────────────────────────────────────────────
-const supabase = Supabase.createClient(
-  'https://qjomrnguhbqfluzwuntz.supabase.co',
-  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
-);
+// Get active meet (redirects to index.html if none)
+const MEET = getActiveMeet();
+let refreshTimer = null;
 
-let currentEventId = '';
-let currentEventName = '';
-let isVertical = false;
-let athleteList = [];
-let attemptsData = [];
-
-window.onload = async () => {
-  const { data, error } = await supabase
-    .from('events')
-    .select('*')
-    .order('name');
-  if (error) { console.error(error); return; }
-  // Populate event selector / kick off your existing load logic here
+window.onload = () => {
+  if (!MEET) return;
+  applyMeetBranding(MEET);
+  loadEvents();
 };
 
-async function onEventChange() {
-  // Your existing fetchAll, renderHLeaderboard, renderVLeaderboard, etc.
+// ── Load events for this meet ─────────────────────────────────
+async function loadEvents() {
+  const { data: events } = await sb
+    .from('events').select('id, name, gender, level')
+    .eq('meet_id', MEET.id).order('name');
+
+  const sel = document.getElementById('eventSelect');
+  sel.innerHTML = '<option value="">— Select event —</option>';
+  (events || []).forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = e.name
+      + (e.gender ? ' — ' + e.gender : '')
+      + (e.level  ? ' (' + e.level + ')' : '');
+    sel.appendChild(opt);
+  });
 }
 
-// Paste all your existing helper functions below:
-// calcHPlaces, calcVPlaces, getBestMark, getVBest, parseMark,
-// isEliminated, placeBadge, renderStatusPanel, etc.
+// ── Event change ──────────────────────────────────────────────
+async function onEventChange() {
+  clearInterval(refreshTimer);
+  const eventId = document.getElementById('eventSelect').value;
+  if (!eventId) {
+    document.getElementById('leaderboard').innerHTML =
+      '<div class="no-event-msg">Select an event above to view the live leaderboard.</div>';
+    return;
+  }
+  await renderLeaderboard(eventId);
+  // Auto-refresh every 15 seconds
+  refreshTimer = setInterval(() => renderLeaderboard(eventId), 15000);
+}
+
+// ── Render leaderboard ────────────────────────────────────────
+async function renderLeaderboard(eventId) {
+  // Get all athletes assigned to this event
+  const { data: assigns } = await sb
+    .from('event_assignments')
+    .select('athlete_id, athlete_name, athletes(fname, lname, team)')
+    .eq('event_id', eventId)
+    .eq('meet_id', MEET.id);
+
+  if (!assigns || !assigns.length) {
+    document.getElementById('leaderboard').innerHTML =
+      '<div class="no-event-msg">No athletes in this event yet.</div>';
+    return;
+  }
+
+  // Get all attempts for this event
+  const { data: attempts } = await sb
+    .from('attempts').select('*')
+    .eq('event_id', eventId).eq('meet_id', MEET.id);
+
+  // Build per-athlete best mark
+  const bestByAthlete = {};
+  (attempts || []).forEach(a => {
+    if (a.result !== 'make') return;
+    const parsed = parseMark(a.mark);
+    if (!bestByAthlete[a.athlete_id] || parsed > bestByAthlete[a.athlete_id].parsed) {
+      bestByAthlete[a.athlete_id] = { mark: a.mark, parsed };
+    }
+  });
+
+  // Sort: athletes with a mark first (best to worst), then no-mark athletes
+  const rows = assigns.map(a => {
+    const ath  = a.athletes || {};
+    const name = ath.fname ? ath.fname + ' ' + ath.lname : a.athlete_name;
+    const team = ath.team || '';
+    const best = bestByAthlete[a.athlete_id];
+    return { name, team, mark: best ? best.mark : null, parsed: best ? best.parsed : -1 };
+  });
+
+  rows.sort((a, b) => b.parsed - a.parsed);
+
+  // Assign places (ties share place)
+  let place = 1;
+  rows.forEach((r, i) => {
+    if (r.parsed < 0) { r.place = null; return; }
+    if (i > 0 && rows[i-1].parsed === r.parsed) r.place = rows[i-1].place;
+    else { r.place = place; }
+    place++;
+  });
+
+  document.getElementById('leaderboard').innerHTML = `
+    <table class="lb-table">
+      <thead><tr>
+        <th style="width:40px;">#</th>
+        <th>Athlete</th>
+        <th style="text-align:right;">Best Mark</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td>${r.place ? placeBadge(r.place) : '<span class="place-badge pNM">—</span>'}</td>
+            <td>
+              <div class="ath-name">${r.name}</div>
+              ${r.team ? `<div class="ath-team">${r.team}</div>` : ''}
+            </td>
+            <td style="text-align:right;" class="best-mark">${r.mark || '<span style="color:#2a4a6a;">—</span>'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  // Status panel: who's up
+  const withAttempts = new Set((attempts||[]).map(a => a.athlete_id));
+  const stillCompeting = rows.filter(r => !r.mark);
+  const nowEl   = document.getElementById('nowCompeting');
+  const nextEl  = document.getElementById('upNext');
+  nowEl.textContent  = stillCompeting[0]?.name || '—';
+  nextEl.textContent = stillCompeting[1]?.name || '—';
+  nowEl.style.color  = stillCompeting[0] ? '#e0e6f0' : '#2a4a6a';
+  nextEl.style.color = stillCompeting[1] ? '#e0e6f0' : '#2a4a6a';
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function parseMark(mark) {
+  if (!mark) return -1;
+  const ft = mark.match(/^(\d+)-(\d{2})(?:\.(\d+))?$/);
+  if (ft) return parseInt(ft[1]) * 12 + parseInt(ft[2]) + (ft[3] ? parseFloat('0.' + ft[3]) : 0);
+  const m = mark.match(/^(\d+(?:\.\d+)?)m?$/);
+  if (m) return parseFloat(m[1]);
+  return -1;
+}
+
+function placeBadge(p) {
+  const cls = p === 1 ? 'p1' : p === 2 ? 'p2' : p === 3 ? 'p3' : p <= 8 ? 'p4' : 'pNM';
+  return `<span class="place-badge ${cls}">${p}</span>`;
+}
 </script>
 </body>
 </html>
