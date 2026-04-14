@@ -9,6 +9,7 @@
   <meta name="theme-color" content="#0d1b2a">
   <title>Admin — Field Events Pro</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="meet-session.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -164,7 +165,7 @@
     <h2>🔐 Admin Access</h2>
     <p>Enter the admin password to continue.</p>
     <input type="password" id="pwInput" placeholder="••••" maxlength="20"
-           onkeydown="if(event.key==='Enter')checkPassword()">
+           onkeydown="if(event.key===\'Enter\')checkPassword()">
     <button class="lock-btn" onclick="checkPassword()">UNLOCK</button>
     <div class="lock-error" id="lockError">❌ Incorrect password. Try again.</div>
   </div>
@@ -210,7 +211,7 @@
   <!-- MEET LOGO -->
   <div class="card" id="logoCard" style="display:none;">
     <h3>🏫 Meet Logo</h3>
-    <p>Upload this school or meet's logo. It replaces the Ironclad logo on <strong style="color:#e0e6f0;">every screen</strong> for workers in this meet. Stored in the <strong style="color:#7eb8f7;">avatars</strong> bucket.</p>
+    <p>Upload this school or meet\'s logo. It replaces the Ironclad logo on <strong style="color:#e0e6f0;">every screen</strong> for workers in this meet. Stored in the <strong style="color:#7eb8f7;">avatars</strong> bucket.</p>
 
     <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0a1422;border:1px solid #1e3a5f;border-radius:8px;margin-bottom:14px;">
       <img id="currentLogoImg" src="" alt="" style="height:42px;width:auto;border-radius:4px;display:none;">
@@ -232,362 +233,688 @@
 
   <!-- CURRENT EVENTS -->
   <div class="card" id="eventsCard" style="display:none;">
-    <h3>📋 Events in This Meet</h3>
-    <p>Athletes and events imported for the selected meet.</p>
-    <div id="loadingEvents" style="color:#4a6a8a;font-size:13px;">Select a meet to see events.</div>
+    <h3>🏃 Events for this Meet</h3>
+    <p>Add, edit, or remove events. Athletes can only be assigned to events here.</p>
+    <div class="field-row">
+      <div class="field-group" style="flex:2;">
+        <label>Event Name</label>
+        <input type="text" id="newEventName" placeholder="e.g. Boys 100m Dash">
+      </div>
+      <div class="field-group">
+        <label>Gender</label>
+        <select id="newEventGender">
+          <option value="">Any</option>
+          <option value="Boys">Boys</option>
+          <option value="Girls">Girls</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Level</label>
+        <input type="text" id="newEventLevel" placeholder="e.g. Varsity, JV, 7th Grade">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Event Type</label>
+        <select id="newEventEventType">
+          <option value="track">Track</option>
+          <option value="field">Field</option>
+          <option value="vertical">Vertical Jump</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="addEvent()">ADD EVENT</button>
+    <div class="status-msg" id="eventStatus"></div>
     <div id="eventList"></div>
   </div>
 
-  <!-- IMPORT CSV -->
-  <div class="card" id="importCard" style="display:none;">
-    <h3>📥 Import Roster</h3>
-    <p>Upload a MileSplit CSV. Only field events (shot, discus, long jump, triple jump, high jump, pole vault) are imported. All athletes are tagged to the selected meet.</p>
-    <label class="file-label" id="fileLabel" for="csvFile">📄 Choose CSV file</label>
-    <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="onFileChosen()">
-    <button class="btn btn-green" id="impBtn" onclick="doImport()" disabled>RUN IMPORT</button>
-    <div class="status-msg" id="importStatus"></div>
+  <!-- ATHLETES -->
+  <div class="card" id="athletesCard" style="display:none;">
+    <h3>🤼 Athletes</h3>
+    <p>Add athletes manually or import from a CSV. Athletes must be assigned to events.</p>
+    <div class="field-row">
+      <div class="field-group">
+        <label>First Name</label>
+        <input type="text" id="newAthFname" placeholder="e.g. John">
+      </div>
+      <div class="field-group">
+        <label>Last Name</label>
+        <input type="text" id="newAthLname" placeholder="e.g. Doe">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Team</label>
+        <input type="text" id="newAthTeam" placeholder="e.g. Central High">
+      </div>
+      <div class="field-group">
+        <label>Gender</label>
+        <select id="newAthGender">
+          <option value="">Any</option>
+          <option value="Boys">Boys</option>
+          <option value="Girls">Girls</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Level</label>
+        <input type="text" id="newAthLevel" placeholder="e.g. Varsity">
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="addAthlete()">ADD ATHLETE</button>
+    <div class="status-msg" id="athleteStatus"></div>
+
+    <h4 style="margin-top:30px;margin-bottom:10px;color:#7eb8f7;">Import from CSV</h4>
+    <p>Upload a CSV file with athlete data. Columns should include: First Name, Last Name, Gender, Level, Team, Event.</p>
+    <label class="file-label" id="csvFileLabel" for="csvFile">⬆ Choose CSV file</label>
+    <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="onCsvChosen()">
+    <button class="btn btn-blue" id="importCsvBtn" onclick="importCsv()" disabled>IMPORT CSV</button>
+    <div class="status-msg" id="csvStatus"></div>
   </div>
 
-  <!-- RESET MEET -->
-  <div class="card" id="resetCard" style="display:none;">
-    <h3>🗑 Reset This Meet</h3>
-    <p>Deletes all events, athletes, assignments, and attempts for the selected meet only. <strong style="color:#f87;">Cannot be undone.</strong></p>
-    <button class="btn btn-red" onclick="clearMeet()">DELETE ALL DATA FOR THIS MEET</button>
+  <!-- DANGER ZONE -->
+  <div class="card" id="dangerCard" style="display:none;">
+    <h3>⚠️ Danger Zone</h3>
+    <p>Permanently delete this meet and all its data. This cannot be undone.</p>
+    <button class="btn btn-red" onclick="clearMeet()">DELETE THIS MEET</button>
     <div class="status-msg" id="clearStatus"></div>
   </div>
 
 </div>
 
-<script>
-const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script type="module">
+  import { sb, MEET, getActiveMeet, safeGet, log } from './meet-session.js';
 
-const ADMIN_PASSWORD = '1111';
-let activeMeetId   = null;
-let activeMeetName = null;
+  const ADMIN_PASSWORD = 'admin'; // TODO: Replace with a secure method for production
+  let activeMeetId = null;
+  let activeMeetName = null;
 
-// ── Password ──────────────────────────────────────────────────
-function checkPassword() {
-  const val = document.getElementById('pwInput').value;
-  if (val === ADMIN_PASSWORD) {
-    document.getElementById('lockScreen').style.display  = 'none';
-    document.getElementById('adminContent').style.display = 'flex';
-    loadMeetSelector();
-  } else {
-    document.getElementById('lockError').style.display = 'block';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-  }
-}
-
-// ── Load meets into selector ──────────────────────────────────
-async function loadMeetSelector() {
-  const { data: meets } = await sb.from('meets').select('id,name,date').order('date', { ascending: false });
-  const sel = document.getElementById('meetSelect');
-  sel.innerHTML = '<option value="">— select a meet —</option>';
-  (meets || []).forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    opt.textContent = m.name + (m.date ? '  (' + new Date(m.date).toLocaleDateString() + ')' : '');
-    sel.appendChild(opt);
-  });
-}
-
-// ── Meet selected ─────────────────────────────────────────────
-async function onMeetChange() {
-  const id = document.getElementById('meetSelect').value;
-  activeMeetId = id || null;
-
-  const show = id ? 'block' : 'none';
-  ['logoCard','eventsCard','importCard','resetCard'].forEach(c => {
-    document.getElementById(c).style.display = show;
-  });
-  if (!id) return;
-
-  // Fetch meet details
-  const { data: meet } = await sb.from('meets').select('*').eq('id', id).single();
-  if (!meet) return;
-  activeMeetName = meet.name;
-
-  // Logo panel
-  if (meet.logo_url) {
-    document.getElementById('currentLogoImg').src = meet.logo_url;
-    document.getElementById('currentLogoImg').style.display = 'block';
-    document.getElementById('currentLogoLabel').textContent = '✅ Custom logo active';
-  } else {
-    document.getElementById('currentLogoImg').style.display = 'none';
-    document.getElementById('currentLogoLabel').textContent = 'No logo uploaded — Ironclad logo shows.';
-  }
-
-  loadEventList(id);
-}
-
-// ── Create Meet ───────────────────────────────────────────────
-function showCreateMeet()  { document.getElementById('createMeetCard').style.display = 'block'; }
-function hideCreateMeet()  { document.getElementById('createMeetCard').style.display = 'none'; }
-
-async function createMeet() {
-  const name = document.getElementById('newMeetName').value.trim();
-  const date = document.getElementById('newMeetDate').value;
-  const pin  = document.getElementById('newMeetPin').value.trim();
-
-  if (!name) { showStatus('createStatus', '❌ Meet name is required.', 'error'); return; }
-  if (!pin || pin.length < 4) { showStatus('createStatus', '❌ PIN must be at least 4 digits.', 'error'); return; }
-
-  showStatus('createStatus', '⏳ Creating meet…', 'info');
-
-  const { data, error } = await sb.from('meets').insert({
-    name, date: date || null, pin, is_active: true
-  }).select().single();
-
-  if (error) { showStatus('createStatus', '❌ ' + error.message, 'error'); return; }
-
-  showStatus('createStatus', `✅ Meet "${name}" created! PIN: ${pin}`, 'success');
-  document.getElementById('newMeetName').value = '';
-  document.getElementById('newMeetDate').value = '';
-  document.getElementById('newMeetPin').value  = '';
-
-  await loadMeetSelector();
-  document.getElementById('meetSelect').value = data.id;
-  onMeetChange();
-  setTimeout(hideCreateMeet, 1500);
-}
-
-// ── Logo upload ───────────────────────────────────────────────
-function onLogoChosen() {
-  const file = document.getElementById('meetLogoFile').files[0];
-  if (!file) return;
-  document.getElementById('uploadLogoBtn').disabled = false;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('logoPreviewImg').src = e.target.result;
-    document.getElementById('logoPreviewRow').classList.add('show');
+  // Override the initPage placeholder from meet-session.js
+  window.initPage = async () => {
+    log("Admin page initialized.");
+    updateBanners(); // Call updateBanners from meet-session.js
+    loadMeetList();
   };
-  reader.readAsDataURL(file);
-}
 
-async function uploadLogo() {
-  if (!activeMeetId) return;
-  const file = document.getElementById('meetLogoFile').files[0];
-  if (!file) return;
-  document.getElementById('uploadLogoBtn').disabled = true;
-  showStatus('logoStatus', '⏳ Uploading…', 'info');
-
-  const ext  = file.name.split('.').pop().toLowerCase();
-  const name = 'meet-logo-' + activeMeetId + '-' + Date.now() + '.' + ext;
-
-  try {
-    const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
-    if (upErr) throw upErr;
-    const { data } = sb.storage.from('avatars').getPublicUrl(name);
-    const url = data.publicUrl;
-
-    // Save URL to the meets row
-    const { error: dbErr } = await sb.from('meets').update({ logo_url: url }).eq('id', activeMeetId);
-    if (dbErr) throw dbErr;
-
-    document.getElementById('currentLogoImg').src = url;
-    document.getElementById('currentLogoImg').style.display = 'block';
-    document.getElementById('currentLogoLabel').textContent = '✅ Custom logo active';
-    document.getElementById('logoPreviewRow').classList.remove('show');
-    showStatus('logoStatus', '✅ Logo saved. Workers will see this logo when they join the meet.', 'success');
-  } catch (err) {
-    showStatus('logoStatus', '❌ ' + err.message, 'error');
-  } finally {
-    document.getElementById('uploadLogoBtn').disabled = false;
-  }
-}
-
-async function removeLogo() {
-  if (!activeMeetId) return;
-  if (!confirm('Remove the logo for this meet? Ironclad logo will show instead.')) return;
-  await sb.from('meets').update({ logo_url: null }).eq('id', activeMeetId);
-  document.getElementById('currentLogoImg').style.display = 'none';
-  document.getElementById('currentLogoLabel').textContent = 'No logo uploaded — Ironclad logo shows.';
-  document.getElementById('logoPreviewRow').classList.remove('show');
-  document.getElementById('uploadLogoBtn').disabled = true;
-  showStatus('logoStatus', 'Logo removed.', 'info');
-}
-
-// ── Event list ────────────────────────────────────────────────
-async function loadEventList(meetId) {
-  document.getElementById('loadingEvents').textContent = 'Loading…';
-  document.getElementById('eventList').innerHTML = '';
-
-  const { data: events, error } = await sb.from('events').select('*').eq('meet_id', meetId).order('name');
-  if (error || !events || !events.length) {
-    document.getElementById('loadingEvents').textContent = events && !events.length
-      ? 'No events imported yet for this meet.'
-      : 'Error loading events.';
-    return;
-  }
-  document.getElementById('loadingEvents').textContent = '';
-
-  const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', meetId);
-  const { data: assigns  } = await sb.from('event_assignments').select('event_id').eq('meet_id', meetId);
-  const attCount = {}, athCount = {};
-  (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
-  (assigns  || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
-
-  document.getElementById('eventList').innerHTML = events.map(e => `
-    <div class="event-item">
-      <div>
-        <div class="ev-name">${e.name}</div>
-        <div class="ev-meta">${e.gender||''} · ${e.level||''}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <span class="badge">${athCount[e.id]||0} ath</span>
-        <span class="badge">${attCount[e.id]||0} att</span>
-      </div>
-    </div>`).join('');
-}
-
-// ── CSV Import ────────────────────────────────────────────────
-function onFileChosen() {
-  const file = document.getElementById('csvFile').files[0];
-  const label = document.getElementById('fileLabel');
-  const btn   = document.getElementById('impBtn');
-  if (file) {
-    label.textContent = '✅ ' + file.name;
-    label.classList.add('has-file');
-    btn.disabled = false;
-  } else {
-    label.textContent = '📄 Choose CSV file';
-    label.classList.remove('has-file');
-    btn.disabled = true;
-  }
-}
-
-async function doImport() {
-  if (!activeMeetId) { showStatus('importStatus', '❌ Select a meet first.', 'error'); return; }
-  const file = document.getElementById('csvFile').files[0];
-  if (!file) return;
-  const btn = document.getElementById('impBtn');
-  btn.textContent = 'IMPORTING…'; btn.disabled = true;
-  showStatus('importStatus', '⏳ Reading CSV…', 'info');
-  try {
-    const text = await file.text();
-    const n = await importMileSplit(text, activeMeetId);
-    showStatus('importStatus', `✅ Imported ${n} athletes into "${activeMeetName}".`, 'success');
-    loadEventList(activeMeetId);
-  } catch(err) {
-    showStatus('importStatus', '❌ ' + err.message, 'error');
-  } finally {
-    btn.textContent = 'RUN IMPORT'; btn.disabled = false;
-  }
-}
-
-async function importMileSplit(csvText, meetId) {
-  const rows    = parseCSV(csvText);
-  if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
-  const headers = rows[0].map(h => h.trim().toLowerCase());
-  const getCol  = names => headers.findIndex(h => names.some(n => h.includes(n)));
-
-  const idx = {
-    ev: getCol(['event']),
-    div: getCol(['division','level','grade']),
-    ln:  getCol(['lname','last']),
-    fn:  getCol(['fname','first']),
-    gen: getCol(['gender','sex']),
-    tm:  getCol(['team','school'])
-  };
-  if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0) throw new Error('CSV missing required columns (first, last, event).');
-
-  const fieldKeywords = ['shot','discus','long jump','triple jump','high jump','pole vault'];
-  const eventsFound = {}, eventRows = [], athleteRows = [], assignRows = [];
-
-  for (let i = 1; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row || row.length < 3) continue;
-    const g = col => (col >= 0 && col < row.length) ? (row[col]||'').toString().trim() : '';
-    if (!g(idx.fn)) continue;
-    const evName = g(idx.ev).toLowerCase();
-    if (!fieldKeywords.some(k => evName.includes(k))) continue;
-
-    const level  = normalizeLevel(g(idx.div));
-    const gender = g(idx.gen);
-    const evKey  = g(idx.ev) + '|' + gender + '|' + level;
-
-    if (!eventsFound[evKey]) {
-      const eId = crypto.randomUUID().substring(0, 8);
-      eventsFound[evKey] = eId;
-      eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId });
-    }
-    const aId = crypto.randomUUID().substring(0, 8);
-    athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
-    assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+' '+g(idx.ln)).trim() });
-  }
-
-  if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
-  if (eventRows.length)   { const { error } = await sb.from('events').insert(eventRows);             if (error) throw error; }
-  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows);          if (error) throw error; }
-  if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows);  if (error) throw error; }
-  return athleteRows.length;
-}
-
-// ── Clear Meet ────────────────────────────────────────────────
-async function clearMeet() {
-  if (!activeMeetId) return;
-  const pw = prompt('Re-enter admin password to confirm:');
-  if (pw !== ADMIN_PASSWORD) { alert('Incorrect password.'); return; }
-  if (!confirm(`DELETE ALL data for "${activeMeetName}"?\n\nThis cannot be undone.`)) return;
-
-  showStatus('clearStatus', '⏳ Deleting…', 'info');
-  const steps = [
-    sb.from('attempts').delete().eq('meet_id', activeMeetId),
-    sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
-    sb.from('athletes').delete().eq('meet_id', activeMeetId),
-    sb.from('events').delete().eq('meet_id', activeMeetId)
-  ];
-  for (const step of steps) {
-    const { error } = await step;
-    if (error) { showStatus('clearStatus', '❌ ' + error.message, 'error'); return; }
-  }
-  showStatus('clearStatus', `✅ All data for "${activeMeetName}" deleted.`, 'success');
-  setTimeout(() => loadEventList(activeMeetId), 600);
-}
-
-// ── Helpers ───────────────────────────────────────────────────
-function showStatus(id, msg, type) {
-  const el = document.getElementById(id);
-  el.textContent = msg; el.className = 'status-msg ' + type;
-}
-
-function normalizeLevel(raw) {
-  if (!raw) return '';
-  const t = raw.toString().toLowerCase().trim();
-  if (t.includes('varsity')) return 'Varsity';
-  if (t.includes('jv') || t.includes('junior var')) return 'JV';
-  if (t.includes('8th') || t === '8') return '8th Grade';
-  if (t.includes('7th') || t === '7') return '7th Grade';
-  if (t.includes('6th') || t === '6') return '6th Grade';
-  if (t.includes('frosh') || t.includes('freshman') || t.includes('9th')) return 'Freshman';
-  if (t.includes('soph') || t.includes('10th')) return 'Sophomore';
-  return raw.toString().trim();
-}
-
-function parseCSV(text) {
-  text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-  const rows = []; let row=[], field='', inQuote=false, i=0;
-  while (i < text.length) {
-    const ch = text[i];
-    if (inQuote) {
-      if (ch==='"' && text[i+1]==='"') { field+='"'; i+=2; continue; }
-      if (ch==='"') inQuote=false;
-      else field+=ch;
+  function checkPassword() {
+    const pwInput = safeGet("pwInput");
+    const lockError = safeGet("lockError");
+    if (pwInput.value === ADMIN_PASSWORD) {
+      safeGet("lockScreen").style.display = "none";
+      safeGet("adminContent").style.display = "block";
+      lockError.style.display = "none";
     } else {
-      if      (ch==='"')  inQuote=true;
-      else if (ch===',')  { row.push(field.trim()); field=''; }
-      else if (ch==='\n') { row.push(field.trim()); field=''; if(row.some(v=>v!='')) rows.push(row); row=[]; }
-      else field+=ch;
+      lockError.style.display = "block";
     }
-    i++;
   }
-  row.push(field.trim());
-  if (row.some(v=>v!='')) rows.push(row);
-  return rows;
-}
+
+  async function loadMeetList() {
+    const { data: meets, error } = await sb
+      .from("meets")
+      .select("id, name, date, logo_url")
+      .order("date", { ascending: false });
+
+    const meetSelect = safeGet("meetSelect");
+    meetSelect.innerHTML = 
+      `<option value="">— select a meet —</option>
+       <option value="create">+ Create New Meet</option>`;
+
+    if (error) {
+      log("Error loading meets: " + error.message);
+      return;
+    }
+
+    meets.forEach(meet => {
+      const option = document.createElement("option");
+      option.value = meet.id;
+      option.textContent = `${meet.name} (${new Date(meet.date).toLocaleDateString()})`;
+      meetSelect.appendChild(option);
+    });
+
+    // Try to set the active meet from session/local storage or URL
+    const currentMeet = getActiveMeet();
+    if (currentMeet && currentMeet.id) {
+      meetSelect.value = currentMeet.id;
+      onMeetChange(); // Trigger change to load meet details
+    }
+  }
+
+  async function onMeetChange() {
+    const meetSelect = safeGet("meetSelect");
+    const selectedMeetId = meetSelect.value;
+
+    // Hide all cards initially
+    safeGet("createMeetCard").style.display = "none";
+    safeGet("logoCard").style.display = "none";
+    safeGet("eventsCard").style.display = "none";
+    safeGet("athletesCard").style.display = "none";
+    safeGet("dangerCard").style.display = "none";
+
+    if (selectedMeetId === "create") {
+      showCreateMeet();
+      activeMeetId = null;
+      activeMeetName = null;
+      MEET = null; // Clear global MEET when creating new
+      sessionStorage.removeItem("fep_meet");
+      localStorage.removeItem("fep_meet");
+      return;
+    }
+
+    if (!selectedMeetId) {
+      activeMeetId = null;
+      activeMeetName = null;
+      MEET = null; // Clear global MEET
+      sessionStorage.removeItem("fep_meet");
+      localStorage.removeItem("fep_meet");
+      return;
+    }
+
+    // Load selected meet details
+    const { data: meet, error } = await sb
+      .from("meets")
+      .select("*")
+      .eq("id", selectedMeetId)
+      .single();
+
+    if (error) {
+      log("Error loading meet details: " + error.message);
+      return;
+    }
+
+    activeMeetId = meet.id;
+    activeMeetName = meet.name;
+    MEET = meet; // Set global MEET object
+    sessionStorage.setItem("fep_meet", JSON.stringify(meet)); // Save to session storage
+    localStorage.setItem("fep_meet", JSON.stringify(meet)); // Save to local storage
+
+    // Show relevant cards
+    safeGet("logoCard").style.display = "block";
+    safeGet("eventsCard").style.display = "block";
+    safeGet("athletesCard").style.display = "block";
+    safeGet("dangerCard").style.display = "block";
+
+    // Update logo preview
+    const currentLogoImg = safeGet("currentLogoImg");
+    const currentLogoLabel = safeGet("currentLogoLabel");
+    if (meet.logo_url) {
+      currentLogoImg.src = meet.logo_url;
+      currentLogoImg.style.display = "block";
+      currentLogoLabel.textContent = "Current Logo";
+    } else {
+      currentLogoImg.style.display = "none";
+      currentLogoLabel.textContent = "No logo uploaded for this meet.";
+    }
+
+    loadEventList(activeMeetId);
+  }
+
+  function showCreateMeet() {
+    safeGet("createMeetCard").style.display = "block";
+    safeGet("logoCard").style.display = "none";
+    safeGet("eventsCard").style.display = "none";
+    safeGet("athletesCard").style.display = "none";
+    safeGet("dangerCard").style.display = "none";
+  }
+
+  function hideCreateMeet() {
+    safeGet("createMeetCard").style.display = "none";
+    safeGet("meetSelect").value = ""; // Reset selection
+    onMeetChange(); // Trigger change to hide other cards
+  }
+
+  async function createMeet() {
+    const newMeetName = safeGet("newMeetName").value.trim();
+    const newMeetDate = safeGet("newMeetDate").value;
+    const newMeetPin = safeGet("newMeetPin").value.trim();
+    const createStatus = safeGet("createStatus");
+
+    if (!newMeetName || !newMeetDate || !newMeetPin) {
+      showStatus("createStatus", "❌ All fields are required.", "error");
+      return;
+    }
+
+    showStatus("createStatus", "⏳ Creating meet...", "info");
+
+    const { data, error } = await sb
+      .from("meets")
+      .insert({
+        name: newMeetName,
+        date: newMeetDate,
+        pin: newMeetPin,
+        id: crypto.randomUUID().substring(0, 8) // Generate a short ID
+      })
+      .select();
+
+    if (error) {
+      showStatus("createStatus", "❌ Error creating meet: " + error.message, "error");
+      return;
+    }
+
+    showStatus("createStatus", `✅ Meet \"${newMeetName}\" created!`, "success");
+    safeGet("newMeetName").value = "";
+    safeGet("newMeetDate").value = "";
+    safeGet("newMeetPin").value = "";
+    loadMeetList(); // Reload meet list to show new meet
+    setTimeout(() => createStatus.style.display = "none", 3000);
+  }
+
+  let meetLogoFile = null;
+  function onLogoChosen() {
+    const fileInput = safeGet("meetLogoFile");
+    const logoPreviewRow = safeGet("logoPreviewRow");
+    const logoPreviewImg = safeGet("logoPreviewImg");
+    const uploadLogoBtn = safeGet("uploadLogoBtn");
+    const meetLogoLabel = safeGet("meetLogoLabel");
+
+    if (fileInput.files.length > 0) {
+      meetLogoFile = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        logoPreviewImg.src = e.target.result;
+        logoPreviewRow.classList.add("show");
+        uploadLogoBtn.disabled = false;
+      };
+      reader.readAsDataURL(meetLogoFile);
+      meetLogoLabel.classList.add("has-file");
+      meetLogoLabel.textContent = meetLogoFile.name;
+    } else {
+      meetLogoFile = null;
+      logoPreviewRow.classList.remove("show");
+      uploadLogoBtn.disabled = true;
+      meetLogoLabel.classList.remove("has-file");
+      meetLogoLabel.textContent = "🖼 Choose logo (PNG / JPG / SVG)";
+    }
+  }
+
+  async function uploadLogo() {
+    if (!activeMeetId || !meetLogoFile) return;
+
+    showStatus("logoStatus", "⏳ Uploading logo...", "info");
+
+    const filePath = `public/${activeMeetId}/logo.${meetLogoFile.name.split(".").pop()}`;
+    const { data, error } = await sb.storage
+      .from("logos") // Assuming a 'logos' bucket in Supabase Storage
+      .upload(filePath, meetLogoFile, { cacheControl: "3600", upsert: true });
+
+    if (error) {
+      showStatus("logoStatus", "❌ Error uploading logo: " + error.message, "error");
+      return;
+    }
+
+    // Get public URL and update meet record
+    const { data: publicUrlData } = sb.storage.from("logos").getPublicUrl(filePath);
+    const publicUrl = publicUrlData.publicUrl;
+
+    const { error: updateError } = await sb
+      .from("meets")
+      .update({ logo_url: publicUrl })
+      .eq("id", activeMeetId);
+
+    if (updateError) {
+      showStatus("logoStatus", "❌ Error updating meet with logo URL: " + updateError.message, "error");
+      return;
+    }
+
+    showStatus("logoStatus", "✅ Logo uploaded and updated!", "success");
+    // Reload meet list to update logo in dropdown if needed, or just update current meet object
+    MEET.logo_url = publicUrl; // Update global MEET object
+    sessionStorage.setItem("fep_meet", JSON.stringify(MEET));
+    localStorage.setItem("fep_meet", JSON.stringify(MEET));
+    onMeetChange(); // Refresh display
+    setTimeout(() => safeGet("logoStatus").style.display = "none", 3000);
+  }
+
+  async function removeLogo() {
+    if (!activeMeetId || !MEET.logo_url) return;
+
+    if (!confirm("Are you sure you want to remove this meet\'s logo?")) return;
+
+    showStatus("logoStatus", "⏳ Removing logo...", "info");
+
+    // Extract file path from URL
+    const urlParts = MEET.logo_url.split("/");
+    const filePath = urlParts.slice(urlParts.indexOf("public") + 1).join("/");
+
+    const { error: deleteError } = await sb.storage
+      .from("logos")
+      .remove([filePath]);
+
+    if (deleteError) {
+      showStatus("logoStatus", "❌ Error deleting logo from storage: " + deleteError.message, "error");
+      return;
+    }
+
+    const { error: updateError } = await sb
+      .from("meets")
+      .update({ logo_url: null })
+      .eq("id", activeMeetId);
+
+    if (updateError) {
+      showStatus("logoStatus", "❌ Error removing logo URL from meet: " + updateError.message, "error");
+      return;
+    }
+
+    showStatus("logoStatus", "✅ Logo removed!", "success");
+    MEET.logo_url = null; // Update global MEET object
+    sessionStorage.setItem("fep_meet", JSON.stringify(MEET));
+    localStorage.setItem("fep_meet", JSON.stringify(MEET));
+    onMeetChange(); // Refresh display
+    setTimeout(() => safeGet("logoStatus").style.display = "none", 3000);
+  }
+
+  async function loadEventList(meetId) {
+    const { data: events, error } = await sb
+      .from("events")
+      .select("id, name, gender, level, event_type")
+      .eq("meet_id", meetId)
+      .order("name");
+
+    const eventListDiv = safeGet("eventList");
+    eventListDiv.innerHTML = "";
+
+    if (error) {
+      log("Error loading events: " + error.message);
+      eventListDiv.innerHTML = `<div style="padding:10px;color:#f87;">Error loading events.</div>`;
+      return;
+    }
+
+    if (!events.length) {
+      eventListDiv.innerHTML = `<div style="padding:10px;color:#888;">No events added yet.</div>`;
+      return;
+    }
+
+    events.forEach(event => {
+      const eventDiv = document.createElement("div");
+      eventDiv.className = "event-item";
+      eventDiv.innerHTML = `
+        <div>
+          <div class="ev-name">${event.name}</div>
+          <div class="ev-meta">${event.gender || ""} ${event.level ? `(${event.level})` : ""}</div>
+        </div>
+        <span class="badge">${event.event_type}</span>
+        <button class="btn-sm-blue" onclick="deleteEvent(\'${event.id}\')" style="background:#2a0a0a;border-color:#dc3545;color:#f87;">Delete</button>
+      `;
+      eventListDiv.appendChild(eventDiv);
+    });
+  }
+
+  async function addEvent() {
+    if (!activeMeetId) {
+      showStatus("eventStatus", "❌ Please select a meet first.", "error");
+      return;
+    }
+
+    const newEventName = safeGet("newEventName").value.trim();
+    const newEventGender = safeGet("newEventGender").value;
+    const newEventLevel = safeGet("newEventLevel").value.trim();
+    const newEventEventType = safeGet("newEventEventType").value;
+
+    if (!newEventName) {
+      showStatus("eventStatus", "❌ Event Name is required.", "error");
+      return;
+    }
+
+    showStatus("eventStatus", "⏳ Adding event...", "info");
+
+    const { error } = await sb
+      .from("events")
+      .insert({
+        id: crypto.randomUUID().substring(0, 8),
+        meet_id: activeMeetId,
+        name: newEventName,
+        gender: newEventGender || null,
+        level: newEventLevel || null,
+        event_type: newEventEventType
+      });
+
+    if (error) {
+      showStatus("eventStatus", "❌ Error adding event: " + error.message, "error");
+      return;
+    }
+
+    showStatus("eventStatus", `✅ Event \"${newEventName}\" added!`, "success");
+    safeGet("newEventName").value = "";
+    safeGet("newEventGender").value = "";
+    safeGet("newEventLevel").value = "";
+    loadEventList(activeMeetId);
+    setTimeout(() => safeGet("eventStatus").style.display = "none", 3000);
+  }
+
+  async function deleteEvent(eventId) {
+    if (!activeMeetId) return;
+    if (!confirm("Are you sure you want to delete this event? This will also unassign all athletes from it.")) return;
+
+    showStatus("eventStatus", "⏳ Deleting event...", "info");
+
+    // First, delete assignments for this event
+    const { error: assignError } = await sb
+      .from("event_assignments")
+      .delete()
+      .eq("event_id", eventId)
+      .eq("meet_id", activeMeetId);
+
+    if (assignError) {
+      showStatus("eventStatus", "❌ Error deleting event assignments: " + assignError.message, "error");
+      return;
+    }
+
+    // Then delete the event itself
+    const { error: eventError } = await sb
+      .from("events")
+      .delete()
+      .eq("id", eventId)
+      .eq("meet_id", activeMeetId);
+
+    if (eventError) {
+      showStatus("eventStatus", "❌ Error deleting event: " + eventError.message, "error");
+      return;
+    }
+
+    showStatus("eventStatus", "✅ Event deleted!", "success");
+    loadEventList(activeMeetId);
+    setTimeout(() => safeGet("eventStatus").style.display = "none", 3000);
+  }
+
+  async function addAthlete() {
+    if (!activeMeetId) {
+      showStatus("athleteStatus", "❌ Please select a meet first.", "error");
+      return;
+    }
+
+    const newAthFname = safeGet("newAthFname").value.trim();
+    const newAthLname = safeGet("newAthLname").value.trim();
+    const newAthTeam = safeGet("newAthTeam").value.trim();
+    const newAthGender = safeGet("newAthGender").value;
+    const newAthLevel = safeGet("newAthLevel").value.trim();
+
+    if (!newAthFname || !newAthLname) {
+      showStatus("athleteStatus", "❌ First and Last Name are required.", "error");
+      return;
+    }
+
+    showStatus("athleteStatus", "⏳ Adding athlete...", "info");
+
+    const { error } = await sb
+      .from("athletes")
+      .insert({
+        id: crypto.randomUUID().substring(0, 8),
+        meet_id: activeMeetId,
+        fname: newAthFname,
+        lname: newAthLname,
+        team: newAthTeam || null,
+        gender: newAthGender || null,
+        level: newAthLevel || null
+      });
+
+    if (error) {
+      showStatus("athleteStatus", "❌ Error adding athlete: " + error.message, "error");
+      return;
+    }
+
+    showStatus("athleteStatus", `✅ Athlete \"${newAthFname} ${newAthLname}\" added!`, "success");
+    safeGet("newAthFname").value = "";
+    safeGet("newAthLname").value = "";
+    safeGet("newAthTeam").value = "";
+    safeGet("newAthGender").value = "";
+    safeGet("newAthLevel").value = "";
+    setTimeout(() => safeGet("athleteStatus").style.display = "none", 3000);
+  }
+
+  let csvFile = null;
+  function onCsvChosen() {
+    const fileInput = safeGet("csvFile");
+    const csvFileLabel = safeGet("csvFileLabel");
+    const importCsvBtn = safeGet("importCsvBtn");
+
+    if (fileInput.files.length > 0) {
+      csvFile = fileInput.files[0];
+      csvFileLabel.classList.add("has-file");
+      csvFileLabel.textContent = csvFile.name;
+      importCsvBtn.disabled = false;
+    } else {
+      csvFile = null;
+      csvFileLabel.classList.remove("has-file");
+      csvFileLabel.textContent = "⬆ Choose CSV file";
+      importCsvBtn.disabled = true;
+    }
+  }
+
+  async function importCsv() {
+    if (!activeMeetId || !csvFile) return;
+
+    showStatus("csvStatus", "⏳ Importing CSV...", "info");
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csvText = e.target.result;
+        const importedCount = await processCsvData(csvText, activeMeetId);
+        showStatus("csvStatus", `✅ Imported ${importedCount} athletes and their events!`, "success");
+        // Optionally reload event list or athlete list if displayed
+        setTimeout(() => safeGet("csvStatus").style.display = "none", 3000);
+      } catch (err) {
+        showStatus("csvStatus", "❌ CSV Import Error: " + err.message, "error");
+      }
+    };
+    reader.readAsText(csvFile);
+  }
+
+  async function processCsvData(csvText, meetId) {
+    const rows = parseCSV(csvText);
+    if (rows.length < 2) throw new Error("CSV is empty or has only headers.");
+
+    const headers = rows[0].map(h => h.toLowerCase());
+    const idx = {
+      fn: headers.indexOf("first name"),
+      ln: headers.indexOf("last name"),
+      gen: headers.indexOf("gender"),
+      level: headers.indexOf("level"),
+      tm: headers.indexOf("team"),
+      ev: headers.indexOf("event")
+    };
+
+    // Check for required headers
+    if (idx.fn === -1 || idx.ln === -1 || idx.ev === -1) {
+      throw new Error("Missing required CSV columns: First Name, Last Name, Event.");
+    }
+
+    const fieldKeywords = ["shot put", "discus", "long jump", "triple jump", "high jump", "pole vault"];
+
+    const eventRows = [];
+    const athleteRows = [];
+    const assignRows = [];
+    const eventsFound = {}; // To track unique events and assign IDs
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length < 3) continue;
+      const g = col => (col >= 0 && col < row.length) ? (row[col]||"").toString().trim() : "";
+      if (!g(idx.fn)) continue;
+      const evName = g(idx.ev).toLowerCase();
+      if (!fieldKeywords.some(k => evName.includes(k))) continue;
+
+      const level  = normalizeLevel(g(idx.level)); // Use idx.level instead of idx.div
+      const gender = g(idx.gen);
+      const evKey  = g(idx.ev) + "|" + gender + "|" + level;
+
+      if (!eventsFound[evKey]) {
+        const eId = crypto.randomUUID().substring(0, 8);
+        eventsFound[evKey] = eId;
+        eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId, event_type: fieldKeywords.some(k => evName.includes(k)) ? "field" : "track" });
+      }
+      const aId = crypto.randomUUID().substring(0, 8);
+      athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
+      assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+" "+g(idx.ln)).trim() });
+    }
+
+    if (!athleteRows.length) throw new Error("No field event athletes found in this CSV.");
+    if (eventRows.length)   { const { error } = await sb.from("events").insert(eventRows);             if (error) throw error; }
+    if (athleteRows.length) { const { error } = await sb.from("athletes").insert(athleteRows);          if (error) throw error; }
+    if (assignRows.length)  { const { error } = await sb.from("event_assignments").insert(assignRows);  if (error) throw error; }
+    return athleteRows.length;
+  }
+
+  // ── Clear Meet ────────────────────────────────────────────────
+  async function clearMeet() {
+    if (!activeMeetId) return;
+    const pw = prompt("Re-enter admin password to confirm:");
+    if (pw !== ADMIN_PASSWORD) { alert("Incorrect password."); return; }
+    if (!confirm(`DELETE ALL data for \"${activeMeetName}\"?\n\nThis cannot be undone.`)) return;
+
+    showStatus("clearStatus", "⏳ Deleting…", "info");
+    const steps = [
+      sb.from("attempts").delete().eq("meet_id", activeMeetId),
+      sb.from("event_assignments").delete().eq("meet_id", activeMeetId),
+      sb.from("athletes").delete().eq("meet_id", activeMeetId),
+      sb.from("events").delete().eq("meet_id", activeMeetId)
+    ];
+    for (const step of steps) {
+      const { error } = await step;
+      if (error) { showStatus("clearStatus", "❌ " + error.message, "error"); return; }
+    }
+    showStatus("clearStatus", `✅ All data for \"${activeMeetName}\" deleted.`, "success");
+    setTimeout(() => loadEventList(activeMeetId), 600);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function showStatus(id, msg, type) {
+    const el = safeGet(id);
+    el.textContent = msg; el.className = "status-msg " + type;
+  }
+
+  function normalizeLevel(raw) {
+    if (!raw) return "";
+    const t = raw.toString().toLowerCase().trim();
+    if (t.includes("varsity")) return "Varsity";
+    if (t.includes("jv") || t.includes("junior var")) return "JV";
+    if (t.includes("8th") || t === "8") return "8th Grade";
+    if (t.includes("7th") || t === "7") return "7th Grade";
+    if (t.includes("6th") || t === "6") return "6th Grade";
+    if (t.includes("frosh") || t.includes("freshman") || t.includes("9th")) return "Freshman";
+    if (t.includes("soph") || t.includes("10th")) return "Sophomore";
+    return raw.toString().trim();
+  }
+
+  function parseCSV(text) {
+    text = text.replace(/^\uFEFF/,"").replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+    const rows = []; let row=[], field=\'\', inQuote=false, i=0;
+    while (i < text.length) {
+      const ch = text[i];
+      if (inQuote) {
+        if (ch===\'"\' && text[i+1]===\'"\') { field+=\'"\'; i+=2; continue; }
+        if (ch===\'"\') inQuote=false;
+        else field+=ch;
+      } else {
+        if      (ch===\'"\')  inQuote=true;
+        else if (ch===\',\')  { row.push(field.trim()); field=\'\'; }
+        else if (ch===\'\n\') { row.push(field.trim()); field=\'\'; if(row.some(v=>v!=\'\')) rows.push(row); row=[]; }
+        else field+=ch;
+      }
+      i++;
+    }
+    row.push(field.trim());
+    if (row.some(v=>v!=\'\')) rows.push(row);
+    return rows;
+  }
 </script>
 </body>
 </html>
