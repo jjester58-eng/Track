@@ -10,154 +10,689 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: -apple-system, sans-serif; background: #0a0f1a; color: #e0e6f0; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
-    .topbar { background: #0d1b2a; border-bottom: 2px solid #1e3a5f; padding: 12px 18px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-    .topbar-title { font-size: 18px; font-weight: 800; color: #7eb8f7; letter-spacing: 1px; flex: 1; }
-    .card { background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 14px; padding: 20px; margin: 20px; }
-    input, button { padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #2a4a6e; background: #162438; color: white; width: 100%; }
-    button { background: #7eb8f7; color: #0d1b2a; font-weight: bold; cursor: pointer; }
-    button:hover { background: #9ac8ff; }
-    .btn-red { background: #dc3545; color: white; }
-    .status-msg { padding: 10px; margin: 10px 0; border-radius: 8px; text-align: center; font-size: 14px; }
-    .success { background: #0a2a18; color: #4dca7a; }
-    .error { background: #2a0a0a; color: #f87; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      background: #07111d;
+      color: #c8d8ec;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: #0d1b2a;
+      border-bottom: 2px solid #1a3352;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #7eb8f7;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      flex: 1;
+    }
+    .topbar a {
+      color: #7eb8f7;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      opacity: 0.8;
+      transition: opacity .2s;
+    }
+    .topbar a:hover { opacity: 1; }
+
+    /* ── Lock Screen ── */
+    #lockScreen {
+      max-width: 380px;
+      margin: 80px auto 0;
+      background: #0d1b2a;
+      border: 1px solid #1e3a5f;
+      border-radius: 18px;
+      padding: 36px 28px;
+      text-align: center;
+    }
+    #lockScreen .lock-icon { font-size: 48px; margin-bottom: 12px; }
+    #lockScreen h3 { margin: 0 0 6px; font-size: 20px; color: #e8f0fc; letter-spacing: 1px; }
+    #lockScreen p { margin: 0 0 20px; font-size: 13px; color: #6a8aac; }
+
+    /* ── Page Layout ── */
+    #adminContent { display: none; }
+    .page-grid {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 640px) {
+      .page-grid { grid-template-columns: 1fr; }
+    }
+    .full-width { grid-column: 1 / -1; }
+
+    /* ── Section Header ── */
+    .section-header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0 2px;
+    }
+    .section-header .line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, #1e3a5f 0%, transparent 100%);
+    }
+    .section-header span {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #3d6899;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #0d1b2a;
+      border: 1px solid #1a3352;
+      border-radius: 14px;
+      padding: 22px 20px;
+      transition: border-color .2s;
+    }
+    .card:hover { border-color: #2a5080; }
+    .card h3 {
+      margin: 0 0 16px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #7eb8f7;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h3 .icon { font-size: 16px; }
+
+    /* ── Meet Preview Banner ── */
+    #meetPreview {
+      background: linear-gradient(135deg, #0d1b2a 0%, #0a2240 100%);
+      border: 1px solid #1a3352;
+      border-radius: 14px;
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      min-height: 96px;
+    }
+    #previewLogo {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      object-fit: contain;
+      background: #162438;
+      border: 1px solid #1e3a5f;
+      flex-shrink: 0;
+    }
+    #previewLogoPlaceholder {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      background: #162438;
+      border: 1px dashed #2a4a6e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      color: #3a5a7e;
+    }
+    #previewTitle {
+      font-size: 20px;
+      font-weight: 800;
+      color: #e8f0fc;
+      letter-spacing: .5px;
+      line-height: 1.2;
+    }
+    #previewTitle.placeholder { color: #3a5a7e; font-style: italic; font-weight: 400; font-size: 15px; }
+    #previewDate {
+      font-size: 12px;
+      color: #6a8aac;
+      margin-top: 4px;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+    .preview-badge {
+      margin-left: auto;
+      background: #0a2240;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #4a8abf;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ── Inputs ── */
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #4a7aaa;
+      margin-bottom: 6px;
+    }
+    input[type="text"],
+    input[type="date"],
+    input[type="password"] {
+      width: 100%;
+      padding: 11px 14px;
+      background: #0a1a2e;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      color: #e0ecff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      margin: 0;
+    }
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="password"]:focus {
+      border-color: #4a8abf;
+      box-shadow: 0 0 0 3px rgba(74,138,191,.15);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0a1a2e;
+      border: 1px dashed #1e3a5f;
+      border-radius: 8px;
+      color: #6a8aac;
+      font-size: 13px;
+      cursor: pointer;
+      margin: 0;
+    }
+    input[type="file"]:hover { border-color: #4a8abf; }
+
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all .2s;
+      margin-top: 14px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2a6abf, #1a4a9e);
+      color: #e8f4ff;
+      box-shadow: 0 2px 12px rgba(42,106,191,.3);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3a7acf, #2a5aae);
+      box-shadow: 0 4px 18px rgba(42,106,191,.45);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: transparent;
+      color: #7eb8f7;
+      border: 1px solid #1e3a5f;
+      margin-top: 8px;
+    }
+    .btn-ghost:hover { background: #0d2040; border-color: #3a6aaf; }
+    .btn-danger {
+      background: transparent;
+      color: #e05555;
+      border: 1px solid #4a1818;
+      margin-top: 8px;
+    }
+    .btn-danger:hover { background: #1a0a0a; border-color: #8a2525; }
+    .btn-unlock {
+      background: linear-gradient(135deg, #1a6a40, #0e4a2c);
+      color: #80e0a8;
+      box-shadow: 0 2px 12px rgba(26,106,64,.3);
+    }
+    .btn-unlock:hover { background: linear-gradient(135deg, #2a8a54, #1a6040); transform: translateY(-1px); }
+
+    /* ── Status Messages ── */
+    .status-msg {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+      line-height: 1.5;
+    }
+    .status-msg.visible { display: block; }
+    .status-success { background: #061a0e; border: 1px solid #1a4a28; color: #4dca7a; }
+    .status-error   { background: #1a0608; border: 1px solid #4a1a1e; color: #f87878; }
+    .status-info    { background: #061224; border: 1px solid #1a3a5f; color: #7eb8f7; }
+
+    /* ── Current Meet Info ── */
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #0f2236;
+      font-size: 13px;
+    }
+    .meta-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .meta-label { color: #4a7aaa; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+    .meta-value { color: #c8d8ec; font-weight: 500; text-align: right; max-width: 60%; word-break: break-all; }
+    .meta-value.none { color: #2a4a6e; font-style: italic; }
+
+    /* ── Danger Zone ── */
+    .danger-card {
+      border-color: #2a1010;
+      background: #0a0d10;
+    }
+    .danger-card:hover { border-color: #4a2020; }
+    .danger-card h3 { color: #e05555; }
+
+    /* ── CSV Progress ── */
+    .progress-bar-wrap {
+      width: 100%;
+      background: #0a1a2e;
+      border-radius: 6px;
+      height: 6px;
+      margin-top: 12px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar-wrap.visible { display: block; }
+    .progress-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #2a6abf, #7eb8f7);
+      border-radius: 6px;
+      transition: width .3s;
+      width: 0%;
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
 <div class="topbar">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" height="38" alt="Logo">
-  <div class="topbar-title">ADMIN / IMPORT</div>
-  <a href="index.html" style="color:white; text-decoration:none;">⌂ Home</a>
+  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" height="36" alt="Logo">
+  <div class="topbar-title">Meet Admin</div>
+  <a href="index.html">⌂ Home</a>
 </div>
 
-<div id="lockScreen" class="card">
-  <h3>🔐 Admin Access</h3>
-  <input type="password" id="pwInput" placeholder="Enter password (1111)" onkeypress="if(event.key==='Enter') checkPassword()">
-  <button onclick="checkPassword()">UNLOCK ADMIN</button>
-  <div id="lockError" class="status-msg error" style="display:none;">Incorrect password</div>
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lockScreen">
+  <div class="lock-icon">🔐</div>
+  <h3>Admin Access</h3>
+  <p>Enter your password to manage meet settings</p>
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="pwInput" placeholder="••••" onkeypress="if(event.key==='Enter') checkPassword()">
+  </div>
+  <button class="btn btn-unlock" onclick="checkPassword()">UNLOCK ADMIN</button>
+  <div id="lockError" class="status-msg status-error">Incorrect password</div>
 </div>
 
-<div id="adminContent" class="hidden">
-  <!-- CSV Import -->
-  <div class="card">
-    <h3>📥 Import Roster (MileSplit CSV)</h3>
-    <input type="file" id="csvFile" accept=".csv">
-    <button onclick="doImport()">RUN IMPORT</button>
-    <div id="importStatus" class="status-msg"></div>
-  </div>
+<!-- ══ ADMIN CONTENT ══ -->
+<div id="adminContent">
+  <div class="page-grid">
 
-  <!-- Image Upload -->
-  <div class="card">
-    <h3>🖼 Upload Logo / Avatar</h3>
-    <input type="file" id="imageFile" accept="image/*">
-    <button onclick="uploadImage()">UPLOAD IMAGE</button>
-    <div id="imageStatus" class="status-msg"></div>
-  </div>
+    <!-- Live Preview -->
+    <div class="full-width section-header">
+      <span>Meet Preview</span>
+      <div class="line"></div>
+    </div>
+    <div class="full-width" id="meetPreview">
+      <div id="previewLogoPlaceholder">🏟</div>
+      <img id="previewLogo" style="display:none;" alt="Meet Logo">
+      <div>
+        <div id="previewTitle" class="placeholder">No meet title set</div>
+        <div id="previewDate"></div>
+      </div>
+      <div class="preview-badge" id="previewStatus">No Meet</div>
+    </div>
 
-  <!-- Danger Zone -->
-  <div class="card">
-    <h3>⚠️ Danger Zone</h3>
-    <button class="btn-red" onclick="clearMeet()">DELETE ALL MEET DATA</button>
+    <!-- ── SETUP ── -->
+    <div class="full-width section-header">
+      <span>Meet Setup</span>
+      <div class="line"></div>
+    </div>
+
+    <!-- Meet Details -->
+    <div class="card">
+      <h3><span class="icon">📋</span> Meet Details</h3>
+      <div class="field">
+        <label>Meet Title</label>
+        <input type="text" id="meetTitle" placeholder="e.g. Spring Invitational 2025" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="meetDate" oninput="updatePreview()">
+      </div>
+      <button class="btn btn-primary" onclick="saveMeetDetails()">SAVE DETAILS</button>
+      <div class="status-msg" id="detailsStatus"></div>
+    </div>
+
+    <!-- Logo -->
+    <div class="card">
+      <h3><span class="icon">🖼</span> Meet Logo</h3>
+      <div class="field">
+        <label>Upload New Logo</label>
+        <input type="file" id="imageFile" accept="image/*" onchange="previewLogoFile()">
+      </div>
+      <button class="btn btn-primary" onclick="uploadLogo()">UPLOAD LOGO</button>
+      <button class="btn btn-ghost" onclick="removeLogo()">REMOVE LOGO</button>
+      <div class="status-msg" id="logoStatus"></div>
+    </div>
+
+    <!-- ── ROSTER ── -->
+    <div class="full-width section-header">
+      <span>Roster Import</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="card full-width">
+      <h3><span class="icon">📥</span> Import Athletes (CSV)</h3>
+      <div class="field">
+        <label>MileSplit CSV File</label>
+        <input type="file" id="csvFile" accept=".csv">
+      </div>
+      <button class="btn btn-primary" onclick="doImport()" id="importBtn">RUN IMPORT</button>
+      <div class="progress-bar-wrap" id="progressWrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="status-msg" id="importStatus"></div>
+    </div>
+
+    <!-- ── DANGER ── -->
+    <div class="full-width section-header">
+      <span>Danger Zone</span>
+      <div class="line"></div>
+    </div>
+
+    <div class="card danger-card">
+      <h3><span class="icon">⚠️</span> Delete Meet Data</h3>
+      <p style="font-size:13px; color:#6a3a3a; margin:0 0 4px;">Removes all athletes, events, attempts, and assignments. Cannot be undone.</p>
+      <button class="btn btn-danger" onclick="clearMeet()">DELETE ALL MEET DATA</button>
+      <div class="status-msg" id="deleteStatus"></div>
+    </div>
+
+    <div class="card danger-card">
+      <h3><span class="icon">🔄</span> Change Logo URL</h3>
+      <p style="font-size:13px; color:#6a3a3a; margin:0 0 10px;">Manually set a logo URL (overrides upload).</p>
+      <div class="field">
+        <label>Logo URL</label>
+        <input type="text" id="logoUrlInput" placeholder="https://...">
+      </div>
+      <button class="btn btn-danger" onclick="setLogoUrl()">SET LOGO URL</button>
+      <div class="status-msg" id="logoUrlStatus"></div>
+    </div>
+
   </div>
 </div>
 
 <script>
-const sb = supabase.createClient('https://qjomrnguhbqfluzwuntz.supabase.co', 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_');
+const sb = supabase.createClient(
+  'https://qjomrnguhbqfluzwuntz.supabase.co',
+  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
+);
 const ADMIN_PASSWORD = '1111';
 
+// ── State ──────────────────────────────────────────────
+let meetState = { title: '', date: '', logo_url: '' };
+
+// ── Lock ──────────────────────────────────────────────
 function checkPassword() {
   if (document.getElementById('pwInput').value === ADMIN_PASSWORD) {
     document.getElementById('lockScreen').style.display = 'none';
-    document.getElementById('adminContent').classList.remove('hidden');
+    document.getElementById('adminContent').style.display = 'block';
+    loadMeetSettings();
   } else {
-    const err = document.getElementById('lockError');
-    err.style.display = 'block';
-    setTimeout(() => err.style.display = 'none', 2500);
+    showStatus('lockError', 'Incorrect password', 'error');
     document.getElementById('pwInput').value = '';
   }
 }
 
+// ── Load existing meet settings ───────────────────────
+async function loadMeetSettings() {
+  try {
+    const { data, error } = await sb.from('meet_settings').select('*').limit(1).single();
+    if (data) {
+      meetState = { title: data.title || '', date: data.date || '', logo_url: data.logo_url || '' };
+      document.getElementById('meetTitle').value = meetState.title;
+      document.getElementById('meetDate').value = meetState.date;
+      if (meetState.logo_url) document.getElementById('logoUrlInput').value = meetState.logo_url;
+    }
+  } catch (e) {
+    // Table may not exist yet — that's fine
+  }
+  updatePreview();
+}
+
+// ── Preview ───────────────────────────────────────────
+function updatePreview() {
+  const title = document.getElementById('meetTitle').value.trim();
+  const date  = document.getElementById('meetDate').value;
+  const titleEl = document.getElementById('previewTitle');
+  const dateEl  = document.getElementById('previewDate');
+  const statusEl = document.getElementById('previewStatus');
+
+  titleEl.textContent = title || 'No meet title set';
+  titleEl.className   = title ? '' : 'placeholder';
+
+  if (date) {
+    const d = new Date(date + 'T12:00:00');
+    dateEl.textContent = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  } else {
+    dateEl.textContent = '';
+  }
+
+  if (title || date) {
+    statusEl.textContent = 'Active';
+    statusEl.style.color = '#4dca7a';
+    statusEl.style.borderColor = '#1a4a28';
+  } else {
+    statusEl.textContent = 'No Meet';
+    statusEl.style.color = '#4a7aaa';
+    statusEl.style.borderColor = '';
+  }
+
+  // Logo
+  const logoUrl = meetState.logo_url;
+  if (logoUrl) {
+    document.getElementById('previewLogoPlaceholder').style.display = 'none';
+    const img = document.getElementById('previewLogo');
+    img.src = logoUrl;
+    img.style.display = 'block';
+  } else {
+    document.getElementById('previewLogoPlaceholder').style.display = 'flex';
+    document.getElementById('previewLogo').style.display = 'none';
+  }
+}
+
+// ── Save meet details ─────────────────────────────────
+async function saveMeetDetails() {
+  const title = document.getElementById('meetTitle').value.trim();
+  const date  = document.getElementById('meetDate').value;
+  if (!title && !date) return showStatus('detailsStatus', 'Enter a title or date first', 'error');
+
+  meetState.title = title;
+  meetState.date  = date;
+
+  try {
+    // Upsert into meet_settings (assumes id=1 row or creates new)
+    const { error } = await sb.from('meet_settings').upsert({ id: 1, title, date, logo_url: meetState.logo_url }, { onConflict: 'id' });
+    if (error) throw error;
+    showStatus('detailsStatus', '✅ Meet details saved', 'success');
+    updatePreview();
+  } catch (err) {
+    showStatus('detailsStatus', 'Error: ' + err.message, 'error');
+  }
+}
+
+// ── Logo file preview ─────────────────────────────────
+function previewLogoFile() {
+  const file = document.getElementById('imageFile').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    meetState.logo_url = e.target.result;
+    updatePreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Upload logo ───────────────────────────────────────
+async function uploadLogo() {
+  const file = document.getElementById('imageFile').files[0];
+  if (!file) return showStatus('logoStatus', 'Select an image file first', 'error');
+
+  const btn = document.querySelector('#logoStatus').parentElement.querySelectorAll('.btn')[0];
+  btn.disabled = true; btn.textContent = 'UPLOADING…';
+
+  try {
+    const fileName = `meet-logo-${Date.now()}.${file.name.split('.').pop()}`;
+    const { error: upErr } = await sb.storage.from('logos').upload(fileName, file, { upsert: true });
+    if (upErr) throw upErr;
+
+    const { data: urlData } = sb.storage.from('logos').getPublicUrl(fileName);
+    const logoUrl = urlData.publicUrl;
+
+    meetState.logo_url = logoUrl;
+    await sb.from('meet_settings').upsert({ id: 1, title: meetState.title, date: meetState.date, logo_url: logoUrl }, { onConflict: 'id' });
+
+    document.getElementById('logoUrlInput').value = logoUrl;
+    updatePreview();
+    showStatus('logoStatus', '✅ Logo uploaded and saved', 'success');
+  } catch (err) {
+    showStatus('logoStatus', 'Upload failed: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'UPLOAD LOGO';
+  }
+}
+
+// ── Remove logo ───────────────────────────────────────
+async function removeLogo() {
+  if (!confirm('Remove the meet logo?')) return;
+  meetState.logo_url = '';
+  await sb.from('meet_settings').upsert({ id: 1, title: meetState.title, date: meetState.date, logo_url: '' }, { onConflict: 'id' });
+  document.getElementById('logoUrlInput').value = '';
+  document.getElementById('imageFile').value = '';
+  updatePreview();
+  showStatus('logoStatus', '✅ Logo removed', 'success');
+}
+
+// ── Set logo via URL ──────────────────────────────────
+async function setLogoUrl() {
+  const url = document.getElementById('logoUrlInput').value.trim();
+  meetState.logo_url = url;
+  try {
+    await sb.from('meet_settings').upsert({ id: 1, title: meetState.title, date: meetState.date, logo_url: url }, { onConflict: 'id' });
+    updatePreview();
+    showStatus('logoUrlStatus', url ? '✅ Logo URL saved' : '✅ Logo cleared', 'success');
+  } catch (err) {
+    showStatus('logoUrlStatus', 'Error: ' + err.message, 'error');
+  }
+}
+
+// ── CSV Import ────────────────────────────────────────
 async function doImport() {
   const file = document.getElementById('csvFile').files[0];
-  if (!file) return showStatus('importStatus', 'Please select a CSV file', 'error');
-  const btn = document.querySelector('#importStatus').parentElement.querySelector('button');
-  btn.disabled = true;
-  btn.textContent = 'IMPORTING...';
+  if (!file) return showStatus('importStatus', 'Select a CSV file first', 'error');
+
+  const btn = document.getElementById('importBtn');
+  btn.disabled = true; btn.textContent = 'IMPORTING…';
+
+  const progress = document.getElementById('progressWrap');
+  const bar = document.getElementById('progressBar');
+  progress.classList.add('visible');
+  bar.style.width = '5%';
 
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      const text = e.target.result;
-      const rows = parseCSV(text);
-      // Basic import - adjust columns to match your table
+      const rows = parseCSV(e.target.result).filter(r => r.some(c => c));
+      if (rows.length < 2) throw new Error('CSV appears empty or has only a header row');
+
       let count = 0;
-      for (let i = 1; i < rows.length; i++) {
+      const total = rows.length - 1;
+
+      for (let i = 1; i <= total; i++) {
         const [name, team, gender, level] = rows[i];
         if (!name) continue;
-        const [fname, ...lnameParts] = name.trim().split(' ');
-        await sb.from('athletes').insert({
-          fname: fname || '',
-          lname: lnameParts.join(' ') || '',
-          team: team || '',
-          gender: gender || '',
-          level: level || ''
-        });
+        const parts = name.trim().split(' ');
+        const fname = parts[0] || '';
+        const lname = parts.slice(1).join(' ') || '';
+        await sb.from('athletes').insert({ fname, lname, team: team || '', gender: gender || '', level: level || '' });
         count++;
+        bar.style.width = Math.round((i / total) * 100) + '%';
       }
+
+      bar.style.width = '100%';
       showStatus('importStatus', `✅ Imported ${count} athletes`, 'success');
     } catch (err) {
       showStatus('importStatus', 'Import failed: ' + err.message, 'error');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'RUN IMPORT';
+      btn.disabled = false; btn.textContent = 'RUN IMPORT';
+      setTimeout(() => { progress.classList.remove('visible'); bar.style.width = '0%'; }, 1500);
     }
   };
   reader.readAsText(file);
 }
 
-async function uploadImage() {
-  const file = document.getElementById('imageFile').files[0];
-  if (!file) return showStatus('imageStatus', 'Select an image first', 'error');
-
-  const fileName = `upload-${Date.now()}-${file.name}`;
-  const statusEl = document.getElementById('imageStatus');
+// ── Clear meet ────────────────────────────────────────
+async function clearMeet() {
+  if (!confirm('DELETE ALL MEET DATA? This removes athletes, events, attempts, and assignments. Cannot be undone.')) return;
+  if (prompt('Type 1111 to confirm deletion:') !== '1111') return showStatus('deleteStatus', 'Cancelled', 'info');
 
   try {
-    const { error } = await sb.storage.from('logos').upload(fileName, file);
-    if (error) throw error;
-
-    const { data: urlData } = sb.storage.from('logos').getPublicUrl(fileName);
-    showStatus('imageStatus', `✅ Uploaded!<br><small>${urlData.publicUrl}</small>`, 'success');
-    console.log('New image URL:', urlData.publicUrl);
+    await Promise.all([
+      sb.from('attempts').delete().neq('id', '0'),
+      sb.from('event_assignments').delete().neq('id', '0'),
+      sb.from('athletes').delete().neq('id', '0'),
+      sb.from('events').delete().neq('id', '0'),
+    ]);
+    showStatus('deleteStatus', '✅ All meet data deleted', 'success');
   } catch (err) {
-    showStatus('imageStatus', 'Upload failed: ' + err.message, 'error');
+    showStatus('deleteStatus', 'Error: ' + err.message, 'error');
   }
+}
+
+// ── Helpers ───────────────────────────────────────────
+function parseCSV(text) {
+  return text.split(/\r?\n/).map(line =>
+    line.split(',').map(f => f.trim().replace(/^"|"$/g, ''))
+  );
 }
 
 function showStatus(id, msg, type) {
   const el = document.getElementById(id);
   el.innerHTML = msg;
-  el.className = `status-msg ${type}`;
-}
-
-function parseCSV(text) {
-  return text.split(/\r?\n/).map(line => line.split(',').map(field => field.trim().replace(/^"|"$/g, '')));
-}
-
-async function clearMeet() {
-  if (!confirm('DELETE ALL DATA? This cannot be undone.')) return;
-  if (prompt('Type 1111 to confirm') !== '1111') return alert('Cancelled');
-
-  await Promise.all([
-    sb.from('attempts').delete().neq('id', '0'),
-    sb.from('event_assignments').delete().neq('id', '0'),
-    sb.from('athletes').delete().neq('id', '0'),
-    sb.from('events').delete().neq('id', '0')
-  ]);
-
-  alert('All data cleared.');
-  location.reload();
+  el.className = `status-msg ${type === 'success' ? 'status-success' : type === 'error' ? 'status-error' : 'status-info'} visible`;
 }
 </script>
 </body>
