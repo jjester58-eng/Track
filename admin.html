@@ -9,186 +9,6 @@
   <meta name="theme-color" content="#0d1b2a">
   <title>Admin — Field Events Pro</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script type="module">
-    import { sb, getActiveMeet, safeGet, log, updateBanners } from './meet-session.js';
-
-    const ADMIN_PASSWORD = '1111'; 
-    let activeMeetId = null;
-    let activeMeetName = null;
-    let MEET = null;
-
-    async function initPage() {
-      log("Admin page initialized.");
-      updateBanners();
-      await loadMeetList();
-    }
-
-    function checkPassword() {
-      const pwInput = safeGet("pwInput");
-      const lockError = safeGet("lockError");
-      console.log("[FEP] Checking password:", pwInput.value);
-      if (pwInput.value === ADMIN_PASSWORD) {
-        safeGet("lockScreen").style.display = "none";
-        safeGet("adminContent").style.display = "block";
-        lockError.style.display = "none";
-      } else {
-        lockError.style.display = "block";
-      }
-    }
-
-    async function loadMeetList() {
-      const { data: meets, error } = await sb
-        .from("meets")
-        .select("id, name, date, logo_url")
-        .order("date", { ascending: false });
-
-      const meetSelect = safeGet("meetSelect");
-      meetSelect.innerHTML = 
-        `<option value="">— select a meet —</option>
-         <option value="create">+ Create New Meet</option>`;
-
-      if (error) {
-        log("Error loading meets: " + error.message);
-        return;
-      }
-
-      meets.forEach(meet => {
-        const option = document.createElement("option");
-        option.value = meet.id;
-        option.textContent = `${meet.name} (${new Date(meet.date).toLocaleDateString()})`;
-        meetSelect.appendChild(option);
-      });
-
-      const currentMeet = await getActiveMeet();
-      if (currentMeet && currentMeet.id) {
-        meetSelect.value = currentMeet.id;
-        onMeetChange();
-      }
-    }
-
-    async function onMeetChange() {
-      const meetSelect = safeGet("meetSelect");
-      const selectedMeetId = meetSelect.value;
-
-      safeGet("createMeetCard").style.display = "none";
-      safeGet("logoCard").style.display = "none";
-      safeGet("eventsCard").style.display = "none";
-      safeGet("athletesCard").style.display = "none";
-      safeGet("dangerCard").style.display = "none";
-
-      if (selectedMeetId === "create") {
-        showCreateMeet();
-        activeMeetId = null;
-        activeMeetName = null;
-        MEET = null;
-        sessionStorage.removeItem("fep_meet");
-        localStorage.removeItem("fep_meet");
-        return;
-      }
-
-      if (!selectedMeetId) {
-        activeMeetId = null;
-        activeMeetName = null;
-        MEET = null;
-        sessionStorage.removeItem("fep_meet");
-        localStorage.removeItem("fep_meet");
-        return;
-      }
-
-      const { data: meet, error } = await sb
-        .from("meets")
-        .select("*")
-        .eq("id", selectedMeetId)
-        .single();
-
-      if (error) {
-        log("Error loading meet details: " + error.message);
-        return;
-      }
-
-      activeMeetId = meet.id;
-      activeMeetName = meet.name;
-      MEET = meet;
-      sessionStorage.setItem("fep_meet", JSON.stringify(meet));
-      localStorage.setItem("fep_meet", JSON.stringify(meet));
-
-      safeGet("logoCard").style.display = "block";
-      safeGet("eventsCard").style.display = "block";
-      safeGet("athletesCard").style.display = "block";
-      safeGet("dangerCard").style.display = "block";
-
-      const currentLogoImg = safeGet("currentLogoImg");
-      const currentLogoLabel = safeGet("currentLogoLabel");
-      if (meet.logo_url) {
-        currentLogoImg.src = meet.logo_url;
-        currentLogoImg.style.display = "block";
-        currentLogoLabel.textContent = "Current Logo";
-      } else {
-        currentLogoImg.style.display = "none";
-        currentLogoLabel.textContent = "No logo uploaded for this meet.";
-      }
-
-      loadEventList(activeMeetId);
-    }
-
-    function showCreateMeet() {
-      safeGet("createMeetCard").style.display = "block";
-    }
-
-    function hideCreateMeet() {
-      safeGet("createMeetCard").style.display = "none";
-      safeGet("meetSelect").value = "";
-      onMeetChange();
-    }
-
-    async function createMeet() {
-      const newMeetName = safeGet("newMeetName").value.trim();
-      const newMeetDate = safeGet("newMeetDate").value;
-      const newMeetPin = safeGet("newMeetPin").value.trim();
-      if (!newMeetName || !newMeetDate || !newMeetPin) {
-        showStatus("createStatus", "❌ All fields are required.", "error");
-        return;
-      }
-      showStatus("createStatus", "⏳ Creating meet...", "info");
-      const { error } = await sb.from("meets").insert({
-        name: newMeetName,
-        date: newMeetDate,
-        pin: newMeetPin,
-        id: crypto.randomUUID().substring(0, 8)
-      });
-      if (error) {
-        showStatus("createStatus", "❌ Error: " + error.message, "error");
-        return;
-      }
-      showStatus("createStatus", "✅ Meet created!", "success");
-      loadMeetList();
-    }
-
-    async function loadEventList(meetId) {
-      const { data: events, error } = await sb.from("events").select("*").eq("meet_id", meetId).order("name");
-      const list = safeGet("eventList");
-      list.innerHTML = "";
-      if (error) return;
-      events.forEach(ev => {
-        const div = document.createElement("div");
-        div.className = "event-item";
-        div.innerHTML = `<div><div class="ev-name">${ev.name}</div><div class="ev-meta">${ev.gender||""} ${ev.level||""}</div></div><span class="badge">${ev.event_type}</span>`;
-        list.appendChild(div);
-      });
-    }
-
-    function showStatus(id, msg, type) {
-      const el = safeGet(id);
-      el.textContent = msg; el.className = "status-msg " + type;
-    }
-
-    window.checkPassword = checkPassword;
-    window.onMeetChange = onMeetChange;
-    window.showCreateMeet = showCreateMeet;
-    window.hideCreateMeet = hideCreateMeet;
-    window.createMeet = createMeet;
-    window.addEventListener('DOMContentLoaded', initPage);
-  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -224,52 +44,40 @@
     }
     .lock-error { color: #f87; font-size: 13px; margin-top: 10px; display: none; }
     #adminContent { display: none; flex: 1; padding: 24px 20px; max-width: 720px; margin: 0 auto; width: 100%; }
-    .meet-strip {
-      background: #0d1b2a; border: 1px solid #1e3a5f;
-      border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    }
-    .meet-strip select {
-      flex: 1; min-width: 180px; background: #162438; color: #e0e6f0;
-      border: 1px solid #2a4a6e; border-radius: 6px; padding: 8px 12px; font-size: 14px;
-    }
-    .btn-sm-blue {
-      padding: 8px 14px; background: #0d2a4a; color: #7eb8f7;
-      border: 1px solid #1e5a8c; border-radius: 6px; font-size: 13px;
-      font-weight: bold; cursor: pointer;
-    }
+    .meet-strip { background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .meet-strip select { flex: 1; min-width: 180px; background: #162438; color: #e0e6f0; border: 1px solid #2a4a6e; border-radius: 6px; padding: 8px 12px; font-size: 14px; }
+    .btn-sm-blue { padding: 8px 14px; background: #0d2a4a; color: #7eb8f7; border: 1px solid #1e5a8c; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
     .card { background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-    .field-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-    .field-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
-    .field-group input { padding: 11px 12px; background: #162438; border: 1px solid #1e3a5f; border-radius: 7px; color: #e0e6f0; }
-    .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 8px; }
     .btn-green { background: #0d2a18; color: #4dca7a; border: 1px solid #28a745; }
     .btn-red { background: #2a0a0a; color: #f87; border: 1px solid #dc3545; }
-    .status-msg { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 8px; font-size: 14px; }
+    .status-msg { display: none; margin-top: 12px; padding: 12px 14px; border-radius: 8px; font-size: 14px; font-weight: bold; }
     .status-msg.success { display: block; background: #0a2218; color: #4dca7a; }
     .status-msg.error { display: block; background: #2a0a0a; color: #f87; }
     .status-msg.info { display: block; background: #0a1a2a; color: #7eb8f7; }
-    .event-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #0a1628; border: 1px solid #1e3a5f; border-radius: 6px; margin-bottom: 6px; }
-    .ev-name { color: #d0e4ff; font-weight: 600; }
-    .badge { background: #1e3a5f; color: #7eb8f7; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
   </style>
 </head>
 <body>
+
 <div class="topbar">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo">
+  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo" style="height:38px;">
   <div class="topbar-title">🔐 Admin — Field Events Pro</div>
   <a href="index.html" class="home-btn">⌂ Home</a>
 </div>
+
+<!-- Lock Screen -->
 <div id="lockScreen">
   <div class="lock-card">
     <h2>🔐 Admin Access</h2>
     <p>Enter the admin password to continue.</p>
-    <input type="password" id="pwInput" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')checkPassword()">
-    <button class="lock-btn" onclick="checkPassword()">UNLOCK</button>
+    <input type="password" id="pwInput" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter') checkPassword()">
+    <button class="lock-btn" onclick="checkPassword()">UNLOCK ADMIN</button>
     <div class="lock-error" id="lockError">❌ Incorrect password. Try again.</div>
   </div>
 </div>
-<div id="adminContent">
+
+<!-- Admin Content -->
+<div id="adminContent" style="display:none;">
   <div class="meet-strip">
     <label>Working on meet:</label>
     <select id="meetSelect" onchange="onMeetChange()">
@@ -277,38 +85,125 @@
     </select>
     <button class="btn-sm-blue" onclick="showCreateMeet()">+ New Meet</button>
   </div>
+
+  <!-- Create Meet -->
   <div class="card" id="createMeetCard" style="display:none;">
     <h3>🏟 Create New Meet</h3>
     <div class="field-row">
-      <div class="field-group" style="flex:2;"><label>Meet Name</label><input type="text" id="newMeetName"></div>
+      <div class="field-group" style="flex:2;"><label>Meet Name</label><input type="text" id="newMeetName" placeholder="e.g. Weatherford Invite"></div>
       <div class="field-group"><label>Date</label><input type="date" id="newMeetDate"></div>
     </div>
     <div class="field-row">
-      <div class="field-group"><label>Worker PIN</label><input type="tel" id="newMeetPin"></div>
+      <div class="field-group"><label>Worker PIN (4-6 digits)</label><input type="tel" id="newMeetPin" maxlength="6" placeholder="1111"></div>
     </div>
     <button class="btn btn-green" onclick="createMeet()">CREATE MEET</button>
-    <button class="btn btn-red" style="margin-top:6px;" onclick="hideCreateMeet()">CANCEL</button>
+    <button class="btn btn-red" onclick="hideCreateMeet()">CANCEL</button>
     <div class="status-msg" id="createStatus"></div>
   </div>
-  <div class="card" id="logoCard" style="display:none;">
-    <h3>🏫 Meet Logo</h3>
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0a1422;border:1px solid #1e3a5f;border-radius:8px;margin-bottom:14px;">
-      <img id="currentLogoImg" src="" alt="" style="height:42px;width:auto;border-radius:4px;display:none;">
-      <span id="currentLogoLabel">No logo uploaded.</span>
-    </div>
-  </div>
-  <div class="card" id="eventsCard" style="display:none;">
-    <h3>🏃 Events</h3>
-    <div id="eventList"></div>
-  </div>
-  <div class="card" id="athletesCard" style="display:none;">
-    <h3>🤼 Athletes</h3>
-    <p>Athlete management is available after selecting a meet.</p>
-  </div>
+
+  <!-- Rest of your cards (logo, events, danger zone) can be added later -->
   <div class="card" id="dangerCard" style="display:none;">
     <h3>⚠️ Danger Zone</h3>
-    <button class="btn btn-red">DELETE THIS MEET</button>
+    <button class="btn btn-red" onclick="clearMeet()">DELETE ALL DATA FOR THIS MEET</button>
   </div>
 </div>
+
+<script>
+// Supabase
+const sb = supabase.createClient(
+  'https://qjomrnguhbqfluzwuntz.supabase.co',
+  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
+);
+
+const ADMIN_PASSWORD = '1111';
+let activeMeetId = null;
+let activeMeetName = null;
+
+// Password check
+function checkPassword() {
+  const input = document.getElementById('pwInput').value.trim();
+  const error = document.getElementById('lockError');
+
+  if (input === ADMIN_PASSWORD) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('adminContent').style.display = 'block';
+    loadMeetList();
+  } else {
+    error.style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    setTimeout(() => error.style.display = 'none', 2500);
+  }
+}
+
+// Load meets
+async function loadMeetList() {
+  const { data: meets, error } = await sb
+    .from('meets')
+    .select('id, name, date')
+    .order('date', { ascending: false });
+
+  const sel = document.getElementById('meetSelect');
+  sel.innerHTML = '<option value="">— select a meet —</option>';
+
+  (meets || []).forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.name + (m.date ? ' (' + new Date(m.date).toLocaleDateString() + ')' : '');
+    sel.appendChild(opt);
+  });
+}
+
+async function onMeetChange() {
+  const id = document.getElementById('meetSelect').value;
+  activeMeetId = id;
+  document.getElementById('dangerCard').style.display = id ? 'block' : 'none';
+}
+
+function showCreateMeet() {
+  document.getElementById('createMeetCard').style.display = 'block';
+}
+
+function hideCreateMeet() {
+  document.getElementById('createMeetCard').style.display = 'none';
+}
+
+async function createMeet() {
+  const name = document.getElementById('newMeetName').value.trim();
+  const date = document.getElementById('newMeetDate').value;
+  const pin = document.getElementById('newMeetPin').value.trim();
+
+  if (!name || !pin) {
+    alert("Meet name and PIN are required");
+    return;
+  }
+
+  const { error } = await sb.from('meets').insert({ name, date, pin });
+  if (error) alert("Error: " + error.message);
+  else {
+    alert("Meet created!");
+    hideCreateMeet();
+    loadMeetList();
+  }
+}
+
+async function clearMeet() {
+  if (!activeMeetId) return;
+  if (!confirm("Delete ALL data for this meet? This cannot be undone.")) return;
+  if (prompt("Enter admin password to confirm:") !== ADMIN_PASSWORD) {
+    alert("Incorrect password");
+    return;
+  }
+  // Add your delete logic here later
+  alert("Data cleared (placeholder)");
+}
+
+// Make functions global
+window.checkPassword = checkPassword;
+window.onMeetChange = onMeetChange;
+window.showCreateMeet = showCreateMeet;
+window.hideCreateMeet = hideCreateMeet;
+window.createMeet = createMeet;
+window.clearMeet = clearMeet;
+</script>
 </body>
 </html>
