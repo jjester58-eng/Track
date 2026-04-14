@@ -1,13 +1,19 @@
 <script>
 /* ─────────────────────────────────────────────
-   SAFE MEET LOADER
+   SAFE MEET LOADER (bulletproof)
 ───────────────────────────────────────────── */
 function getActiveMeet() {
   try {
     const stored = sessionStorage.getItem('fep_meet');
     if (stored) return JSON.parse(stored);
+
     const local = localStorage.getItem('fep_meet');
     if (local) return JSON.parse(local);
+
+    const params = new URLSearchParams(window.location.search);
+    const meetId = params.get('meet');
+    if (meetId) return { id: meetId };
+
     return null;
   } catch (e) {
     console.error('Meet parse error:', e);
@@ -16,183 +22,267 @@ function getActiveMeet() {
 }
 
 /* ─────────────────────────────────────────────
-   SUPABASE INIT
+   SUPABASE INIT (SAFE GUARD)
 ───────────────────────────────────────────── */
 const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let sb = null;
+try {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.error("Supabase init failed:", e);
+}
+
 let MEET = null;
 
 /* ─────────────────────────────────────────────
-   DEBUG HELPER
+   DEBUG
 ───────────────────────────────────────────── */
 function log(msg) {
   console.log('[Scoring]', msg);
-  const debugEl = document.getElementById('debug');
-  if (debugEl) {
-    debugEl.style.display = 'block';
-    debugEl.innerHTML += '→ ' + msg + '<br>';
-  }
+
+  const el = document.getElementById('debug');
+  if (!el) return;
+
+  el.style.display = 'block';
+  el.innerHTML += '→ ' + msg + '<br>';
 }
 
 /* ─────────────────────────────────────────────
-   BOOTSTRAP
+   SAFE DOM CHECK
+───────────────────────────────────────────── */
+function safeGet(id) {
+  const el = document.getElementById(id);
+  if (!el) console.warn("Missing element:", id);
+  return el;
+}
+
+/* ─────────────────────────────────────────────
+   BOOTSTRAP (CRASH-PROOF)
 ───────────────────────────────────────────── */
 window.onload = async () => {
-  MEET = getActiveMeet();
+  try {
+    MEET = getActiveMeet();
 
-  if (!MEET || !MEET.id) {
-    log('No meet found in sessionStorage');
-    document.getElementById('topMeetName').textContent = "No Meet Selected";
-    document.getElementById('leftPanel').innerHTML = 
-      `<div style="padding:30px;color:#c00;text-align:center;">
-        No meet selected.<br><a href="index.html" style="color:#7eb8f7;">← Go back to home page</a>
-      </div>`;
-    return;
+    const title = safeGet('topMeetName');
+    const left = safeGet('leftPanel');
+
+    if (!MEET || !MEET.id) {
+      log('No meet found');
+
+      if (title) title.textContent = "No Meet Selected";
+      if (left) {
+        left.innerHTML =
+          `<div style="padding:30px;color:#c00;text-align:center;">
+            No meet selected.<br>
+            <a href="index.html" style="color:#7eb8f7;">← Go back</a>
+          </div>`;
+      }
+      return;
+    }
+
+    log('Meet loaded: ' + (MEET.name || MEET.id));
+
+    const logo = safeGet('topLogo');
+    if (logo) {
+      logo.src = MEET.logo_url ||
+        'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
+    }
+
+    if (title) title.textContent = MEET.name || 'Current Meet';
+
+    await loadEvents();
+    updateBanners();
+
+  } catch (err) {
+    console.error("BOOTSTRAP CRASH:", err);
+    log("Fatal error — check console");
   }
-
-  log(`Meet loaded: ${MEET.name || MEET.id}`);
-
-  // Update top bar branding
-  document.getElementById('topLogo').src = MEET.logo_url || 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
-  document.getElementById('topMeetName').textContent = MEET.name || 'Current Meet';
-
-  await loadEvents();
-  updateBanners();
 };
 
 /* ─────────────────────────────────────────────
-   LOAD EVENTS
+   LOAD EVENTS (SAFE SUPABASE)
 ───────────────────────────────────────────── */
 async function loadEvents() {
-  log("Fetching events...");
-  const { data: events, error } = await sb
-    .from('events')
-    .select('*')
-    .eq('meet_id', MEET.id)
-    .order('name');
+  if (!sb || !MEET) return;
 
-  if (error) {
-    log("Events error: " + error.message);
-    return;
+  log("Loading events...");
+
+  try {
+    const { data, error } = await sb
+      .from('events')
+      .select('*')
+      .eq('meet_id', MEET.id)
+      .order('name');
+
+    if (error) {
+      log("Events error: " + error.message);
+      return;
+    }
+
+    const sel = safeGet('eventSelect');
+    if (!sel) return;
+
+    sel.innerHTML = '<option value="">— Select Event —</option>';
+
+    (data || []).forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.id;
+      opt.textContent =
+        `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
+      sel.appendChild(opt);
+    });
+
+  } catch (err) {
+    log("Events crash: " + err.message);
   }
-
-  const sel = document.getElementById('eventSelect');
-  sel.innerHTML = '<option value="">— Select Event —</option>';
-
-  (events || []).forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e.id;
-    opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
-    sel.appendChild(opt);
-  });
-
-  if (!events || events.length === 0) log("No events found for this meet.");
 }
 
 /* ─────────────────────────────────────────────
    LOAD ATHLETES
 ───────────────────────────────────────────── */
 async function loadEvent() {
-  const eventId = document.getElementById('eventSelect').value;
+  if (!sb || !MEET) return;
+
+  const eventId = document.getElementById('eventSelect')?.value;
   if (!eventId) return;
 
-  log(`Loading athletes for event: ${eventId}`);
+  log("Loading athletes...");
 
-  const { data: assigns, error } = await sb
-    .from('event_assignments')
-    .select('athlete_id, athlete_name, athletes(fname, lname, team)')
-    .eq('event_id', eventId)
-    .eq('meet_id', MEET.id);
+  try {
+    const { data, error } = await sb
+      .from('event_assignments')
+      .select('athlete_id, athlete_name, athletes(fname,lname,team)')
+      .eq('event_id', eventId)
+      .eq('meet_id', MEET.id);
 
-  const left = document.getElementById('leftPanel');
-  left.innerHTML = '';
+    const left = safeGet('leftPanel');
+    if (!left) return;
 
-  if (error || !assigns || assigns.length === 0) {
-    left.innerHTML = `<div style="padding:40px;text-align:center;color:#888;">No athletes in this event yet.<br>Use Admin to import roster.</div>`;
-    return;
+    left.innerHTML = '';
+
+    if (error || !data?.length) {
+      left.innerHTML = `<div style="padding:30px;color:#888;">No athletes found</div>`;
+      return;
+    }
+
+    data.forEach(a => {
+      const ath = a.athletes || {};
+      const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
+
+      const btn = document.createElement('button');
+      btn.className = 'ath-btn';
+      btn.innerHTML = `<div style="font-weight:700;">${name}</div>`;
+
+      btn.onclick = (e) => selectAthlete(a.athlete_id, name, eventId, e);
+      left.appendChild(btn);
+    });
+
+  } catch (err) {
+    log("Athlete load crash: " + err.message);
   }
-
-  assigns.forEach(a => {
-    const ath = a.athletes || {};
-    const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
-    const btn = document.createElement('button');
-    btn.className = 'ath-btn';
-    btn.innerHTML = `<div style="font-weight:700;">${name}</div>${ath.team ? `<div style="font-size:13px;color:#666;">${ath.team}</div>` : ''}`;
-    btn.onclick = () => selectAthlete(a.athlete_id, name, eventId);
-    left.appendChild(btn);
-  });
 }
 
 /* ─────────────────────────────────────────────
-   SELECT ATHLETE + ATTEMPTS
+   SELECT ATHLETE
 ───────────────────────────────────────────── */
-async function selectAthlete(athleteId, name, eventId) {
-  document.querySelectorAll('.ath-btn').forEach(b => b.classList.remove('active'));
-  if (event.currentTarget) event.currentTarget.classList.add('active');
+async function selectAthlete(athleteId, name, eventId, e) {
+  document.querySelectorAll('.ath-btn')
+    .forEach(b => b.classList.remove('active'));
 
-  const { data: attempts } = await sb
-    .from('attempts')
-    .select('*')
-    .eq('athlete_id', athleteId)
-    .eq('event_id', eventId)
-    .eq('meet_id', MEET.id)
-    .order('attempt_number');
+  if (e?.currentTarget) e.currentTarget.classList.add('active');
 
-  document.getElementById('rightPanel').innerHTML = `
-    <div class="card">
-      <h2>${name}</h2>
-      <button onclick="addAttempt('${athleteId}','${eventId}')" 
-        style="width:100%;padding:16px;background:#155724;color:white;border:none;border-radius:8px;margin:12px 0;cursor:pointer;">
-        + Add Attempt
-      </button>
-      <div id="attemptList"></div>
-    </div>`;
+  try {
+    const { data } = await sb
+      .from('attempts')
+      .select('*')
+      .eq('athlete_id', athleteId)
+      .eq('event_id', eventId)
+      .eq('meet_id', MEET.id)
+      .order('attempt_number');
 
-  renderAttempts(attempts || []);
+    const right = safeGet('rightPanel');
+    if (!right) return;
+
+    right.innerHTML = `
+      <div class="card">
+        <h2>${name}</h2>
+        <button onclick="addAttempt('${athleteId}','${eventId}')"
+          style="width:100%;padding:16px;background:#155724;color:white;border:none;border-radius:8px;">
+          + Add Attempt
+        </button>
+        <div id="attemptList"></div>
+      </div>`;
+
+    renderAttempts(data || []);
+
+  } catch (err) {
+    log("Select athlete crash: " + err.message);
+  }
 }
 
+/* ─────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────── */
 function renderAttempts(attempts) {
   const el = document.getElementById('attemptList');
-  el.innerHTML = attempts.length 
-    ? attempts.map(a => `
-        <div style="padding:12px;background:#f8f9fa;border-radius:8px;margin:8px 0;">
-          Attempt ${a.attempt_number} — <strong>${a.mark || '—'}</strong>
-        </div>`).join('')
-    : '<p style="color:#888;text-align:center;">No attempts recorded yet</p>';
-}
+  if (!el) return;
 
-async function addAttempt(athleteId, eventId) {
-  const mark = prompt('Enter mark (e.g. 42-06, FOUL, PASS):');
-  if (!mark) return;
-
-  const result = mark.toUpperCase().includes('FOUL') ? 'foul' : 'make';
-  const { data: existing } = await sb.from('attempts').select('attempt_number')
-    .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id);
-  const nextNum = (existing ? existing.length : 0) + 1;
-
-  await sb.from('attempts').insert({
-    meet_id: MEET.id,
-    event_id: eventId,
-    athlete_id: athleteId,
-    attempt_number: nextNum,
-    mark: mark.trim(),
-    result
-  });
-
-  // Refresh list
-  const { data: attempts } = await sb.from('attempts').select('*')
-    .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id);
-  renderAttempts(attempts || []);
+  el.innerHTML = attempts.length
+    ? attempts.map(a =>
+        `<div style="padding:10px;background:#f8f9fa;margin:6px 0;">
+          Attempt ${a.attempt_number} — <b>${a.mark || '—'}</b>
+        </div>`
+      ).join('')
+    : `<p style="color:#888;">No attempts</p>`;
 }
 
 /* ─────────────────────────────────────────────
-   OFFLINE BANNER
+   ADD ATTEMPT
+───────────────────────────────────────────── */
+async function addAttempt(athleteId, eventId) {
+  if (!sb || !MEET) return;
+
+  const mark = prompt("Enter mark:");
+  if (!mark) return;
+
+  try {
+    const { data: existing } = await sb
+      .from('attempts')
+      .select('attempt_number')
+      .eq('athlete_id', athleteId)
+      .eq('event_id', eventId)
+      .eq('meet_id', MEET.id);
+
+    const next = (existing?.length || 0) + 1;
+
+    await sb.from('attempts').insert({
+      meet_id: MEET.id,
+      event_id: eventId,
+      athlete_id: athleteId,
+      attempt_number: next,
+      mark: mark.trim(),
+      result: mark.toUpperCase().includes('FOUL') ? 'foul' : 'make'
+    });
+
+    selectAthlete(athleteId, "Athlete", eventId);
+
+  } catch (err) {
+    log("Insert crash: " + err.message);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   BANNER
 ───────────────────────────────────────────── */
 function updateBanners() {
-  const banner = document.getElementById('offlineBanner');
-  const toggle = () => banner.classList.toggle('show', !navigator.onLine);
+  const b = document.getElementById('offlineBanner');
+  if (!b) return;
+
+  const toggle = () => b.classList.toggle('show', !navigator.onLine);
   toggle();
+
   window.addEventListener('online', toggle);
   window.addEventListener('offline', toggle);
 }
