@@ -1,62 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0d1b2a">
-  <title>Field Events Pro — Scoring</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    .topbar { background: #0d1b2a; border-bottom: 2px solid #1e3a5f; padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-    #topLogo { height: 38px; width: auto; }
-    .meet-pill { background: #162438; border: 1px solid #1e3a5f; border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: 700; color: #7eb8f7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .topbar-title { font-size: 18px; font-weight: 800; color: #7eb8f7; flex: 1; }
-    .nav-home { color: white; text-decoration: none; }
-    #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; }
-    #offlineBanner.show { display: block; }
-    .debug { background: #2a0a0a; color: #ff9; padding: 10px; font-size: 13px; max-height: 200px; overflow-y: auto; }
-    .event-header { background: #0d1b2a; color: white; padding: 12px 16px; }
-    .event-header select { width: 100%; padding: 10px; background: #162438; color: white; border-radius: 6px; }
-    .container { display: flex; flex: 1; overflow: hidden; }
-    .left-panel { width: 42%; border-right: 2px solid #ddd; overflow-y: auto; background: white; padding: 10px; }
-    .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
-    .ath-btn { width: 100%; padding: 14px; margin: 6px 0; background: #f8f9fa; border: 1px solid #ddd; text-align: left; cursor: pointer; border-radius: 6px; }
-    .ath-btn:hover { background: #eef4ff; }
-    .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
-  </style>
-</head>
-<body>
-
-<div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
-
-<div class="topbar">
-  <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo">
-  <div class="meet-pill" id="topMeetName">Loading meet...</div>
-  <div class="topbar-title">FIELD EVENTS PRO — SCORING</div>
-  <a href="index.html" class="nav-home">⌂</a>
-</div>
-
-<div class="event-header">
-  <select id="eventSelect" onchange="loadEvent()">
-    <option value="">— Select Event —</option>
-  </select>
-</div>
-
-<div class="container">
-  <div class="left-panel" id="leftPanel">
-    <div style="padding:40px;text-align:center;color:#666;">Select an event above</div>
-  </div>
-  <div class="right-panel" id="rightPanel">
-    <div style="padding:40px;text-align:center;color:#666;">Select an athlete to begin scoring</div>
-  </div>
-</div>
-
-<div class="debug" id="debug"></div>
-
 <script>
 const sb = supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
@@ -65,40 +6,56 @@ const sb = supabase.createClient(
 
 let currentMeet = null;
 
+/* ─────────────────────────────
+   DEBUG
+───────────────────────────── */
 function log(msg) {
   console.log('[Scoring]', msg);
   const d = document.getElementById('debug');
-  d.style.display = 'block';
-  d.innerHTML += '→ ' + msg + '<br>';
-  d.scrollTop = d.scrollHeight;
+  if (d) {
+    d.style.display = 'block';
+    d.innerHTML += '→ ' + msg + '<br>';
+  }
 }
 
+/* ─────────────────────────────
+   BOOT
+───────────────────────────── */
 window.onload = async () => {
   log("=== SCORING PAGE LOADED ===");
 
   const stored = sessionStorage.getItem('fep_meet');
+
   if (!stored) {
-    log("ERROR: No meet in sessionStorage. Go back to index.html");
-    document.getElementById('topMeetName').innerHTML = "<span style='color:red'>No Meet Selected</span>";
+    log("ERROR: No meet found");
+    document.getElementById('topMeetName').textContent = "No Meet Selected";
     return;
   }
 
   currentMeet = JSON.parse(stored);
-  log(`Meet loaded: ${currentMeet.name} (ID: ${currentMeet.id})`);
+  log(`Meet loaded: ${currentMeet.name} (${currentMeet.id})`);
+
   document.getElementById('topMeetName').textContent = currentMeet.name;
 
   await loadEvents();
 };
 
+/* ─────────────────────────────
+   LOAD EVENTS
+───────────────────────────── */
 async function loadEvents() {
   log("Fetching events...");
+
   const { data: events, error } = await sb
     .from('events')
-    .select('*')
+    .select('id, name, gender, level')
     .eq('meet_id', currentMeet.id)
     .order('name');
 
-  if (error) return log("Events error: " + error.message);
+  if (error) {
+    log("Events error: " + error.message);
+    return;
+  }
 
   const sel = document.getElementById('eventSelect');
   sel.innerHTML = '<option value="">— Select Event —</option>';
@@ -106,25 +63,26 @@ async function loadEvents() {
   (events || []).forEach(e => {
     const opt = document.createElement('option');
     opt.value = e.id;
-    opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
+    opt.textContent =
+      `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
     sel.appendChild(opt);
   });
 }
 
+/* ─────────────────────────────
+   LOAD EVENT ATHLETES
+   (FIXED: NO SUPABASE EMBED JOINS)
+───────────────────────────── */
 async function loadEvent() {
   const eventId = document.getElementById('eventSelect').value;
   if (!eventId) return;
 
   log(`Loading athletes for event ${eventId}`);
 
-  // FIXED: Explicit foreign key reference using !athlete_id
+  // 1. get assignments only
   const { data: assigns, error } = await sb
     .from('event_assignments')
-    .select(`
-      athlete_id,
-      athlete_name,
-      athletes!athlete_id (fname, lname, team)
-    `)
+    .select('athlete_id, athlete_name')
     .eq('event_id', eventId)
     .eq('meet_id', currentMeet.id);
 
@@ -132,30 +90,61 @@ async function loadEvent() {
   left.innerHTML = '';
 
   if (error) {
-    log("ERROR: " + error.message);
-    left.innerHTML = `<div style="color:red;padding:20px;">${error.message}</div>`;
+    log("Assignment error: " + error.message);
     return;
   }
 
   if (!assigns || assigns.length === 0) {
-    left.innerHTML = `<div style="padding:40px;text-align:center;color:#888;">No athletes in this event yet.</div>`;
+    left.innerHTML = `<div style="padding:40px;text-align:center;color:#888;">
+      No athletes in this event yet.
+    </div>`;
     return;
   }
 
+  // 2. fetch athlete details separately (NO JOINS = SAFE)
+  const athleteIds = assigns.map(a => a.athlete_id);
+
+  const { data: athletes, error: athError } = await sb
+    .from('athletes')
+    .select('id, fname, lname, team')
+    .in('id', athleteIds);
+
+  if (athError) {
+    log("Athlete fetch error: " + athError.message);
+  }
+
+  const map = {};
+  (athletes || []).forEach(a => map[a.id] = a);
+
+  // 3. render
   assigns.forEach(a => {
-    const ath = a.athletes || {};
+    const ath = map[a.athlete_id] || {};
     const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
+    const team = ath.team || '';
+
     const btn = document.createElement('button');
     btn.className = 'ath-btn';
-    btn.innerHTML = `<div style="font-weight:700;">${name}</div>${ath.team ? `<div style="font-size:13px;color:#666;">${ath.team}</div>` : ''}`;
-    btn.onclick = () => selectAthlete(a.athlete_id, name, eventId);
+
+    btn.innerHTML = `
+      <div style="font-weight:700;">${name}</div>
+      ${team ? `<div style="font-size:13px;color:#666;">${team}</div>` : ''}
+    `;
+
+    btn.onclick = (e) => selectAthlete(a.athlete_id, name, eventId, e);
     left.appendChild(btn);
   });
 }
 
-async function selectAthlete(athleteId, name, eventId) {
-  document.querySelectorAll('.ath-btn').forEach(b => b.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+/* ─────────────────────────────
+   SELECT ATHLETE
+───────────────────────────── */
+async function selectAthlete(athleteId, name, eventId, e) {
+  document.querySelectorAll('.ath-btn')
+    .forEach(b => b.classList.remove('active'));
+
+  if (e?.currentTarget) {
+    e.currentTarget.classList.add('active');
+  }
 
   const { data: attempts } = await sb
     .from('attempts')
@@ -168,33 +157,52 @@ async function selectAthlete(athleteId, name, eventId) {
   document.getElementById('rightPanel').innerHTML = `
     <div class="card">
       <h2>${name}</h2>
-      <button onclick="addAttempt('${athleteId}','${eventId}')" 
+
+      <button onclick="addAttempt('${athleteId}','${eventId}')"
         style="width:100%;padding:16px;background:#155724;color:white;border:none;border-radius:8px;margin:12px 0;cursor:pointer;">
         + Add Attempt
       </button>
+
       <div id="attemptList"></div>
     </div>`;
 
   renderAttempts(attempts || []);
 }
 
+/* ─────────────────────────────
+   RENDER ATTEMPTS
+───────────────────────────── */
 function renderAttempts(attempts) {
   const el = document.getElementById('attemptList');
-  el.innerHTML = attempts.length 
-    ? attempts.map(a => `<div style="padding:12px;background:#f8f9fa;border-radius:8px;margin:8px 0;">Attempt ${a.attempt_number} — <strong>${a.mark || '—'}</strong></div>`).join('')
-    : '<p style="color:#888;text-align:center;">No attempts yet</p>';
+
+  el.innerHTML = attempts.length
+    ? attempts.map(a => `
+        <div style="padding:12px;background:#f8f9fa;border-radius:8px;margin:8px 0;">
+          Attempt ${a.attempt_number} — <strong>${a.mark || '—'}</strong>
+        </div>
+      `).join('')
+    : `<p style="color:#888;text-align:center;">No attempts yet</p>`;
 }
 
+/* ─────────────────────────────
+   ADD ATTEMPT
+───────────────────────────── */
 async function addAttempt(athleteId, eventId) {
   const mark = prompt('Enter mark (e.g. 42-06, FOUL, PASS):');
   if (!mark) return;
 
   const result = mark.toUpperCase().includes('FOUL') ? 'foul' : 'make';
-  const { data: existing } = await sb.from('attempts').select('attempt_number')
-    .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id);
-  const nextNum = (existing ? existing.length : 0) + 1;
 
-  await sb.from('attempts').insert({
+  const { data: existing } = await sb
+    .from('attempts')
+    .select('attempt_number')
+    .eq('athlete_id', athleteId)
+    .eq('event_id', eventId)
+    .eq('meet_id', currentMeet.id);
+
+  const nextNum = (existing?.length || 0) + 1;
+
+  const { error } = await sb.from('attempts').insert({
     meet_id: currentMeet.id,
     event_id: eventId,
     athlete_id: athleteId,
@@ -203,10 +211,31 @@ async function addAttempt(athleteId, eventId) {
     result
   });
 
-  const { data: attempts } = await sb.from('attempts').select('*')
-    .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id);
+  if (error) {
+    log("Insert error: " + error.message);
+    return;
+  }
+
+  // refresh
+  const { data: attempts } = await sb
+    .from('attempts')
+    .select('*')
+    .eq('athlete_id', athleteId)
+    .eq('event_id', eventId)
+    .eq('meet_id', currentMeet.id)
+    .order('attempt_number');
+
   renderAttempts(attempts || []);
 }
+
+/* ─────────────────────────────
+   OFFLINE BANNER
+───────────────────────────── */
+function updateBanners() {
+  const banner = document.getElementById('offlineBanner');
+  const toggle = () => banner.classList.toggle('show', !navigator.onLine);
+  toggle();
+  window.addEventListener('online', toggle);
+  window.addEventListener('offline', toggle);
+}
 </script>
-</body>
-</html>
