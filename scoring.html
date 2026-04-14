@@ -10,48 +10,40 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, sans-serif;
-      background: #f0f2f5; margin: 0;
-      display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+    body { 
+      font-family: -apple-system, sans-serif; 
+      background: #f0f2f5; margin: 0; 
+      display: flex; flex-direction: column; height: 100vh; overflow: hidden; 
     }
-    .topbar {
-      background: #0d1b2a; border-bottom: 2px solid #1e3a5f;
-      padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    .topbar { 
+      background: #0d1b2a; border-bottom: 2px solid #1e3a5f; 
+      padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; 
     }
     #topLogo { height: 38px; width: auto; }
-    .meet-pill {
-      background: #162438; border: 1px solid #1e3a5f; border-radius: 20px;
-      padding: 4px 12px; font-size: 13px; font-weight: 700; color: #7eb8f7;
-      white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+    .meet-pill { 
+      background: #162438; border: 1px solid #1e3a5f; border-radius: 20px; 
+      padding: 4px 12px; font-size: 13px; font-weight: 700; color: #7eb8f7; 
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
     }
     .topbar-title { font-size: 18px; font-weight: 800; color: #7eb8f7; flex: 1; }
     .nav-home { color: white; text-decoration: none; font-size: 20px; }
-    #offlineBanner {
-      display: none; background: #dc3545; color: white;
-      padding: 8px; text-align: center; font-weight: bold; flex-shrink: 0;
-    }
+    #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; flex-shrink: 0; }
     #offlineBanner.show { display: block; }
-    .event-header {
-      background: #0d1b2a; color: white; padding: 10px 14px; flex-shrink: 0;
-    }
-    .event-header select {
-      width: 100%; padding: 10px; background: #162438; color: white;
-      border: 1px solid #2a4a6e; border-radius: 6px; font-size: 14px;
-    }
+    #queueBanner { display: none; background: #856404; color: #fff3cd; padding: 6px; text-align: center; font-size: 12px; }
+    #queueBanner.show { display: block; }
+    .event-header { background: #0d1b2a; color: white; padding: 10px 14px; flex-shrink: 0; }
+    .event-header select { width: 100%; padding: 10px; background: #162438; color: white; border-radius: 6px; font-size: 14px; }
     .container { display: flex; flex: 1; overflow: hidden; }
-    .left-panel {
-      width: 42%; border-right: 2px solid #ddd;
-      overflow-y: auto; background: white; padding: 8px;
+    .left-panel { width: 42%; border-right: 2px solid #ddd; overflow-y: auto; background: white; padding: 8px; }
+    .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
+    .ath-btn { 
+      width: 100%; padding: 13px 14px; margin: 5px 0; 
+      background: #f8f9fa; border: 1px solid #ddd; 
+      text-align: left; cursor: pointer; border-radius: 6px; 
     }
-    .right-panel { flex: 1; overflow-y: auto; padding: 16px; background: #fdfdfd; }
-    .ath-btn {
-      width: 100%; padding: 13px 14px; margin: 5px 0;
-      background: #f8f9fa; border: 1px solid #ddd;
-      text-align: left; cursor: pointer; border-radius: 6px;
-    }
-    .ath-btn:hover  { background: #eef4ff; }
+    .ath-btn:hover { background: #eef4ff; }
     .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
+    .ath-btn.eliminated { background: #fff5f5; }
     .attempt-row {
       display: flex; align-items: center; gap: 10px;
       padding: 11px 14px; background: #f8f9fa;
@@ -75,6 +67,12 @@
       background: white; border-radius: 10px; padding: 18px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
+    .height-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .height-controls input { width: 110px; padding: 10px; font-size: 18px; text-align: center; }
+    .inc-btn { padding: 8px 12px; background: #eee; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
+    .vmark-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
+    .vmark-btn { height: 60px; border-radius: 8px; border: none; font-size: 22px; font-weight: bold; color: white; cursor: pointer; }
+    .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
   </style>
 </head>
 <body>
@@ -82,9 +80,7 @@
 <div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally...</div>
 
 <div class="topbar">
-  <img id="topLogo"
-       src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-       alt="Logo">
+  <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo">
   <div class="meet-pill" id="topMeetName">Loading…</div>
   <div class="topbar-title">FIELD EVENTS PRO — SCORING</div>
   <a href="index.html" class="nav-home">⌂</a>
@@ -113,6 +109,13 @@ const sb = supabase.createClient(
 
 const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
 let currentMeet = null;
+let currentAth = null;
+let currentEventId = '';
+let isVertical = false;
+let flightBarHeight = '';
+let checkinStatus = {};   // { athleteId: { status: 'accepted'|'passed', entryHeight: '8-06' } }
+let attemptsCache = {};
+let athleteListCache = [];
 
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
@@ -122,13 +125,13 @@ window.onload = async () => {
   }
   currentMeet = JSON.parse(stored);
 
-  // Apply meet branding: use meet logo if uploaded, else Ironclad
+  // Apply custom logo or fallback
   document.getElementById('topLogo').src = currentMeet.logo_url || IRONCLAD;
   document.getElementById('topMeetName').textContent = currentMeet.name;
 
   await loadEvents();
 
-  // Online/offline banner
+  // Offline banner
   const banner = document.getElementById('offlineBanner');
   const checkOnline = () => banner.classList.toggle('show', !navigator.onLine);
   checkOnline();
@@ -136,7 +139,7 @@ window.onload = async () => {
   window.addEventListener('offline', checkOnline);
 };
 
-// ── Load events ───────────────────────────────────────────────
+// Load events
 async function loadEvents() {
   const { data: events, error } = await sb
     .from('events')
@@ -144,74 +147,78 @@ async function loadEvents() {
     .eq('meet_id', currentMeet.id)
     .order('name');
 
-  if (error) { console.error('loadEvents:', error.message); return; }
+  if (error) return console.error(error);
 
   const sel = document.getElementById('eventSelect');
   sel.innerHTML = '<option value="">— Select Event —</option>';
+
   (events || []).forEach(e => {
     const opt = document.createElement('option');
     opt.value = e.id;
-    opt.textContent = e.name
-      + (e.gender ? ' — ' + e.gender : '')
-      + (e.level  ? ' (' + e.level + ')' : '');
+    opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
     sel.appendChild(opt);
   });
 }
 
-// ── Load athletes for selected event ─────────────────────────
+// Load athletes when event selected
 async function loadEvent() {
   const eventId = document.getElementById('eventSelect').value;
+  if (!eventId) return;
+
+  currentEventId = eventId;
+  currentAth = null;
+
   const left = document.getElementById('leftPanel');
-  if (!eventId) { left.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Select an event above</div>'; return; }
+  left.innerHTML = '<div style="padding:40px;text-align:center;color:#888;">Loading athletes...</div>';
 
-  left.innerHTML = '<div style="padding:20px;color:#888;">Loading…</div>';
-
-  // Fix: name the FK explicitly to resolve the ambiguous relationship error
+  // Explicit join to fix ambiguous relationship error
   const { data: assigns, error } = await sb
     .from('event_assignments')
-    .select('athlete_id, athlete_name, athletes!event_assignments_athlete_id_fkey(id, fname, lname, team)')
+    .select('athlete_id, athlete_name, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
     .eq('event_id', eventId)
     .eq('meet_id', currentMeet.id);
 
   if (error) {
-    left.innerHTML = `<div style="padding:20px;color:red;font-size:13px;">Error: ${error.message}</div>`;
+    left.innerHTML = `<div style="color:red;padding:20px;">Error: ${error.message}</div>`;
     return;
   }
 
-  if (!assigns || !assigns.length) {
-    left.innerHTML = '<div style="padding:30px;text-align:center;color:#888;">No athletes in this event.</div>';
+  if (!assigns || assigns.length === 0) {
+    left.innerHTML = '<div style="padding:30px;text-align:center;color:#888;">No athletes in this event yet.</div>';
     return;
   }
 
   left.innerHTML = '';
   assigns.forEach(a => {
-    const ath  = a.athletes || {};
+    const ath = a.athletes || {};
     const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
-    const btn  = document.createElement('button');
+    const btn = document.createElement('button');
     btn.className = 'ath-btn';
-    btn.innerHTML = `<div style="font-weight:700;font-size:14px;">${name}</div>`
-      + (ath.team ? `<div style="font-size:12px;color:#888;">${ath.team}</div>` : '');
-    btn.onclick = (e) => selectAthlete(e, a.athlete_id, name, eventId);
+    btn.innerHTML = `<div style="font-weight:700;">${name}</div>${ath.team ? `<div style="font-size:13px;color:#666;">${ath.team}</div>` : ''}`;
+    btn.onclick = () => selectAthlete(a.athlete_id, name, eventId);
     left.appendChild(btn);
   });
 }
 
-// ── Select athlete ────────────────────────────────────────────
-async function selectAthlete(e, athleteId, name, eventId) {
+// Select athlete
+async function selectAthlete(athleteId, name, eventId) {
+  currentAth = { id: athleteId, name };
+
   document.querySelectorAll('.ath-btn').forEach(b => b.classList.remove('active'));
-  e.currentTarget.classList.add('active');
+  event.currentTarget.classList.add('active');
 
   const { data: attempts } = await sb
-    .from('attempts').select('*')
+    .from('attempts')
+    .select('*')
     .eq('athlete_id', athleteId)
-    .eq('event_id',   eventId)
-    .eq('meet_id',    currentMeet.id)
+    .eq('event_id', eventId)
+    .eq('meet_id', currentMeet.id)
     .order('attempt_number');
 
-  document.getElementById('rightPanel').innerHTML = `
+  const right = document.getElementById('rightPanel');
+  right.innerHTML = `
     <div class="card">
-      <h2 style="margin:0 0 4px;font-size:20px;">${name}</h2>
-      <p style="margin:0 0 12px;color:#888;font-size:13px;">Tap below to record a new attempt</p>
+      <h2>${name}</h2>
       <button class="add-btn" onclick="addAttempt('${athleteId}','${eventId}')">+ ADD ATTEMPT</button>
       <div id="attemptList"></div>
     </div>`;
@@ -219,53 +226,44 @@ async function selectAthlete(e, athleteId, name, eventId) {
   renderAttempts(attempts || []);
 }
 
-// ── Render attempts ───────────────────────────────────────────
 function renderAttempts(attempts) {
   const el = document.getElementById('attemptList');
   if (!el) return;
   if (!attempts.length) {
-    el.innerHTML = '<p style="text-align:center;color:#aaa;font-size:13px;">No attempts recorded yet.</p>';
+    el.innerHTML = '<p style="text-align:center;color:#aaa;">No attempts recorded yet.</p>';
     return;
   }
   el.innerHTML = attempts.map(a => {
     const badgeClass = a.result === 'make' ? 'att-make' : a.result === 'foul' ? 'att-foul' : 'att-other';
-    const badgeLabel = (a.result || 'pending').toUpperCase();
     return `<div class="attempt-row">
       <span class="att-num">ATT ${a.attempt_number}</span>
       <span class="att-mark">${a.mark || '—'}</span>
-      <span class="att-badge ${badgeClass}">${badgeLabel}</span>
+      <span class="att-badge ${badgeClass}">${(a.result || 'pending').toUpperCase()}</span>
     </div>`;
   }).join('');
 }
 
-// ── Add attempt ───────────────────────────────────────────────
 async function addAttempt(athleteId, eventId) {
-  const mark = prompt('Enter mark:\n\nExamples: 42-06  /  45-00.5  /  FOUL  /  PASS  /  NH');
-  if (mark === null || mark.trim() === '') return;
+  const mark = prompt('Enter mark (e.g. 42-06, FOUL, PASS, NH):');
+  if (!mark) return;
 
-  const upper  = mark.trim().toUpperCase();
-  const result = upper.includes('FOUL') ? 'foul'
-               : upper === 'NH' || upper === 'PASS' ? 'nh'
-               : 'make';
+  const result = mark.toUpperCase().includes('FOUL') ? 'foul' : 'make';
 
   const { data: existing } = await sb.from('attempts').select('attempt_number')
     .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id);
   const nextNum = (existing ? existing.length : 0) + 1;
 
-  const { error } = await sb.from('attempts').insert({
-    meet_id:        currentMeet.id,
-    event_id:       eventId,
-    athlete_id:     athleteId,
+  await sb.from('attempts').insert({
+    meet_id: currentMeet.id,
+    event_id: eventId,
+    athlete_id: athleteId,
     attempt_number: nextNum,
-    mark:           mark.trim(),
+    mark: mark.trim(),
     result
   });
 
-  if (error) { alert('Save failed: ' + error.message); return; }
-
   const { data: attempts } = await sb.from('attempts').select('*')
-    .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id)
-    .order('attempt_number');
+    .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', currentMeet.id);
   renderAttempts(attempts || []);
 }
 </script>
