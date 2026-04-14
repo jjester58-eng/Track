@@ -12,7 +12,7 @@
   <script type="module">
     import { sb, getActiveMeet, safeGet, log, updateBanners } from './meet-session.js';
 
-    const ADMIN_PASSWORD = 'admin'; 
+    const ADMIN_PASSWORD = '1111'; 
     let activeMeetId = null;
     let activeMeetName = null;
     let MEET = null;
@@ -20,12 +20,13 @@
     async function initPage() {
       log("Admin page initialized.");
       updateBanners();
-      loadMeetList();
+      await loadMeetList();
     }
 
     function checkPassword() {
       const pwInput = safeGet("pwInput");
       const lockError = safeGet("lockError");
+      console.log("[FEP] Checking password:", pwInput.value);
       if (pwInput.value === ADMIN_PASSWORD) {
         safeGet("lockScreen").style.display = "none";
         safeGet("adminContent").style.display = "block";
@@ -58,7 +59,7 @@
         meetSelect.appendChild(option);
       });
 
-      const currentMeet = getActiveMeet();
+      const currentMeet = await getActiveMeet();
       if (currentMeet && currentMeet.id) {
         meetSelect.value = currentMeet.id;
         onMeetChange();
@@ -171,7 +172,7 @@
       events.forEach(ev => {
         const div = document.createElement("div");
         div.className = "event-item";
-        div.innerHTML = `<div><div class="ev-name">${ev.name}</div><div class="ev-meta">${ev.gender||''} ${ev.level||''}</div></div><span class="badge">${ev.event_type}</span>`;
+        div.innerHTML = `<div><div class="ev-name">${ev.name}</div><div class="ev-meta">${ev.gender||""} ${ev.level||""}</div></div><span class="badge">${ev.event_type}</span>`;
         list.appendChild(div);
       });
     }

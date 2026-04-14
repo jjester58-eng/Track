@@ -10,15 +10,16 @@
   <title>Field Events Pro — Scoring</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module">
-    import { sb, getActiveMeet, applyMeetBranding, updateBanners, safeGet, log } from './meet-session.js';
+    import { sb, getActiveMeet, applyMeetBranding, updateBanners, safeGet, log, MEET } from './meet-session.js';
 
-    let MEET = null;
-
-    async function initPage() {
-      console.log("[FEP] Starting index.html initialization...");
-      MEET = getActiveMeet();
+    // Override the initPage placeholder from meet-session.js
+    window.initPage = async () => {
+      console.log("[FEP] Starting scoring.html initialization...");
       
-      if (!MEET || !MEET.id) {
+      const currentMeet = await getActiveMeet();
+      
+      if (!currentMeet || !currentMeet.id) {
+        console.warn("[FEP] No meet found during init.");
         const title = safeGet("topMeetName");
         if (title) title.textContent = "No Meet Selected";
         const left = safeGet("leftPanel");
@@ -28,13 +29,21 @@
         return;
       }
 
-      applyMeetBranding(MEET);
+      console.log("[FEP] Meet loaded successfully:", currentMeet.id);
+      
+      applyMeetBranding(currentMeet);
       await loadEvents();
       updateBanners();
-    }
+    };
 
     async function loadEvents() {
-      if (!sb || !MEET) return;
+      if (!sb || !MEET) {
+        console.error("[FEP] Cannot load events: Supabase or MEET not initialized.");
+        return;
+      }
+
+      console.log("[FEP] Fetching events for meet_id:", MEET.id);
+
       try {
         const { data: events, error } = await sb
           .from("events")
@@ -43,27 +52,35 @@
           .order("name");
 
         if (error) {
-          console.error("[FEP] Supabase error:", error.message);
+          console.error("[FEP] Supabase error fetching events:", error.message);
           return;
         }
 
+        console.log("[FEP] Events fetched:", events?.length || 0);
+
         const sel = safeGet("eventSelect");
         if (!sel) return;
+
         sel.innerHTML = '<option value="">— Select Event —</option>';
+
         (events || []).forEach(e => {
           const opt = document.createElement("option");
           opt.value = e.id;
           opt.textContent = `${e.name} ${e.gender ? '— ' + e.gender : ''} ${e.level ? '(' + e.level + ')' : ''}`;
           sel.appendChild(opt);
         });
+
       } catch (err) {
-        console.error("[FEP] loadEvents crash:", err.message);
+        console.error("[FEP] Crash during loadEvents:", err.message);
       }
     }
 
     async function loadEvent() {
       const eventId = safeGet("eventSelect")?.value;
       if (!eventId || !sb || !MEET) return;
+
+      console.log("[FEP] Loading athletes for event_id:", eventId);
+
       try {
         const { data: assigns, error } = await sb
           .from("event_assignments")
@@ -73,9 +90,11 @@
 
         const left = safeGet("leftPanel");
         if (!left) return;
+
         left.innerHTML = '';
 
         if (error || !assigns?.length) {
+          console.warn("[FEP] No athletes found for this event.");
           left.innerHTML = `<div style="padding:30px;color:#888;">No athletes found</div>`;
           return;
         }
@@ -83,15 +102,18 @@
         assigns.forEach(a => {
           const ath = a.athletes || {};
           const name = ath.fname ? `${ath.fname} ${ath.lname}` : a.athlete_name;
+
           const btn = document.createElement("button");
           btn.className = "ath-btn";
           btn.innerHTML = `<div style="font-weight:700;font-size:14px;">${name}</div>
                            ${ath.team ? `<div style="font-size:12px;color:#888;">${ath.team}</div>` : ''}`;
+
           btn.onclick = (e) => selectAthlete(a.athlete_id, name, eventId, e);
           left.appendChild(btn);
         });
+
       } catch (err) {
-        console.error("[FEP] loadEvent crash:", err.message);
+        console.error("[FEP] Athlete load crash:", err.message);
       }
     }
 
@@ -110,6 +132,7 @@
 
         const right = safeGet("rightPanel");
         if (!right) return;
+
         right.innerHTML = `
           <div class="card">
             <h2 style="margin:0 0 4px;font-size:18px;">${name}</h2>
@@ -120,10 +143,13 @@
               + ADD ATTEMPT
             </button>
           </div>`;
+
         safeGet("addAttemptBtn").onclick = () => addAttempt(athleteId, eventId);
+
         renderAttempts(attempts || []);
+
       } catch (err) {
-        console.error("[FEP] selectAthlete crash:", err.message);
+        console.error("[FEP] Select athlete crash:", err.message);
       }
     }
 
@@ -140,7 +166,8 @@
           <span style="flex:1;font-size:16px;font-weight:700;">${a.mark || '—'}</span>
           <span style="font-size:11px;padding:2px 8px;border-radius:4px;font-weight:bold;
             background:${a.result==='make'?'#0a2a18':a.result==='foul'?'#2a0a0a':'#1a2a3a'};
-            color:${a.result==='make'?'#4dca7a':a.result==='foul'?'#f87':'#7eb8f7'};">
+            color:${a.result==='make'?'#4dca7a':a.result==='foul'?'#f87':'#7eb8f7'};
+            ">
             ${(a.result||'pending').toUpperCase()}
           </span>
         </div>`).join('');
@@ -150,9 +177,11 @@
       const mark = prompt('Enter mark (e.g. 45-06 or NH or FOUL):');
       if (mark === null) return;
       const result = mark.toUpperCase().includes('FOUL') ? 'foul' : mark.toUpperCase() === 'NH' ? 'nh' : 'make';
+
       const { data: existing } = await sb.from('attempts').select('attempt_number')
         .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id);
       const nextNum = existing ? existing.length + 1 : 1;
+
       const { error } = await sb.from('attempts').insert({
         athlete_id: athleteId,
         event_id:   eventId,
@@ -161,6 +190,7 @@
         result,
         attempt_number: nextNum
       });
+
       if (!error) {
         const { data: attempts } = await sb.from('attempts').select('*')
           .eq('athlete_id', athleteId).eq('event_id', eventId).eq('meet_id', MEET.id)
