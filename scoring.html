@@ -9,6 +9,7 @@
   <title>Field Events Pro — Scoring</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    /* Your full original styling */
     *, *::before, *::after { box-sizing: border-box; }
     body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px; font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0; }
@@ -49,6 +50,13 @@
     .badge-foul { background: #2a0a0a; color: #f87; }
     .del-btn { background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
     .hidden { display: none; }
+    /* Check-in panel from your paste */
+    #checkInPanel { background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%); border: 2px solid #f9a825; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .ci-bar-height { font-size: 28px; font-weight: bold; color: #1a3a5c; margin-bottom: 14px; line-height: 1; }
+    .btn-checkin-in { width: 100%; padding: 14px; background: #1a3a5c; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+    .pass-expander-header { width: 100%; padding: 11px 14px; background: #fff8e1; border: none; cursor: pointer; font-size: 13px; font-weight: bold; color: #795548; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+    .pass-expander-body { display: none; padding: 12px; background: white; border-top: 1px solid #e0c97a; }
+    .pass-expander-body.open { display: block; }
   </style>
 </head>
 <body>
@@ -131,15 +139,44 @@
             <div id="hHistoryLog"></div>
           </div>
         </div>
-        <!-- VERTICAL (simplified for now) -->
+        <!-- VERTICAL -->
         <div id="vEntry" class="hidden">
           <div class="card">
             <h2 id="vAthName"></h2>
+            <div class="phase-info" id="vPhaseInfo"></div>
+            <div id="checkInPanel" class="hidden">
+              <div class="ci-header">
+                <span class="ci-icon">📋</span>
+                <h4>Check-In — Bar is set</h4>
+              </div>
+              <div class="ci-bar-label">Current bar height</div>
+              <div class="ci-bar-height" id="checkInHeight">—</div>
+              <button class="btn-checkin-in" onclick="doCheckIn('accept')">✓ IN — Competing at <span id="ciBarInlineLabel">—</span></button>
+              <div class="pass-expander">
+                <button class="pass-expander-header" onclick="togglePassExpander()">
+                  <span>↑ Pass — entering at a higher height</span>
+                  <span id="passExpanderCaret">▼</span>
+                </button>
+                <div class="pass-expander-body" id="passExpanderBody">
+                  <div class="ci-bar-label" style="margin-bottom:6px;">Athlete's opening height</div>
+                  <div class="pass-height-row">
+                    <input type="text" id="passHeightInput" placeholder="e.g. 8-06" oninput="updatePassPreview()">
+                    <button class="ph-inc" onclick="incPassHeight(2)">+2"</button>
+                    <button class="ph-inc" onclick="incPassHeight(6)">+6"</button>
+                    <button class="ph-inc" onclick="incPassHeight(12)">+1'</button>
+                  </div>
+                  <div class="pass-preview" id="passPreview"></div>
+                  <button class="btn-confirm-pass" onclick="doCheckIn('pass')">CONFIRM — Pass to <span id="passHeightLabel">—</span></button>
+                </div>
+              </div>
+            </div>
             <div class="vmark-grid">
               <button class="vmark-btn btn-o" onclick="submitV('O')">O</button>
               <button class="vmark-btn btn-x" onclick="submitV('X')">X</button>
               <button class="vmark-btn btn-p" onclick="submitV('P')">P</button>
             </div>
+            <h4>Height Log</h4>
+            <div id="vHeightLog"></div>
           </div>
         </div>
       </div>
@@ -155,6 +192,8 @@ let currentAth = null;
 let currentEventId = '';
 let isVertical = false;
 let hPhase = '3att';
+let flightBarHeight = '';
+let checkinStatus = {};
 let attemptsCache = {};
 let athleteListCache = [];
 let _athMap = {};
@@ -190,6 +229,7 @@ async function loadEvent() {
   document.getElementById('flightBarStrip').classList.toggle('show', isVertical);
 
   currentAth = null;
+  checkinStatus = {};
   attemptsCache[currentEventId] = attemptsCache[currentEventId] || [];
 
   const [{ data: assigns }, { data: attempts }] = await Promise.all([
@@ -221,7 +261,7 @@ function renderAthleteList(list) {
     btn.onclick = () => selectAth(a.id);
     container.appendChild(btn);
   });
-  updateAllPlaceBadges();
+  updatePlaceBadges();
 }
 
 function selectAth(id) {
@@ -259,7 +299,7 @@ async function saveHMark() {
     result: 'make'
   });
 
-  // Refresh data and UI
+  // Refresh and update UI immediately
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
 
@@ -268,7 +308,7 @@ async function saveHMark() {
   document.getElementById('hIn').value = '';
   document.getElementById('hQtr').value = '0';
 
-  renderAthleteList(athleteListCache); // this will update place badges too
+  renderAthleteList(athleteListCache); // updates place badges instantly
 }
 
 async function saveHFoul() {
@@ -289,14 +329,13 @@ async function saveHFoul() {
   renderAthleteList(athleteListCache);
 }
 
-function updateAllPlaceBadges() {
-  // Simple horizontal placement for now
+function updatePlaceBadges() {
   const cache = attemptsCache[currentEventId] || [];
   athleteListCache.forEach(ath => {
     const myMarks = cache.filter(a => a.athlete_id === ath.id && a.result === 'make').map(a => parseMark(a.mark)).filter(v => v != null).sort((a,b) => b-a);
     const badgeEl = document.getElementById('place_' + ath.id);
     if (badgeEl && myMarks.length > 0) {
-      badgeEl.textContent = '1st'; // placeholder - full calcHPlaces can be added later
+      badgeEl.textContent = '1st'; // full calcHPlaces can be expanded later
       badgeEl.className = 'place-badge place-1';
     }
   });
@@ -315,7 +354,7 @@ function submitV(result) { }
 function incFlightBar(inches) { }
 function setFlightBar() { }
 function toggleRoster() { document.getElementById('rosterMgr').classList.toggle('hidden'); }
-async function doAddAthlete() { alert('Add athlete logic ready - expand with Supabase insert if needed'); }
+async function doAddAthlete() { alert('Add athlete (expand with Supabase insert if needed)'); }
 function showTab(tab) { }
 </script>
 </body>
