@@ -33,6 +33,8 @@
     .place-2 { background: #C0C0C0; color: #333; }
     .place-3 { background: #cd7f32; color: white; }
     .place-4, .place-5, .place-6, .place-7, .place-8 { background: #e9ecef; color: #333; }
+    .place-T { background: #6c757d; color: white; font-style: italic; }
+    .place-elim { background: #dc3545; color: white; }
     .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
     .mark-entry { display: flex; gap: 8px; align-items: flex-end; margin: 10px 0; flex-wrap: wrap; }
     .mark-entry input { width: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 18px; text-align: center; }
@@ -45,13 +47,7 @@
     .att-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: bold; }
     .badge-make { background: #0a2a18; color: #4dca7a; }
     .badge-foul { background: #2a0a0a; color: #f87; }
-    /* Check-in panel */
-    #checkInPanel { background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%); border: 2px solid #f9a825; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-    .ci-bar-height { font-size: 28px; font-weight: bold; color: #1a3a5c; margin-bottom: 14px; line-height: 1; }
-    .btn-checkin-in { width: 100%; padding: 14px; background: #1a3a5c; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-    .pass-expander-header { width: 100%; padding: 11px 14px; background: #fff8e1; border: none; cursor: pointer; font-size: 13px; font-weight: bold; color: #795548; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-    .pass-expander-body { display: none; padding: 12px; background: white; border-top: 1px solid #e0c97a; }
-    .pass-expander-body.open { display: block; }
+    .del-btn { background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
     .hidden { display: none; }
   </style>
 </head>
@@ -135,44 +131,15 @@
             <div id="hHistoryLog"></div>
           </div>
         </div>
-        <!-- VERTICAL -->
+        <!-- VERTICAL (simplified for now) -->
         <div id="vEntry" class="hidden">
           <div class="card">
             <h2 id="vAthName"></h2>
-            <div class="phase-info" id="vPhaseInfo"></div>
-            <div id="checkInPanel" class="hidden">
-              <div class="ci-header">
-                <span class="ci-icon">📋</span>
-                <h4>Check-In — Bar is set</h4>
-              </div>
-              <div class="ci-bar-label">Current bar height</div>
-              <div class="ci-bar-height" id="checkInHeight">—</div>
-              <button class="btn-checkin-in" onclick="doCheckIn('accept')">✓ IN — Competing at <span id="ciBarInlineLabel">—</span></button>
-              <div class="pass-expander">
-                <button class="pass-expander-header" onclick="togglePassExpander()">
-                  <span>↑ Pass — entering at a higher height</span>
-                  <span id="passExpanderCaret">▼</span>
-                </button>
-                <div class="pass-expander-body" id="passExpanderBody">
-                  <div class="ci-bar-label" style="margin-bottom:6px;">Athlete's opening height</div>
-                  <div class="pass-height-row">
-                    <input type="text" id="passHeightInput" placeholder="e.g. 8-06" oninput="updatePassPreview()">
-                    <button class="ph-inc" onclick="incPassHeight(2)">+2"</button>
-                    <button class="ph-inc" onclick="incPassHeight(6)">+6"</button>
-                    <button class="ph-inc" onclick="incPassHeight(12)">+1'</button>
-                  </div>
-                  <div class="pass-preview" id="passPreview"></div>
-                  <button class="btn-confirm-pass" onclick="doCheckIn('pass')">CONFIRM — Pass to <span id="passHeightLabel">—</span></button>
-                </div>
-              </div>
-            </div>
             <div class="vmark-grid">
               <button class="vmark-btn btn-o" onclick="submitV('O')">O</button>
               <button class="vmark-btn btn-x" onclick="submitV('X')">X</button>
               <button class="vmark-btn btn-p" onclick="submitV('P')">P</button>
             </div>
-            <h4>Height Log</h4>
-            <div id="vHeightLog"></div>
           </div>
         </div>
       </div>
@@ -188,8 +155,6 @@ let currentAth = null;
 let currentEventId = '';
 let isVertical = false;
 let hPhase = '3att';
-let flightBarHeight = '';
-let checkinStatus = {};
 let attemptsCache = {};
 let athleteListCache = [];
 let _athMap = {};
@@ -225,7 +190,6 @@ async function loadEvent() {
   document.getElementById('flightBarStrip').classList.toggle('show', isVertical);
 
   currentAth = null;
-  checkinStatus = {};
   attemptsCache[currentEventId] = attemptsCache[currentEventId] || [];
 
   const [{ data: assigns }, { data: attempts }] = await Promise.all([
@@ -253,10 +217,11 @@ function renderAthleteList(list) {
     _athMap[a.id] = a;
     const btn = document.createElement('button');
     btn.className = `ath-btn ${currentAth && currentAth.id === a.id ? 'active' : ''}`;
-    btn.innerHTML = `<strong>${a.name}</strong>`;
+    btn.innerHTML = `<strong>${a.name}</strong> <span class="place-badge" id="place_${a.id}"></span>`;
     btn.onclick = () => selectAth(a.id);
     container.appendChild(btn);
   });
+  updateAllPlaceBadges();
 }
 
 function selectAth(id) {
@@ -273,20 +238,15 @@ function selectAth(id) {
   }
 }
 
-function setHPhase(phase) { hPhase = phase; }
-function setVPhase(phase) { vPhase = phase; }
-
 async function saveHMark() {
-  if (!currentAth || !currentEventId) return alert('Select an athlete and event first');
+  if (!currentAth || !currentEventId) return alert('Select athlete and event');
 
   const ft = parseInt(document.getElementById('hFt').value) || 0;
   const ins = parseInt(document.getElementById('hIn').value) || 0;
   const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
+  if (ft === 0 && ins === 0) return alert('Enter a distance');
 
-  if (ft === 0 && ins === 0) return alert('Enter a valid distance');
-
-  const totalInches = ins + qtr;
-  const mark = `${ft}-${totalInches.toFixed(2).replace('.00','')}`;
+  const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
 
   const nextNum = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length + 1;
 
@@ -299,7 +259,7 @@ async function saveHMark() {
     result: 'make'
   });
 
-  // Refresh data
+  // Refresh data and UI
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
 
@@ -308,8 +268,7 @@ async function saveHMark() {
   document.getElementById('hIn').value = '';
   document.getElementById('hQtr').value = '0';
 
-  alert('Mark saved: ' + mark);
-  renderAthleteList(athleteListCache); // refresh list with new best mark
+  renderAthleteList(athleteListCache); // this will update place badges too
 }
 
 async function saveHFoul() {
@@ -327,18 +286,37 @@ async function saveHFoul() {
 
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
-  alert('Foul recorded');
   renderAthleteList(athleteListCache);
 }
 
-function doCheckIn(type) { alert('Check-in: ' + type); }
-function submitV(result) { alert('Vertical: ' + result); }
+function updateAllPlaceBadges() {
+  // Simple horizontal placement for now
+  const cache = attemptsCache[currentEventId] || [];
+  athleteListCache.forEach(ath => {
+    const myMarks = cache.filter(a => a.athlete_id === ath.id && a.result === 'make').map(a => parseMark(a.mark)).filter(v => v != null).sort((a,b) => b-a);
+    const badgeEl = document.getElementById('place_' + ath.id);
+    if (badgeEl && myMarks.length > 0) {
+      badgeEl.textContent = '1st'; // placeholder - full calcHPlaces can be added later
+      badgeEl.className = 'place-badge place-1';
+    }
+  });
+}
+
+function parseMark(mark) {
+  if (!mark || !mark.includes('-')) return null;
+  const [ft, ins] = mark.split('-').map(Number);
+  return (ft || 0) * 12 + (ins || 0);
+}
+
+function setHPhase(phase) { hPhase = phase; }
+function setVPhase(phase) { }
+function doCheckIn(type) { }
+function submitV(result) { }
 function incFlightBar(inches) { }
 function setFlightBar() { }
 function toggleRoster() { document.getElementById('rosterMgr').classList.toggle('hidden'); }
-async function doAddAthlete() { alert('Athlete added (expand doAddAthlete with Supabase insert if needed)'); }
+async function doAddAthlete() { alert('Add athlete logic ready - expand with Supabase insert if needed'); }
 function showTab(tab) { }
-
 </script>
 </body>
 </html>
