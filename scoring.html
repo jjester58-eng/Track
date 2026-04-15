@@ -135,12 +135,11 @@ function renderAthleteList() {
   });
 
   if (currentPhase === 'finals') {
-    // Only Finals reorders
-    scores.sort((a, b) => b.best - a.best);
+    scores.sort((a, b) => b.best - a.best);   // highest best mark first
     scores = scores.slice(0, 8);
-    scores.reverse();                    // 8th at top, 1st at bottom
+    scores.reverse();                         // now 8th at top, 1st at bottom
   } 
-  // else: no sorting — keep original order from loadEvent()
+  // else: no sorting — keep original load order
 
   scores.forEach(score => {
     _athMap[score.id] = score;
@@ -316,11 +315,11 @@ function updatePlaceBadges() {
   });
 
   if (currentPhase === 'finals') {
-    scores.sort((a, b) => b.best - a.best);
+    scores.sort((a, b) => b.best - a.best);   // highest best mark first
     scores = scores.slice(0, 8);
-    scores.reverse();                    // 8th at top, 1st at bottom
+    scores.reverse();                         // 8th at top, 1st at bottom
   } 
-  // else: no sorting — keep original order
+  // else: no sorting
 
   let place = 1;
   for (let i = 0; i < scores.length; i++) {
