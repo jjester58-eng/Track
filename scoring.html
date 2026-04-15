@@ -135,11 +135,12 @@ function renderAthleteList() {
   });
 
   if (currentPhase === 'finals') {
-    scores.sort((a, b) => b.best - a.best);
+    scores.sort((a, b) => b.best - a.best);   // highest best mark first
     scores = scores.slice(0, 8);
-    scores.reverse();   // 8th at top, 1st at bottom
-  } 
-  // else: no sorting in prelims
+    scores.reverse();                         // 8th at top, 1st at bottom
+  } else {
+    scores.sort((a, b) => b.best - a.best);   // normal prelims: highest best mark at top
+  }
 
   scores.forEach(score => {
     _athMap[score.id] = score;
@@ -299,7 +300,7 @@ function setPhase(phase) {
   if (phase === '4att') document.getElementById('ph4').classList.add('active');
   if (phase === 'finals') document.getElementById('phF').classList.add('active');
 
-  renderAthleteList();   // Only reorders when Finals is clicked
+  renderAthleteList();   // Re-calculate and re-order only on Finals
   if (currentAth) renderRightPanel();
 }
 
@@ -318,6 +319,8 @@ function updatePlaceBadges() {
     scores.sort((a, b) => b.best - a.best);
     scores = scores.slice(0, 8);
     scores.reverse();   // 8th at top, 1st at bottom
+  } else {
+    scores.sort((a, b) => b.best - a.best);   // highest best mark at top in prelims
   }
 
   let place = 1;
