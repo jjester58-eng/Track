@@ -29,9 +29,11 @@
     .btn-row button { flex: 1; padding: 16px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
     .btn-save { background: #1a3a5c; color: white; }
     .btn-foul { background: #dc3545; color: white; }
-    .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 12px; }
+    .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+    .att-row button { padding: 4px 10px; font-size: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
     .phase-btn { padding: 8px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
     .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
+    .limit-msg { color: #dc3545; font-size: 13px; font-weight: bold; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -68,7 +70,10 @@ let currentAth = null;
 let attemptsCache = {};
 let athleteListCache = [];
 let _athMap = {};
-let currentPhase = '3att';   // 3att, 4att, finals
+let currentPhase = '3att';
+let editingAttemptId = null;   // for edit mode
+
+const PHASE_LIMIT = { '3att': 3, '4att': 4, 'finals': 999 };
 
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
@@ -95,6 +100,7 @@ async function loadEvent() {
   if (!currentEventId) return;
 
   currentAth = null;
+  editingAttemptId = null;
 
   const [{ data: assigns }, { data: attempts }] = await Promise.all([
     sb.from('event_assignments')
@@ -131,6 +137,7 @@ function renderAthleteList() {
 
 function selectAth(id) {
   currentAth = _athMap[id];
+  editingAttemptId = null;
   renderRightPanel();
 }
 
@@ -139,19 +146,22 @@ function renderRightPanel() {
   if (!currentAth) return;
 
   const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
+  const limit = PHASE_LIMIT[currentPhase];
+  const canAddMore = myAttempts.length < limit;
 
   let html = `
     <div class="card">
       <h2>${currentAth.name}</h2>
-      <div style="margin:10px 0; font-size:14px; color:#555;">Phase: <strong>${currentPhase.toUpperCase()}</strong></div>
+      <div style="margin:8px 0; font-size:14px; color:#555;">Phase: <strong>${currentPhase.toUpperCase()}</strong></div>
+      ${!canAddMore ? `<div class="limit-msg">Maximum attempts reached for this phase</div>` : ''}
       <div class="mark-entry">
         <div><label>Feet</label><input type="number" id="hFt" placeholder="0"></div>
         <div><label>Inches</label><input type="number" id="hIn" placeholder="0" max="11"></div>
         <div><label>¼"</label><select id="hQtr"><option value="0">.00</option><option value="0.25">.25</option><option value="0.5">.50</option><option value="0.75">.75</option></select></div>
       </div>
       <div class="btn-row">
-        <button class="btn-save" onclick="saveHMark()">SAVE MARK</button>
-        <button class="btn-foul" onclick="saveHFoul()">FOUL</button>
+        <button class="btn-save" onclick="saveOrUpdateMark()" id="saveBtn">SAVE MARK</button>
+        <button class="btn-foul" onclick="saveHFoul()" id="foulBtn" ${!canAddMore ? 'disabled' : ''}>FOUL</button>
       </div>
     </div>
     <div class="card">
@@ -165,16 +175,37 @@ function renderRightPanel() {
 
 function renderAttemptHistory(attempts) {
   const el = document.getElementById('attemptHistory');
-  el.innerHTML = attempts.length ? attempts.map(a => `
+  const sorted = [...attempts].sort((a,b) => a.attempt_number - b.attempt_number);
+  el.innerHTML = sorted.length ? sorted.map(a => `
     <div class="att-row">
-      <span class="att-num">Att ${a.attempt_number || '?'}</span>
+      <span class="att-num">Att ${a.attempt_number}</span>
       <span style="flex:1;font-weight:700;">${a.mark || '—'}</span>
       <span style="color:${a.result==='make'?'#0a2a18':'#c00'};">${(a.result || '').toUpperCase()}</span>
+      <button onclick="editAttempt('${a.id}', '${a.mark}', '${a.result}')">Edit</button>
     </div>
   `).join('') : '<p style="color:#888;text-align:center;">No attempts yet</p>';
 }
 
-async function saveHMark() {
+function editAttempt(attemptId, mark, result) {
+  editingAttemptId = attemptId;
+
+  if (result === 'foul') {
+    alert("Editing FOUL — you can change it to a mark by saving new value.");
+  }
+
+  // Pre-fill form with current mark
+  if (mark && mark.includes('-')) {
+    const [ft, ins] = mark.split('-').map(Number);
+    document.getElementById('hFt').value = ft || '';
+    document.getElementById('hIn').value = Math.floor(ins) || '';
+    const qtr = (ins % 1).toFixed(2);
+    document.getElementById('hQtr').value = qtr === '0.00' ? '0' : qtr;
+  }
+
+  document.getElementById('saveBtn').textContent = 'UPDATE MARK';
+}
+
+async function saveOrUpdateMark() {
   if (!currentAth || !currentEventId) return alert("Select athlete and event");
 
   const ft = parseInt(document.getElementById('hFt').value) || 0;
@@ -183,22 +214,39 @@ async function saveHMark() {
   if (ft === 0 && ins === 0) return alert("Enter a distance");
 
   const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
-  const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
 
-  const { error } = await sb.from('attempts').insert({
-    meet_id: currentMeet.id,
-    event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: nextNum,
-    mark: mark,
-    result: 'make'
-  });
+  if (editingAttemptId) {
+    // UPDATE existing attempt
+    const { error } = await sb
+      .from('attempts')
+      .update({ mark: mark, result: 'make' })
+      .eq('id', editingAttemptId);
 
-  if (error) {
-    alert('Save failed: ' + error.message);
-    return;
+    if (error) return alert('Update failed: ' + error.message);
+
+    editingAttemptId = null;
+    document.getElementById('saveBtn').textContent = 'SAVE MARK';
+  } else {
+    // INSERT new attempt
+    const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
+    const limit = PHASE_LIMIT[currentPhase];
+    if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
+
+    const nextNum = myAttempts.length + 1;
+
+    const { error } = await sb.from('attempts').insert({
+      meet_id: currentMeet.id,
+      event_id: currentEventId,
+      athlete_id: currentAth.id,
+      attempt_number: nextNum,
+      mark: mark,
+      result: 'make'
+    });
+
+    if (error) return alert('Save failed: ' + error.message);
   }
 
+  // Refresh everything
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
 
@@ -212,7 +260,12 @@ async function saveHMark() {
 
 async function saveHFoul() {
   if (!currentAth || !currentEventId) return;
-  const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
+
+  const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
+  const limit = PHASE_LIMIT[currentPhase];
+  if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
+
+  const nextNum = myAttempts.length + 1;
 
   const { error } = await sb.from('attempts').insert({
     meet_id: currentMeet.id,
@@ -237,6 +290,9 @@ function setPhase(phase) {
   if (phase === '3att') document.getElementById('ph3').classList.add('active');
   if (phase === '4att') document.getElementById('ph4').classList.add('active');
   if (phase === 'finals') document.getElementById('phF').classList.add('active');
+
+  renderRightPanel();
+  renderAthleteList();
 }
 
 function updatePlaceBadges() {
@@ -250,7 +306,12 @@ function updatePlaceBadges() {
     return { ...ath, best };
   });
 
-  scores.sort((a, b) => b.best - a.best);
+  if (currentPhase === 'finals') {
+    scores.sort((a, b) => b.best - a.best);
+    scores.splice(8);
+  } else {
+    scores.sort((a, b) => b.best - a.best);
+  }
 
   let place = 1;
   for (let i = 0; i < scores.length; i++) {
