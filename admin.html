@@ -10,317 +10,155 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
-
     *, *::before, *::after { box-sizing: border-box; }
-
     :root {
-      --bg:        #07101c;
-      --bg2:       #0c1b2e;
-      --bg3:       #0f2240;
-      --border:    #1a3352;
-      --border2:   #254a72;
-      --accent:    #4d9de0;
-      --accent2:   #7ec8f7;
-      --text:      #c8dcf0;
-      --text2:     #7a9cbf;
-      --text3:     #3a5a7e;
-      --green:     #3dd68c;
-      --green-bg:  #061a0e;
-      --red:       #e05252;
-      --red-bg:    #1a0808;
-      --amber:     #f0a040;
-      --amber-bg:  #1a1008;
+      --bg:#07101c; --bg2:#0c1b2e; --bg3:#0f2240;
+      --border:#1a3352; --border2:#254a72;
+      --accent:#4d9de0; --accent2:#7ec8f7;
+      --text:#c8dcf0; --text2:#7a9cbf; --text3:#3a5a7e;
+      --green:#3dd68c; --green-bg:#061a0e;
+      --red:#e05252; --red-bg:#1a0808;
+      --amber:#f0a040; --amber-bg:#1a1008;
     }
+    body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); margin:0; min-height:100vh; }
 
-    body {
-      font-family: 'Barlow', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      min-height: 100vh;
-    }
+    /* topbar */
+    .topbar { background:var(--bg2); border-bottom:2px solid var(--border); padding:10px 20px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:200; }
+    .topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--accent2); letter-spacing:3px; text-transform:uppercase; flex:1; }
+    .topbar a { color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; opacity:.75; }
+    .topbar a:hover { opacity:1; }
 
-    /* ── Topbar ── */
-    .topbar {
-      background: var(--bg2);
-      border-bottom: 2px solid var(--border);
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      position: sticky;
-      top: 0;
-      z-index: 200;
-    }
-    .topbar-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--accent2);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      flex: 1;
-    }
-    .topbar a {
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      opacity: .75;
-      transition: opacity .2s;
-    }
-    .topbar a:hover { opacity: 1; }
+    /* lock */
+    #lockScreen { max-width:360px; margin:80px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:36px 28px; text-align:center; }
+    .lock-icon { font-size:44px; margin-bottom:10px; }
+    #lockScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 4px; }
+    #lockScreen p { font-size:13px; color:var(--text2); margin:0 0 20px; }
 
-    /* ── Lock Screen ── */
-    #lockScreen {
-      max-width: 360px;
-      margin: 80px auto 0;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 36px 28px;
-      text-align: center;
-    }
-    .lock-icon { font-size: 44px; margin-bottom: 10px; }
-    #lockScreen h3 {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #e0ecff;
-      margin: 0 0 4px;
-    }
-    #lockScreen p { font-size: 13px; color: var(--text2); margin: 0 0 20px; }
+    /* two-panel layout */
+    #adminContent { display:none; }
+    .admin-layout { display:flex; height:calc(100vh - 54px); }
 
-    /* ── Page ── */
-    #adminContent { display: none; }
-    .wrap {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px 16px 80px;
+    /* LEFT: meet list sidebar */
+    .meet-sidebar {
+      width:280px; flex-shrink:0; border-right:2px solid var(--border);
+      background:var(--bg2); display:flex; flex-direction:column; overflow:hidden;
     }
+    .sidebar-head {
+      padding:14px 16px 10px; border-bottom:1px solid var(--border);
+      font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800;
+      letter-spacing:3px; text-transform:uppercase; color:var(--text3);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .sidebar-list { flex:1; overflow-y:auto; padding:8px; }
+    .meet-item {
+      padding:12px 14px; border-radius:8px; cursor:pointer; margin-bottom:4px;
+      border:1px solid transparent; transition:all .15s;
+    }
+    .meet-item:hover { background:var(--bg3); border-color:var(--border); }
+    .meet-item.active { background:var(--bg3); border-color:var(--accent); }
+    .mi-name { font-weight:700; font-size:14px; color:#d0eaff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mi-date { font-size:11px; color:var(--text2); margin-top:2px; }
+    .mi-pin  { font-size:10px; color:var(--text3); margin-top:2px; letter-spacing:1px; }
+    .mi-status { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; margin-top:4px; }
+    .s-active    { background:rgba(61,214,140,.12); color:var(--green);  border:1px solid rgba(61,214,140,.25); }
+    .s-inactive  { background:rgba(58,90,126,.12);  color:var(--text3);  border:1px solid var(--border); }
+    .s-cancelled { background:rgba(224,82,82,.12);  color:var(--red);    border:1px solid rgba(224,82,82,.25); }
 
-    /* ── Meet Status Banner ── */
-    .meet-banner {
-      background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px 22px;
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
+    .new-meet-btn {
+      margin:10px 10px 0; padding:10px; background:var(--bg3); color:var(--accent);
+      border:1px dashed var(--border2); border-radius:8px; font-family:'Barlow Condensed',sans-serif;
+      font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase;
+      cursor:pointer; text-align:center;
     }
-    .meet-banner::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 80% 50%, rgba(77,157,224,.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .banner-logo-wrap {
-      width: 62px;
-      height: 62px;
-      border-radius: 10px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
-      overflow: hidden;
-      color: var(--text3);
-    }
-    .banner-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
-    .banner-info { flex: 1; min-width: 0; }
-    .banner-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #e8f4ff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .banner-title.empty { color: var(--text3); font-style: italic; font-weight: 400; font-size: 15px; font-family: 'Barlow', sans-serif; }
-    .banner-date { font-size: 12px; color: var(--text2); margin-top: 3px; letter-spacing: .5px; }
-    .status-pill {
-      padding: 5px 14px;
-      border-radius: 20px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .pill-active    { background: rgba(61,214,140,.12); color: var(--green);  border: 1px solid rgba(61,214,140,.25); }
-    .pill-none      { background: rgba(58,90,126,.12);  color: var(--text3);  border: 1px solid var(--border); }
-    .pill-cancelled { background: rgba(224,82,82,.12);  color: var(--red);    border: 1px solid rgba(224,82,82,.25); }
+    .new-meet-btn:hover { background:var(--bg); border-color:var(--accent); }
 
-    /* ── Section Divider ── */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 28px 0 14px;
-    }
-    .divider span {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--text3);
-      white-space: nowrap;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    /* RIGHT: edit panel */
+    .edit-panel { flex:1; overflow-y:auto; padding:20px 24px 80px; }
+    .no-select-msg { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text3); font-size:16px; }
 
-    /* ── Grid ── */
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .grid2 .span2 { grid-column: 1 / -1; }
-    @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } .grid2 .span2 { grid-column: 1; } }
+    /* meet header in edit panel */
+    .meet-header {
+      background:var(--bg2); border:1px solid var(--border); border-radius:14px;
+      padding:18px 20px; display:flex; align-items:center; gap:16px; margin-bottom:20px;
+    }
+    .header-logo { width:56px; height:56px; border-radius:10px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:22px; overflow:hidden; flex-shrink:0; }
+    .header-logo img { width:100%; height:100%; object-fit:contain; }
+    .header-info { flex:1; min-width:0; }
+    .header-name { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; color:#e8f4ff; }
+    .header-sub  { font-size:12px; color:var(--text2); margin-top:3px; }
+    .header-pin  { font-family:'Barlow Condensed',sans-serif; font-size:13px; color:var(--accent2); background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:4px 12px; white-space:nowrap; }
 
-    /* ── Cards ── */
-    .card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px 18px 20px;
-      transition: border-color .2s;
-    }
-    .card:hover { border-color: var(--border2); }
-    .card-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin: 0 0 16px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .card-desc { font-size: 12px; color: var(--text2); margin: -10px 0 14px; line-height: 1.5; }
-    .card-danger { border-color: #2a1212; background: #0a0d10; }
-    .card-danger:hover { border-color: #4a2020; }
-    .card-danger .card-title { color: var(--red); }
-    .card-amber { border-color: #2a1a08; background: #0a0d10; }
-    .card-amber:hover { border-color: #4a3010; }
-    .card-amber .card-title { color: var(--amber); }
+    /* section divider */
+    .divider { display:flex; align-items:center; gap:10px; margin:24px 0 12px; }
+    .divider span { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800; letter-spacing:4px; text-transform:uppercase; color:var(--text3); white-space:nowrap; }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    /* ── Fields ── */
-    .field { margin-bottom: 13px; }
-    .field:last-of-type { margin-bottom: 0; }
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text2);
-      margin-bottom: 5px;
-    }
-    input[type="text"],
-    input[type="date"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px 13px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      color: #e0ecff;
-      font-size: 14px;
-      font-family: 'Barlow', sans-serif;
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
-    }
-    input[type="text"]:focus,
-    input[type="date"]:focus,
-    input[type="password"]:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(77,157,224,.15);
-    }
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.5); cursor: pointer; }
-    input[type="file"] {
-      width: 100%;
-      padding: 9px 12px;
-      background: var(--bg);
-      border: 1px dashed var(--border);
-      border-radius: 7px;
-      color: var(--text2);
-      font-size: 13px;
-      cursor: pointer;
-    }
-    input[type="file"]:hover { border-color: var(--accent); }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .span2 { grid-column:1/-1; }
+    @media(max-width:640px){.grid2{grid-template-columns:1fr;}.span2{grid-column:1;}}
 
-    /* ── Buttons ── */
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 11px 14px;
-      border-radius: 8px;
-      border: none;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all .18s;
-      margin-top: 12px;
+    /* cards */
+    .card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px; transition:border-color .2s; }
+    .card:hover { border-color:var(--border2); }
+    .card-title { font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin:0 0 14px; }
+    .card-desc  { font-size:12px; color:var(--text2); margin:-8px 0 14px; line-height:1.5; }
+    .card-danger { border-color:#2a1212; background:#0a0d10; }
+    .card-danger:hover { border-color:#5a2020; }
+    .card-danger .card-title { color:var(--red); }
+    .card-amber { border-color:#2a1a08; background:#0a0d10; }
+    .card-amber .card-title { color:var(--amber); }
+
+    /* fields */
+    .field { margin-bottom:12px; }
+    label { display:block; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); margin-bottom:5px; }
+    input[type=text],input[type=date],input[type=password],input[type=tel] {
+      width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border);
+      border-radius:7px; color:#e0ecff; font-size:14px; font-family:'Barlow',sans-serif; outline:none;
+      transition:border-color .2s;
     }
-    .btn + .btn { margin-top: 8px; }
-    .btn-primary { background: linear-gradient(135deg, #1e5fa8, #164080); color: #d0eaff; box-shadow: 0 2px 12px rgba(30,95,168,.3); }
-    .btn-primary:hover { background: linear-gradient(135deg, #2a70be, #1e5090); transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-    .btn-ghost  { background: transparent; color: var(--accent); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: var(--bg3); border-color: var(--border2); }
-    .btn-amber  { background: transparent; color: var(--amber); border: 1px solid #3a2008; }
-    .btn-amber:hover { background: var(--amber-bg); border-color: #6a4010; }
-    .btn-danger { background: transparent; color: var(--red); border: 1px solid #3a1010; }
-    .btn-danger:hover { background: var(--red-bg); border-color: #6a2020; }
-    .btn-unlock { background: linear-gradient(135deg, #165a38, #0c3a22); color: #80e0a8; box-shadow: 0 2px 12px rgba(22,90,56,.3); }
-    .btn-unlock:hover { background: linear-gradient(135deg, #1e7248, #14502e); transform: translateY(-1px); }
+    input:focus { border-color:var(--accent); }
+    input[type=file] { width:100%; padding:9px 12px; background:var(--bg); border:1px dashed var(--border); border-radius:7px; color:var(--text2); font-size:13px; cursor:pointer; }
+    input[type=file]:hover { border-color:var(--accent); }
+    select { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:#e0ecff; font-size:14px; font-family:'Barlow',sans-serif; outline:none; }
+    select:focus { border-color:var(--accent); }
 
-    /* ── Status ── */
-    .st { padding: 9px 13px; border-radius: 7px; font-size: 12px; margin-top: 10px; display: none; line-height: 1.5; }
-    .st.show { display: block; }
-    .st-ok   { background: var(--green-bg); border: 1px solid #1a4a28; color: var(--green); }
-    .st-err  { background: var(--red-bg);   border: 1px solid #4a1a1a; color: var(--red); }
-    .st-inf  { background: var(--bg3);      border: 1px solid var(--border); color: var(--accent2); }
-    .st-warn { background: var(--amber-bg); border: 1px solid #3a2008; color: var(--amber); }
+    /* buttons */
+    .btn { display:block; width:100%; padding:11px 14px; border-radius:8px; border:none; font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all .18s; margin-top:10px; }
+    .btn+.btn { margin-top:7px; }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-primary { background:linear-gradient(135deg,#1e5fa8,#164080); color:#d0eaff; }
+    .btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#2a70be,#1e5090); }
+    .btn-ghost   { background:transparent; color:var(--accent); border:1px solid var(--border); }
+    .btn-ghost:hover { background:var(--bg3); }
+    .btn-green   { background:linear-gradient(135deg,#165a38,#0c3a22); color:#80e0a8; }
+    .btn-green:hover:not(:disabled) { background:linear-gradient(135deg,#1e7248,#14502e); }
+    .btn-amber   { background:transparent; color:var(--amber); border:1px solid #3a2008; }
+    .btn-amber:hover { background:var(--amber-bg); }
+    .btn-danger  { background:transparent; color:var(--red); border:1px solid #3a1010; }
+    .btn-danger:hover { background:var(--red-bg); }
 
-    /* ── Progress bar ── */
-    .prog-wrap { width: 100%; background: var(--bg); border-radius: 4px; height: 5px; margin-top: 10px; display: none; overflow: hidden; }
-    .prog-wrap.show { display: block; }
-    .prog-bar { height: 5px; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; transition: width .25s; width: 0%; }
+    /* status */
+    .st { padding:9px 12px; border-radius:7px; font-size:12px; margin-top:10px; display:none; line-height:1.5; }
+    .st.show { display:block; }
+    .st-ok   { background:var(--green-bg); border:1px solid #1a4a28; color:var(--green); }
+    .st-err  { background:var(--red-bg);   border:1px solid #4a1a1a; color:var(--red); }
+    .st-inf  { background:var(--bg3);      border:1px solid var(--border); color:var(--accent2); }
+    .st-warn { background:var(--amber-bg); border:1px solid #3a2008; color:var(--amber); }
 
-    /* ── Athlete count ── */
-    .count-badge {
-      display: inline-block;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 3px 10px;
-      font-size: 12px;
-      color: var(--text2);
-      margin-bottom: 12px;
-    }
-    .count-badge strong { color: var(--accent2); font-size: 15px; }
+    /* progress */
+    .prog-wrap { width:100%; background:var(--bg); border-radius:4px; height:5px; margin-top:10px; display:none; }
+    .prog-wrap.show { display:block; }
+    .prog-bar  { height:5px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:4px; transition:width .25s; width:0%; }
+
+    /* event badges */
+    .ev-item { display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; margin-bottom:6px; font-size:13px; }
+    .ev-name { color:#d0eaff; font-weight:600; }
+    .ev-meta { font-size:11px; color:var(--text3); }
+    .badge   { background:var(--bg3); color:var(--accent2); font-size:11px; padding:2px 8px; border-radius:10px; font-weight:700; }
+    #evList  { margin-top:10px; max-height:220px; overflow-y:auto; }
+
+    /* logo thumb */
+    .logo-thumb { width:60px; height:60px; border-radius:8px; object-fit:contain; background:var(--bg); border:1px solid var(--border); padding:4px; margin-bottom:10px; display:none; }
   </style>
 </head>
 <body>
@@ -331,128 +169,40 @@
   <a href="index.html">⌂ Home</a>
 </div>
 
-<!-- ══ LOCK ══ -->
+<!-- LOCK -->
 <div id="lockScreen">
   <div class="lock-icon">🔐</div>
   <h3>Admin Access</h3>
-  <p>Enter your password to manage meet settings</p>
+  <p>Enter the admin password to manage meets</p>
   <div class="field" style="text-align:left">
     <label>Password</label>
     <input type="password" id="pwInput" placeholder="••••" onkeypress="if(event.key==='Enter')checkPw()">
   </div>
-  <button class="btn btn-unlock" onclick="checkPw()">Unlock Admin</button>
-  <div id="lockErr" class="st st-err">Incorrect password</div>
+  <button class="btn btn-green" onclick="checkPw()">Unlock Admin</button>
+  <div id="lockErr" class="st st-err"></div>
 </div>
 
-<!-- ══ ADMIN ══ -->
+<!-- ADMIN -->
 <div id="adminContent">
-<div class="wrap">
+  <div class="admin-layout">
 
-  <!-- Live Banner -->
-  <div class="meet-banner">
-    <div class="banner-logo-wrap" id="bannerLogoWrap">🏟</div>
-    <div class="banner-info">
-      <div class="banner-title empty" id="bannerTitle">No meet configured</div>
-      <div class="banner-date" id="bannerDate"></div>
-    </div>
-    <div class="status-pill pill-none" id="bannerPill">No Meet</div>
-  </div>
-
-  <!-- ── MEET DETAILS ── -->
-  <div class="divider"><span>Meet Details</span></div>
-  <div class="grid2">
-
-    <div class="card">
-      <div class="card-title">📋 Title &amp; Date</div>
-      <div class="field">
-        <label>Meet Title</label>
-        <input type="text" id="meetTitle" placeholder="e.g. Spring Invitational 2025" oninput="refreshBanner()">
+    <!-- LEFT: meet list -->
+    <div class="meet-sidebar">
+      <div class="sidebar-head">
+        <span>Meets</span>
+        <span id="meetCount" style="color:var(--accent2);">—</span>
       </div>
-      <div class="field">
-        <label>Date</label>
-        <input type="date" id="meetDate" oninput="refreshBanner()">
-      </div>
-      <button class="btn btn-primary" onclick="saveMeetDetails()">Save Details</button>
-      <div class="st" id="stDetails"></div>
+      <div class="sidebar-list" id="meetList"></div>
+      <button class="new-meet-btn" onclick="startNewMeet()">+ New Meet</button>
+      <div style="height:12px;"></div>
     </div>
 
-    <div class="card">
-      <div class="card-title">🖼 Logo</div>
-      <div class="field">
-        <label>Upload Image</label>
-        <input type="file" id="imgFile" accept="image/*" onchange="previewLogoLocal()">
-      </div>
-      <button class="btn btn-primary" onclick="uploadLogo(event)">Upload Logo</button>
-      <button class="btn btn-ghost" onclick="removeLogo()">Remove Logo</button>
-      <div class="st" id="stLogo"></div>
+    <!-- RIGHT: edit panel -->
+    <div class="edit-panel" id="editPanel">
+      <div class="no-select-msg">← Select a meet to edit, or create a new one</div>
     </div>
 
   </div>
-
-  <!-- ── RESCHEDULE ── -->
-  <div class="divider"><span>Reschedule / Cancel</span></div>
-  <div class="grid2">
-
-    <div class="card card-amber">
-      <div class="card-title">📅 Move to New Date</div>
-      <div class="card-desc">Bad weather or conflict — pick a new date and save. Title and roster are untouched.</div>
-      <div class="field">
-        <label>New Date</label>
-        <input type="date" id="reschedDate">
-      </div>
-      <button class="btn btn-amber" onclick="reschedule()">Reschedule Meet</button>
-      <div class="st" id="stResched"></div>
-    </div>
-
-    <div class="card card-danger">
-      <div class="card-title">🚫 Cancel Meet</div>
-      <div class="card-desc">Weather cancellation with no make-up. Clears all roster &amp; event data but keeps the meet name for reference.</div>
-      <button class="btn btn-danger" onclick="cancelMeet()">Mark as Cancelled</button>
-      <div class="st" id="stCancel"></div>
-    </div>
-
-  </div>
-
-  <!-- ── ROSTER ── -->
-  <div class="divider"><span>Roster / CSV</span></div>
-  <div class="grid2">
-
-    <div class="card span2">
-      <div class="card-title">📥 Replace Roster (CSV)</div>
-      <div class="card-desc">Uploads a new MileSplit CSV. <strong style="color:var(--accent2)">All existing athletes are deleted first</strong>, then the new file is imported.</div>
-      <div class="count-badge">Athletes on file: <strong id="athleteNum">—</strong></div>
-      <div class="field">
-        <label>MileSplit CSV File</label>
-        <input type="file" id="csvFile" accept=".csv">
-      </div>
-      <button class="btn btn-primary" id="importBtn" onclick="replaceRoster()">Replace Roster</button>
-      <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
-      <div class="st" id="stImport"></div>
-    </div>
-
-  </div>
-
-  <!-- ── DANGER ── -->
-  <div class="divider"><span>Danger Zone</span></div>
-  <div class="grid2">
-
-    <div class="card card-danger">
-      <div class="card-title">⚠️ Delete Meet Data</div>
-      <div class="card-desc">Wipes athletes, events, attempts, and assignments. Meet title, date, and logo are kept.</div>
-      <button class="btn btn-danger" onclick="clearMeetData()">Delete Meet Data</button>
-      <div class="st" id="stClear"></div>
-    </div>
-
-    <div class="card card-danger">
-      <div class="card-title">💣 Full Reset</div>
-      <div class="card-desc">Nuclear option — deletes all meet data <em>and</em> wipes the title, date, and logo completely.</div>
-      <button class="btn btn-danger" onclick="nukeEverything()">Full Reset</button>
-      <div class="st" id="stNuke"></div>
-    </div>
-
-  </div>
-
-</div>
 </div>
 
 <script>
@@ -460,253 +210,495 @@ const sb = supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
 );
-const PW = '1111';
-let state = { title: '', date: '', logo_url: '', cancelled: false };
+const ADMIN_PW   = '1111';
+const IRONCLAD   = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
 
-// ── Lock ─────────────────────────────────────────────────
+let allMeets     = [];
+let activeMeetId = null;
+let activeMeet   = null;
+
+// ── Lock ──────────────────────────────────────────────────
 function checkPw() {
-  if (document.getElementById('pwInput').value === PW) {
-    document.getElementById('lockScreen').style.display = 'none';
+  if (document.getElementById('pwInput').value === ADMIN_PW) {
+    document.getElementById('lockScreen').style.display  = 'none';
     document.getElementById('adminContent').style.display = 'block';
-    init();
+    loadMeets();
   } else {
-    flash('lockErr', 'Incorrect password', 'err');
+    flash('lockErr', '❌ Incorrect password', 'err');
     document.getElementById('pwInput').value = '';
   }
 }
 
-// ── Init ─────────────────────────────────────────────────
-async function init() {
-  try {
-    const { data } = await sb.from('meet_settings').select('*').eq('id', 1).single();
-    if (data) {
-      state = { title: data.title||'', date: data.date||'', logo_url: data.logo_url||'', cancelled: !!data.cancelled };
-      document.getElementById('meetTitle').value = state.title;
-      document.getElementById('meetDate').value  = state.date;
-      if (state.date) document.getElementById('reschedDate').value = state.date;
-    }
-  } catch(e) {}
-
-  try {
-    const { count } = await sb.from('athletes').select('*', { count:'exact', head:true });
-    document.getElementById('athleteNum').textContent = count ?? 0;
-  } catch(e) { document.getElementById('athleteNum').textContent = '?'; }
-
-  refreshBanner();
+// ── Load meet list ────────────────────────────────────────
+async function loadMeets() {
+  const { data, error } = await sb.from('meets').select('*').order('date', { ascending: false });
+  if (error) { console.error(error); return; }
+  allMeets = data || [];
+  document.getElementById('meetCount').textContent = allMeets.length;
+  renderMeetList();
 }
 
-// ── Banner ────────────────────────────────────────────────
-function refreshBanner() {
-  const title   = document.getElementById('meetTitle').value.trim() || state.title;
-  const date    = document.getElementById('meetDate').value || state.date;
-  const titleEl = document.getElementById('bannerTitle');
-  const dateEl  = document.getElementById('bannerDate');
-  const pillEl  = document.getElementById('bannerPill');
-  const logoWrap = document.getElementById('bannerLogoWrap');
-
-  titleEl.textContent = title || 'No meet configured';
-  titleEl.className   = 'banner-title' + (title ? '' : ' empty');
-
-  dateEl.textContent = date ? fmtDate(date) : '';
-
-  if (state.cancelled) {
-    pillEl.textContent = 'Cancelled'; pillEl.className = 'status-pill pill-cancelled';
-  } else if (title || date) {
-    pillEl.textContent = 'Active'; pillEl.className = 'status-pill pill-active';
-  } else {
-    pillEl.textContent = 'No Meet'; pillEl.className = 'status-pill pill-none';
+function renderMeetList() {
+  const el = document.getElementById('meetList');
+  if (!allMeets.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No meets yet</div>';
+    return;
   }
-
-  logoWrap.innerHTML = state.logo_url
-    ? `<img src="${state.logo_url}" alt="logo">`
-    : '🏟';
+  el.innerHTML = allMeets.map(m => {
+    const isActive = m.id === activeMeetId;
+    const statusCls = m.cancelled ? 's-cancelled' : m.is_active === false ? 's-inactive' : 's-active';
+    const statusTxt = m.cancelled ? 'Cancelled'  : m.is_active === false ? 'Inactive'   : 'Active';
+    return `<div class="meet-item ${isActive ? 'active' : ''}" onclick="selectMeet('${m.id}')">
+      <div class="mi-name">${m.name || 'Untitled'}</div>
+      <div class="mi-date">${m.date ? fmtDate(m.date) : 'No date'}</div>
+      <div class="mi-pin">PIN: ${m.pin || '—'}</div>
+      <span class="mi-status ${statusCls}">${statusTxt}</span>
+    </div>`;
+  }).join('');
 }
 
-// ── Save Details ──────────────────────────────────────────
-async function saveMeetDetails() {
-  const title = document.getElementById('meetTitle').value.trim();
-  const date  = document.getElementById('meetDate').value;
-  if (!title && !date) return flash('stDetails', 'Enter a title or date first', 'err');
-  state.title = title; state.date = date; state.cancelled = false;
-  try {
-    await upsertSettings();
-    flash('stDetails', '✅ Meet details saved', 'ok');
-    refreshBanner();
-  } catch(err) { flash('stDetails', 'Error: ' + err.message, 'err'); }
+// ── Select meet ───────────────────────────────────────────
+async function selectMeet(id) {
+  activeMeetId = id;
+  activeMeet   = allMeets.find(m => m.id === id);
+  renderMeetList();
+  renderEditPanel();
+}
+
+// ── Edit panel ────────────────────────────────────────────
+async function renderEditPanel() {
+  const m   = activeMeet;
+  const ep  = document.getElementById('editPanel');
+  const logoHtml = m.logo_url
+    ? `<div class="header-logo"><img src="${m.logo_url}" alt="logo"></div>`
+    : `<div class="header-logo">🏟</div>`;
+
+  ep.innerHTML = `
+    <!-- Header -->
+    <div class="meet-header">
+      ${logoHtml}
+      <div class="header-info">
+        <div class="header-name">${m.name || 'Untitled Meet'}</div>
+        <div class="header-sub">${m.date ? fmtDate(m.date) : 'No date set'}</div>
+      </div>
+      <div class="header-pin">PIN: ${m.pin || '—'}</div>
+    </div>
+
+    <!-- Details -->
+    <div class="divider"><span>Meet Details</span></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">📋 Title &amp; Date</div>
+        <div class="field"><label>Meet Name</label>
+          <input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025">
+        </div>
+        <div class="field"><label>Date</label>
+          <input type="date" id="eDate" value="${m.date || ''}">
+        </div>
+        <div class="field"><label>Worker PIN (4–6 digits)</label>
+          <input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric">
+        </div>
+        <div class="field"><label>Status</label>
+          <select id="eActive">
+            <option value="active"    ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active</option>
+            <option value="inactive"  ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive (hidden from workers)</option>
+            <option value="cancelled" ${m.cancelled ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="saveDetails()">Save Changes</button>
+        <div class="st" id="stDetails"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🖼 Meet Logo</div>
+        <div class="card-desc">Replaces the Ironclad logo on scoring &amp; leaderboard for workers in this meet.</div>
+        <img id="logoThumb" class="logo-thumb" src="${m.logo_url || ''}" style="${m.logo_url ? 'display:block' : 'display:none'}">
+        <div class="field"><label>Upload New Logo</label>
+          <input type="file" id="logoFile" accept="image/*" onchange="previewLogo()">
+        </div>
+        <button class="btn btn-primary" onclick="uploadLogo()">Upload Logo</button>
+        <button class="btn btn-ghost"   onclick="removeLogo()">Remove Logo</button>
+        <div class="st" id="stLogo"></div>
+      </div>
+    </div>
+
+    <!-- Roster -->
+    <div class="divider"><span>Roster &amp; Events</span></div>
+    <div class="card span2">
+      <div class="card-title">📋 Events in This Meet</div>
+      <div id="evLoading" style="color:var(--text3);font-size:13px;">Loading…</div>
+      <div id="evList"></div>
+    </div>
+
+    <div class="divider"><span>Import</span></div>
+    <div class="card span2">
+      <div class="card-title">📥 Import / Replace Roster</div>
+      <div class="card-desc">Upload a MileSplit CSV. Choose whether to <strong style="color:var(--accent2)">add to</strong> the existing roster or <strong style="color:var(--red)">replace it entirely</strong>.</div>
+      <div class="field"><label>CSV File</label>
+        <input type="file" id="csvFile" accept=".csv">
+      </div>
+      <div class="field"><label>Import Mode</label>
+        <select id="importMode">
+          <option value="add">Add to existing roster</option>
+          <option value="replace">Replace entire roster (delete first)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="importBtn" onclick="doImport()">Run Import</button>
+      <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+      <div class="st" id="stImport"></div>
+    </div>
+
+    <!-- Danger -->
+    <div class="divider"><span>Danger Zone</span></div>
+    <div class="grid2">
+      <div class="card card-danger">
+        <div class="card-title">🗑 Clear Roster &amp; Events</div>
+        <div class="card-desc">Deletes all athletes, events, attempts, and assignments for this meet. Meet shell (name, date, PIN, logo) is kept.</div>
+        <button class="btn btn-danger" onclick="clearRoster()">Clear Roster &amp; Events</button>
+        <div class="st" id="stClear"></div>
+      </div>
+      <div class="card card-danger">
+        <div class="card-title">💣 Delete This Meet</div>
+        <div class="card-desc">Permanently removes this meet and all its data from the database.</div>
+        <button class="btn btn-danger" onclick="deleteMeet()">Delete Meet Entirely</button>
+        <div class="st" id="stDelete"></div>
+      </div>
+    </div>
+  `;
+
+  loadEventList();
+}
+
+// ── Save details ──────────────────────────────────────────
+async function saveDetails() {
+  const name   = document.getElementById('eName').value.trim();
+  const date   = document.getElementById('eDate').value || null;
+  const pin    = document.getElementById('ePin').value.trim();
+  const status = document.getElementById('eActive').value;
+  if (!name)           return flash('stDetails', '❌ Meet name is required', 'err');
+  if (pin && pin.length < 4) return flash('stDetails', '❌ PIN must be at least 4 digits', 'err');
+
+  const updates = {
+    name,
+    date,
+    pin:       pin || activeMeet.pin,
+    is_active: status !== 'inactive',
+    cancelled: status === 'cancelled'
+  };
+
+  const { error } = await sb.from('meets').update(updates).eq('id', activeMeetId);
+  if (error) return flash('stDetails', '❌ ' + error.message, 'err');
+
+  Object.assign(activeMeet, updates);
+  allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, ...updates } : m);
+  renderMeetList();
+  renderEditPanel();
+  flash('stDetails', '✅ Meet updated', 'ok');
 }
 
 // ── Logo ──────────────────────────────────────────────────
-function previewLogoLocal() {
-  const file = document.getElementById('imgFile').files[0];
+function previewLogo() {
+  const file = document.getElementById('logoFile').files[0];
   if (!file) return;
   const r = new FileReader();
-  r.onload = e => { state.logo_url = e.target.result; refreshBanner(); };
+  r.onload = e => {
+    const thumb = document.getElementById('logoThumb');
+    thumb.src = e.target.result;
+    thumb.style.display = 'block';
+  };
   r.readAsDataURL(file);
 }
 
-async function uploadLogo(e) {
-  const file = document.getElementById('imgFile').files[0];
-  if (!file) return flash('stLogo', 'Select an image first', 'err');
-  const btn = e.target; btn.disabled = true; btn.textContent = 'Uploading…';
+async function uploadLogo() {
+  const file = document.getElementById('logoFile').files[0];
+  if (!file) return flash('stLogo', '❌ Select an image first', 'err');
+  flash('stLogo', '⏳ Uploading…', 'inf');
+
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
+
   try {
-    const ext  = file.name.split('.').pop();
-    const name = `meet-logo-${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from('logos').upload(name, file, { upsert: true });
+    const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
     if (upErr) throw upErr;
-    const { data: urlData } = sb.storage.from('logos').getPublicUrl(name);
-    state.logo_url = urlData.publicUrl;
-    await upsertSettings();
-    refreshBanner();
-    flash('stLogo', '✅ Logo uploaded & saved', 'ok');
-  } catch(err) { flash('stLogo', 'Upload failed: ' + err.message, 'err'); }
-  finally { btn.disabled = false; btn.textContent = 'Upload Logo'; }
+    const { data } = sb.storage.from('avatars').getPublicUrl(name);
+    const url = data.publicUrl;
+
+    const { error: dbErr } = await sb.from('meets').update({ logo_url: url }).eq('id', activeMeetId);
+    if (dbErr) throw dbErr;
+
+    activeMeet.logo_url = url;
+    allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: url } : m);
+
+    const thumb = document.getElementById('logoThumb');
+    thumb.src = url; thumb.style.display = 'block';
+
+    // Update header logo immediately
+    const headerLogo = document.querySelector('.header-logo');
+    if (headerLogo) headerLogo.innerHTML = `<img src="${url}" alt="logo">`;
+
+    flash('stLogo', '✅ Logo uploaded', 'ok');
+  } catch(err) { flash('stLogo', '❌ ' + err.message, 'err'); }
 }
 
 async function removeLogo() {
-  if (!confirm('Remove the meet logo?')) return;
-  state.logo_url = '';
-  await upsertSettings();
-  document.getElementById('imgFile').value = '';
-  refreshBanner();
+  if (!confirm('Remove this meet\'s logo? The Ironclad logo will show instead.')) return;
+  const { error } = await sb.from('meets').update({ logo_url: null }).eq('id', activeMeetId);
+  if (error) return flash('stLogo', '❌ ' + error.message, 'err');
+  activeMeet.logo_url = null;
+  allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: null } : m);
+  document.getElementById('logoThumb').style.display = 'none';
+  const headerLogo = document.querySelector('.header-logo');
+  if (headerLogo) headerLogo.innerHTML = '🏟';
   flash('stLogo', '✅ Logo removed', 'ok');
 }
 
-// ── Reschedule ────────────────────────────────────────────
-async function reschedule() {
-  const newDate = document.getElementById('reschedDate').value;
-  if (!newDate) return flash('stResched', 'Pick a new date first', 'err');
-  if (!confirm(`Move meet to ${fmtDate(newDate)}?`)) return;
-  state.date = newDate; state.cancelled = false;
-  document.getElementById('meetDate').value = newDate;
-  try {
-    await upsertSettings();
-    flash('stResched', `✅ Rescheduled to ${fmtDate(newDate)}`, 'ok');
-    refreshBanner();
-  } catch(err) { flash('stResched', 'Error: ' + err.message, 'err'); }
+// ── Event list ────────────────────────────────────────────
+async function loadEventList() {
+  const { data: events, error } = await sb.from('events').select('*')
+    .eq('meet_id', activeMeetId).order('name');
+  document.getElementById('evLoading').textContent = '';
+
+  if (error || !events || !events.length) {
+    document.getElementById('evList').innerHTML =
+      '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
+    return;
+  }
+
+  const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', activeMeetId);
+  const { data: assigns  } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
+  const attCount = {}, athCount = {};
+  (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
+  (assigns  || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
+
+  document.getElementById('evList').innerHTML = events.map(e => `
+    <div class="ev-item">
+      <div>
+        <div class="ev-name">${e.name}</div>
+        <div class="ev-meta">${e.gender||''} ${e.level ? '· ' + e.level : ''}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <span class="badge">${athCount[e.id]||0} ath</span>
+        <span class="badge">${attCount[e.id]||0} att</span>
+      </div>
+    </div>`).join('');
 }
 
-// ── Cancel ────────────────────────────────────────────────
-async function cancelMeet() {
-  if (!confirm('Mark this meet as CANCELLED and clear all athlete/event data?')) return;
-  if (prompt('Type 1111 to confirm:') !== PW) return flash('stCancel', 'Cancelled — no changes made', 'inf');
-  try {
-    await clearAllData();
-    state.cancelled = true;
-    await upsertSettings();
-    document.getElementById('athleteNum').textContent = '0';
-    flash('stCancel', '✅ Meet marked cancelled. Roster & events cleared.', 'warn');
-    refreshBanner();
-  } catch(err) { flash('stCancel', 'Error: ' + err.message, 'err'); }
-}
-
-// ── Replace Roster ────────────────────────────────────────
-async function replaceRoster() {
+// ── Import CSV ────────────────────────────────────────────
+async function doImport() {
   const file = document.getElementById('csvFile').files[0];
-  if (!file) return flash('stImport', 'Select a CSV file first', 'err');
-  if (!confirm('This will DELETE all existing athletes and import the new CSV. Continue?')) return;
+  if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
+  const mode = document.getElementById('importMode').value;
+  if (!confirm(mode === 'replace'
+    ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import the new CSV. Continue?`
+    : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
 
   const btn = document.getElementById('importBtn');
-  const progWrap = document.getElementById('progWrap');
-  const progBar  = document.getElementById('progBar');
+  const pw  = document.getElementById('progWrap');
+  const pb  = document.getElementById('progBar');
   btn.disabled = true; btn.textContent = 'Working…';
-  progWrap.classList.add('show'); progBar.style.width = '5%';
+  pw.classList.add('show'); pb.style.width = '5%';
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
+  try {
+    if (mode === 'replace') {
       flash('stImport', '🗑 Clearing existing roster…', 'inf');
-      const { error: delErr } = await sb.from('athletes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (delErr) throw delErr;
-      progBar.style.width = '20%';
-
-      const rows = parseCSV(e.target.result).filter(r => r.some(c => c));
-      if (rows.length < 2) throw new Error('CSV is empty or has only a header row');
-
-      let count = 0;
-      const total = rows.length - 1;
-      for (let i = 1; i <= total; i++) {
-        const [name, team, gender, level] = rows[i];
-        if (!name) continue;
-        const parts = name.trim().split(' ');
-        await sb.from('athletes').insert({
-          fname: parts[0] || '',
-          lname: parts.slice(1).join(' ') || '',
-          team: team || '', gender: gender || '', level: level || ''
-        });
-        count++;
-        progBar.style.width = (20 + Math.round((i / total) * 80)) + '%';
-      }
-      progBar.style.width = '100%';
-      document.getElementById('athleteNum').textContent = count;
-      flash('stImport', `✅ Replaced roster — ${count} athletes imported`, 'ok');
-    } catch(err) {
-      flash('stImport', 'Error: ' + err.message, 'err');
-    } finally {
-      btn.disabled = false; btn.textContent = 'Replace Roster';
-      setTimeout(() => { progWrap.classList.remove('show'); progBar.style.width = '0%'; }, 1800);
+      const steps = [
+        sb.from('attempts').delete().eq('meet_id', activeMeetId),
+        sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+        sb.from('athletes').delete().eq('meet_id', activeMeetId),
+        sb.from('events').delete().eq('meet_id', activeMeetId)
+      ];
+      for (const s of steps) { const { error } = await s; if (error) throw error; }
     }
+    pb.style.width = '20%';
+
+    flash('stImport', '⏳ Parsing CSV…', 'inf');
+    const text = await file.text();
+    const n    = await importMileSplit(text, activeMeetId, pb);
+
+    flash('stImport', `✅ ${n} athletes imported into "${activeMeet.name}"`, 'ok');
+    loadEventList();
+  } catch(err) {
+    flash('stImport', '❌ ' + err.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Run Import';
+    setTimeout(() => { pw.classList.remove('show'); pb.style.width = '0%'; }, 2000);
+  }
+}
+
+async function importMileSplit(csvText, meetId, progBar) {
+  const rows    = parseCSV(csvText);
+  if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  const getCol  = names => headers.findIndex(h => names.some(n => h.includes(n)));
+
+  const idx = {
+    ev:  getCol(['event']),
+    div: getCol(['division','level','grade']),
+    ln:  getCol(['lname','last']),
+    fn:  getCol(['fname','first']),
+    gen: getCol(['gender','sex']),
+    tm:  getCol(['team','school'])
   };
-  reader.readAsText(file);
+  if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0)
+    throw new Error('CSV missing required columns (first, last, event).');
+
+  const fieldKeywords = ['shot','discus','long jump','triple jump','high jump','pole vault'];
+  const eventsFound = {}, eventRows = [], athleteRows = [], assignRows = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 3) continue;
+    const g = col => (col >= 0 && col < row.length) ? (row[col]||'').toString().trim() : '';
+    if (!g(idx.fn)) continue;
+    const evName = g(idx.ev).toLowerCase();
+    if (!fieldKeywords.some(k => evName.includes(k))) continue;
+
+    const level  = normalizeLevel(g(idx.div));
+    const gender = g(idx.gen);
+    const evKey  = g(idx.ev) + '|' + gender + '|' + level;
+
+    if (!eventsFound[evKey]) {
+      const eId = crypto.randomUUID().substring(0, 8);
+      eventsFound[evKey] = eId;
+      eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId });
+    }
+    const aId = crypto.randomUUID().substring(0, 8);
+    athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
+    assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+' '+g(idx.ln)).trim() });
+
+    if (progBar) progBar.style.width = (20 + Math.round((i / rows.length) * 70)) + '%';
+  }
+
+  if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
+  if (eventRows.length)   { const { error } = await sb.from('events').insert(eventRows);            if (error) throw error; }
+  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows);         if (error) throw error; }
+  if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows); if (error) throw error; }
+  if (progBar) progBar.style.width = '100%';
+  return athleteRows.length;
 }
 
-// ── Clear data (keep shell) ───────────────────────────────
-async function clearMeetData() {
-  if (!confirm('Delete all athletes, events, attempts, and assignments?\nMeet title, date, and logo will be kept.')) return;
-  if (prompt('Type 1111 to confirm:') !== PW) return flash('stClear', 'Cancelled', 'inf');
-  try {
-    await clearAllData();
-    document.getElementById('athleteNum').textContent = '0';
-    flash('stClear', '✅ All meet data deleted. Shell kept.', 'ok');
-  } catch(err) { flash('stClear', 'Error: ' + err.message, 'err'); }
+// ── Clear roster (keep meet shell) ────────────────────────
+async function clearRoster() {
+  if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?\n\nMeet name, date, PIN and logo will be kept.`)) return;
+  if (prompt('Re-enter admin password:') !== ADMIN_PW) { flash('stClear', 'Cancelled', 'inf'); return; }
+
+  const steps = [
+    sb.from('attempts').delete().eq('meet_id', activeMeetId),
+    sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+    sb.from('athletes').delete().eq('meet_id', activeMeetId),
+    sb.from('events').delete().eq('meet_id', activeMeetId)
+  ];
+  for (const s of steps) {
+    const { error } = await s;
+    if (error) { flash('stClear', '❌ ' + error.message, 'err'); return; }
+  }
+  flash('stClear', '✅ Roster & events cleared.', 'ok');
+  loadEventList();
 }
 
-// ── Full nuke ─────────────────────────────────────────────
-async function nukeEverything() {
-  if (!confirm('FULL RESET — deletes everything including meet title, date, and logo. Cannot be undone.')) return;
-  if (prompt('Type 1111 to confirm full reset:') !== PW) return flash('stNuke', 'Cancelled', 'inf');
-  try {
-    await clearAllData();
-    state = { title:'', date:'', logo_url:'', cancelled:false };
-    await upsertSettings();
-    document.getElementById('meetTitle').value   = '';
-    document.getElementById('meetDate').value    = '';
-    document.getElementById('reschedDate').value = '';
-    document.getElementById('athleteNum').textContent = '0';
-    refreshBanner();
-    flash('stNuke', '✅ Full reset complete', 'ok');
-  } catch(err) { flash('stNuke', 'Error: ' + err.message, 'err'); }
+// ── Delete meet entirely ──────────────────────────────────
+async function deleteMeet() {
+  if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?\n\nThis cannot be undone.`)) return;
+  if (prompt('Re-enter admin password:') !== ADMIN_PW) { flash('stDelete', 'Cancelled', 'inf'); return; }
+
+  // Delete child records first, then the meet itself
+  const steps = [
+    sb.from('attempts').delete().eq('meet_id', activeMeetId),
+    sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+    sb.from('athletes').delete().eq('meet_id', activeMeetId),
+    sb.from('events').delete().eq('meet_id', activeMeetId),
+    sb.from('meets').delete().eq('id', activeMeetId)
+  ];
+  for (const s of steps) {
+    const { error } = await s;
+    if (error) { flash('stDelete', '❌ ' + error.message, 'err'); return; }
+  }
+
+  allMeets     = allMeets.filter(m => m.id !== activeMeetId);
+  activeMeetId = null;
+  activeMeet   = null;
+  document.getElementById('meetCount').textContent = allMeets.length;
+  renderMeetList();
+  document.getElementById('editPanel').innerHTML =
+    '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
 }
 
-// ── Shared helpers ────────────────────────────────────────
-async function clearAllData() {
-  const s = '00000000-0000-0000-0000-000000000000';
-  await Promise.all([
-    sb.from('attempts').delete().neq('id', s),
-    sb.from('event_assignments').delete().neq('id', s),
-    sb.from('athletes').delete().neq('id', s),
-    sb.from('events').delete().neq('id', s),
-  ]);
+// ── Create new meet ───────────────────────────────────────
+function startNewMeet() {
+  activeMeetId = null;
+  activeMeet   = null;
+  renderMeetList();
+
+  document.getElementById('editPanel').innerHTML = `
+    <div class="divider"><span>New Meet</span></div>
+    <div class="card" style="max-width:480px;">
+      <div class="card-title">🏟 Create New Meet</div>
+      <div class="field"><label>Meet Name</label>
+        <input type="text" id="newName" placeholder="e.g. Weatherford Invite 2025">
+      </div>
+      <div class="field"><label>Date</label>
+        <input type="date" id="newDate">
+      </div>
+      <div class="field"><label>Worker PIN (4–6 digits)</label>
+        <input type="tel" id="newPin" maxlength="6" placeholder="e.g. 2025" inputmode="numeric">
+      </div>
+      <button class="btn btn-green" onclick="createMeet()">Create Meet</button>
+      <div class="st" id="stCreate"></div>
+    </div>`;
 }
 
-async function upsertSettings() {
-  const { error } = await sb.from('meet_settings').upsert(
-    { id:1, title:state.title, date:state.date, logo_url:state.logo_url, cancelled:state.cancelled },
-    { onConflict:'id' }
-  );
-  if (error) throw error;
+async function createMeet() {
+  const name = document.getElementById('newName').value.trim();
+  const date = document.getElementById('newDate').value || null;
+  const pin  = document.getElementById('newPin').value.trim();
+  if (!name)          return flash('stCreate', '❌ Meet name is required', 'err');
+  if (pin.length < 4) return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
+
+  flash('stCreate', '⏳ Creating…', 'inf');
+  const { data, error } = await sb.from('meets')
+    .insert({ name, date, pin, is_active: true })
+    .select().single();
+  if (error) return flash('stCreate', '❌ ' + error.message, 'err');
+
+  allMeets.unshift(data);
+  document.getElementById('meetCount').textContent = allMeets.length;
+  activeMeetId = data.id;
+  activeMeet   = data;
+  renderMeetList();
+  renderEditPanel();
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function normalizeLevel(raw) {
+  if (!raw) return '';
+  const t = raw.toString().toLowerCase().trim();
+  if (t.includes('varsity')) return 'Varsity';
+  if (t.includes('jv') || t.includes('junior var')) return 'JV';
+  if (t.includes('8th') || t==='8') return '8th Grade';
+  if (t.includes('7th') || t==='7') return '7th Grade';
+  if (t.includes('frosh') || t.includes('freshman') || t.includes('9th')) return 'Freshman';
+  if (t.includes('soph') || t.includes('10th')) return 'Sophomore';
+  return raw.toString().trim();
 }
 
 function parseCSV(text) {
-  return text.split(/\r?\n/).map(line =>
-    line.split(',').map(f => f.trim().replace(/^"|"$/g,''))
-  );
+  text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const rows=[]; let row=[],field='',inQ=false,i=0;
+  while(i<text.length){
+    const c=text[i];
+    if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;continue;}if(c==='"')inQ=false;else field+=c;}
+    else{if(c==='"')inQ=true;else if(c===','){row.push(field.trim());field='';}else if(c==='\n'){row.push(field.trim());field='';if(row.some(v=>v!=''))rows.push(row);row=[];}else field+=c;}
+    i++;
+  }
+  row.push(field.trim());if(row.some(v=>v!=''))rows.push(row);
+  return rows;
 }
 
 function fmtDate(d) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {
-    weekday:'short', month:'short', day:'numeric', year:'numeric'
-  });
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
 }
+
+function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
 function flash(id, msg, type) {
   const el = document.getElementById(id);
