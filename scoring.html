@@ -187,11 +187,10 @@ async function saveHMark() {
     return;
   }
 
-  // Refresh data
+  // Refresh
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
 
-  // Clear form
   document.getElementById('hFt').value = '';
   document.getElementById('hIn').value = '';
   document.getElementById('hQtr').value = '0';
