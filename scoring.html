@@ -4,222 +4,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Field Events Pro">
-  <meta name="theme-color" content="#0d1b2a">
   <title>Field Events Pro — Scoring</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0;
-           display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
-    #offlineBanner {
-      display: none; background: #dc3545; color: white; font-size: 13px;
-      font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0; letter-spacing: 0.5px;
-    }
+    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; }
     #offlineBanner.show { display: block; }
-
-    /* ── Top bar ── */
-    .topbar {
-      background: #0d1b2a; color: white; padding: 10px 14px;
-      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-    }
-    .topbar #topMeetName { flex: 1; font-weight: 700; font-size: 15px; }
-
-    /* ── Flight bar strip ── */
-    #flightBarStrip {
-      display: none; background: #1e3a1e; color: white; padding: 8px 12px;
-      flex-shrink: 0; align-items: center; gap: 10px; flex-wrap: wrap;
-    }
-    #flightBarStrip.show { display: flex; }
-    #flightBarStrip label { font-size: 12px; opacity: .75; white-space: nowrap; }
-    #flightBarInput {
-      width: 90px; padding: 6px 8px; border-radius: 5px; border: none;
-      font-size: 16px; font-weight: bold; text-align: center; background: #fff;
-    }
-    .fbar-inc { padding: 6px 10px; background: rgba(255,255,255,.15);
-                border: 1px solid rgba(255,255,255,.4); color: white;
-                border-radius: 5px; cursor: pointer; font-size: 13px; }
-    #flightBarSet { padding: 6px 14px; background: #28a745; border: none;
-                    color: white; border-radius: 5px; font-weight: bold; cursor: pointer; }
-    #flightBarDisplay { font-size: 14px; font-weight: bold; margin-left: 4px;
-                        background: rgba(255,255,255,.1); padding: 4px 10px; border-radius: 5px; }
-
-    .header { background: #1a3a5c; color: white; padding: 10px;
-              display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
-    .header select { flex: 2; min-width: 160px; }
-    .phase-btn { padding: 8px 10px; background: rgba(255,255,255,0.15);
-                 border: 1px solid rgba(255,255,255,0.4); color: white;
-                 border-radius: 5px; cursor: pointer; font-size: 13px; white-space: nowrap; }
-    .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
-
+    .topbar { background: #0d1b2a; color: white; padding: 12px; display: flex; align-items: center; gap: 12px; }
+    .header { background: #1a3a5c; color: white; padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .container { display: flex; flex: 1; overflow: hidden; }
-    .left-panel { width: 38%; border-right: 2px solid #ddd; overflow-y: auto; background: white; flex-shrink: 0; }
-    .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
-
-    /* ── Athlete list rows ── */
-    .ath-btn { width: 100%; text-align: left; padding: 10px 12px; border: none;
-               border-bottom: 1px solid #eee; background: white; cursor: pointer; line-height: 1.4; }
-    .ath-btn.active   { background: #eef4ff; border-left: 5px solid #1a3a5c; }
-    .ath-btn.eliminated { background: #fff5f5; }
-    .ath-btn.passing-height { background: #f4f4f4; opacity: 0.65; }
-    .ath-btn.needs-checkin { background: #fffbf0; }
-
-    .ath-top-row { display: flex; align-items: center; gap: 6px; }
-    .place-badge { font-size: 12px; font-weight: bold; min-width: 26px; text-align: center;
-                   padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
-    .place-1  { background: #FFD700; color: #333; }
-    .place-2  { background: #C0C0C0; color: #333; }
-    .place-3  { background: #cd7f32; color: white; }
+    .left-panel { width: 38%; overflow-y: auto; background: white; border-right: 2px solid #ddd; }
+    .right-panel { flex: 1; overflow-y: auto; padding: 15px; }
+    .ath-btn { width: 100%; padding: 12px; border: none; border-bottom: 1px solid #eee; text-align: left; background: white; cursor: pointer; }
+    .ath-btn.active { background: #eef4ff; border-left: 5px solid #1a3a5c; }
+    .place-badge { float: right; padding: 4px 9px; border-radius: 4px; font-weight: bold; min-width: 32px; text-align: center; }
+    .place-1 { background: gold; color: #222; }
+    .place-2 { background: silver; color: #222; }
+    .place-3 { background: #cd7f32; color: white; }
     .place-4, .place-5, .place-6, .place-7, .place-8 { background: #e9ecef; color: #333; }
-    .place-T  { background: #6c757d; color: white; font-style: italic; }
-    .place-elim { background: #dc3545; color: white; }
-    .place-nr { background: #f0f0f0; color: #aaa; }
-
-    .entry-badge {
-      display: inline-block; background: #e8f4fd; border: 1px solid #90caf9;
-      color: #1565c0; font-size: 11px; font-weight: bold; padding: 2px 7px;
-      border-radius: 10px; margin-top: 3px; white-space: nowrap;
-    }
-    .entry-badge.not-checked { background: #fff8e1; border-color: #f9a825; color: #795548; }
-
-    .ath-name-line { font-weight: bold; font-size: 14px; }
-    .ath-sub { font-size: 11px; color: #888; margin-top: 1px; }
-    .ath-best-line { font-size: 12px; color: #28a745; font-weight: bold; margin-top: 2px; }
-
-    /* ── Roster management panel ── */
-    #rosterMgr { border-top: 2px solid #ddd; padding: 10px 12px; background: #f8f9fa; display: none; }
-    #rosterMgr.show { display: block; }
-    #rosterMgr h5 { margin: 0 0 8px 0; font-size: 13px; color: #1a3a5c; }
-    #rosterMgr input { font-size: 14px; padding: 7px 9px; border: 1px solid #ccc;
-                       border-radius: 5px; width: 100%; margin-bottom: 6px; }
-    #rosterMgr .add-row { display: flex; gap: 6px; }
-    #rosterMgr .add-row input { margin-bottom: 0; }
-    .btn-add-ath { background: #1a3a5c; color: white; border: none; padding: 8px 14px;
-                   border-radius: 5px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
-    .roster-toggle { width: 100%; margin: 0; padding: 8px; background: #eef4ff;
-                     border: none; border-top: 1px solid #ddd; font-size: 12px;
-                     color: #1a3a5c; font-weight: bold; cursor: pointer; flex-shrink: 0; }
-
-    /* ── Cards ── */
-    .card { background: white; border-radius: 10px; padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-
-    /* ── Attempt slots ── */
-    .attempt-slot { border: 2px solid #ddd; border-radius: 8px; padding: 12px;
-                    margin-bottom: 10px; background: #fafafa; }
-    .attempt-slot.active-slot { border-color: #1a3a5c; background: #eef4ff; }
-    .attempt-slot.done   { border-color: #28a745; background: #f0fff4; }
-    .attempt-slot.foul   { border-color: #dc3545; background: #fff5f5; }
-    .attempt-slot.passed { border-color: #6c757d; background: #f8f9fa; }
-    .slot-label { font-size: 12px; font-weight: bold; color: #666; margin-bottom: 6px; }
-    .slot-mark  { font-size: 22px; font-weight: bold; color: #1a3a5c; }
-
-    .mark-entry { display: flex; gap: 8px; align-items: flex-end; margin: 10px 0; flex-wrap: wrap; }
-    .mark-entry input { width: 70px; padding: 10px; border: 1px solid #ccc;
-                        border-radius: 6px; font-size: 18px; text-align: center; }
-    .mark-entry label { font-size: 11px; color: #666; display: block; margin-bottom: 3px; }
-    .qtr-select { width: 72px; padding: 10px; border: 1px solid #ccc;
-                  border-radius: 6px; font-size: 15px; background: white; }
-
-    .btn-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-    .btn-save { flex: 1; background: #1a3a5c; color: white; padding: 14px; border: none;
-                border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; min-width: 100px; }
-    .btn-foul { flex: 1; background: #dc3545; color: white; padding: 14px; border: none;
-                border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; min-width: 80px; }
-
-    /* ── Vertical ── */
-    .height-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-    .height-controls input { width: 100px; padding: 10px; border: 1px solid #ccc;
-                              border-radius: 6px; font-size: 18px; text-align: center; }
-    .inc-btn { padding: 8px 12px; background: #eee; border: 1px solid #ccc;
-               border-radius: 5px; cursor: pointer; font-size: 13px; }
-    .vmark-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
-    .vmark-btn { height: 60px; border-radius: 8px; border: none; font-size: 22px;
-                 font-weight: bold; color: white; cursor: pointer; }
-    .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
-
-    .mid-pass-toggle {
-      width: 100%; padding: 9px 12px; background: #eef4ff;
-      border: 1px dashed #1a3a5c; border-radius: 7px;
-      color: #1a3a5c; font-size: 13px; font-weight: bold;
-      cursor: pointer; text-align: left;
-    }
-
-    /* ── Check-in panel ── */
-    #checkInPanel {
-      background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
-      border: 2px solid #f9a825; border-radius: 12px; padding: 16px; margin-bottom: 14px;
-    }
-    #checkInPanel .ci-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-    #checkInPanel .ci-header .ci-icon { font-size: 20px; }
-    #checkInPanel .ci-header h4 { margin: 0; color: #5d4037; font-size: 14px; font-weight: bold; }
-    #checkInPanel .ci-bar-label { font-size: 11px; color: #795548; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    #checkInPanel .ci-bar-height { font-size: 28px; font-weight: bold; color: #1a3a5c; margin-bottom: 14px; line-height: 1; }
-
-    .btn-checkin-in {
-      width: 100%; padding: 14px; background: #1a3a5c; color: white;
-      border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 10px;
-    }
-    .pass-expander { border: 1px solid #e0c97a; border-radius: 8px; overflow: hidden; }
-    .pass-expander-header {
-      width: 100%; padding: 11px 14px; background: #fff8e1; border: none; cursor: pointer;
-      font-size: 13px; font-weight: bold; color: #795548; text-align: left;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .pass-expander-body { display: none; padding: 12px; background: white; border-top: 1px solid #e0c97a; }
-    .pass-expander-body.open { display: block; }
-    .pass-height-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
-    .pass-height-row input {
-      width: 110px; padding: 10px; border: 2px solid #1a3a5c;
-      border-radius: 6px; font-size: 20px; font-weight: bold; text-align: center; color: #1a3a5c;
-    }
-    .pass-height-row .ph-inc {
-      padding: 8px 10px; background: #eef4ff; border: 1px solid #1a3a5c;
-      color: #1a3a5c; border-radius: 5px; cursor: pointer; font-size: 12px; white-space: nowrap;
-    }
-    .btn-confirm-pass {
-      width: 100%; padding: 12px; background: #e65100; color: white;
-      border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer;
-    }
-    .pass-preview { font-size: 12px; color: #795548; margin-bottom: 8px; font-style: italic; }
-
-    #checkInDone { border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: none; align-items: center; gap: 10px; }
-    #checkInDone.show-accepted { display: flex; background: #e8f5e9; border: 2px solid #43a047; }
-    #checkInDone.show-passed   { display: flex; background: #e3f2fd; border: 2px solid #1e88e5; }
-    #checkInDone .ci-done-icon  { font-size: 22px; flex-shrink: 0; }
-    #checkInDone .ci-done-text  { flex: 1; }
-    #checkInDone .ci-done-title { font-weight: bold; font-size: 14px; }
-    #checkInDone .ci-done-sub   { font-size: 12px; opacity: 0.8; }
-    .btn-ci-redo { background: none; border: 1px solid currentColor; border-radius: 5px;
-                   padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; flex-shrink: 0; }
-
-    .height-row { display: flex; justify-content: space-between; align-items: center;
-                  padding: 8px 10px; background: #f8f9fa; border-radius: 6px;
-                  margin-bottom: 6px; font-size: 13px; border: 1px solid #eee; }
-    .height-row.current-ht { border-color: #1a3a5c; background: #eef4ff; font-weight: bold; }
-    .height-row.height-cleared { background: #f0fff4; border-color: #a5d6a7; }
-
-    .history-item { display: flex; justify-content: space-between; align-items: center;
-                    padding: 8px 10px; background: #f8f9fa; border-radius: 5px;
-                    margin-top: 5px; font-size: 13px; border: 1px solid #eee; }
-    .del-btn { background: #dc3545; color: white; border: none; padding: 3px 8px;
-               border-radius: 4px; cursor: pointer; font-size: 12px; }
-    .del-ath-btn { background: none; border: none; color: #dc3545; font-size: 14px;
-                   cursor: pointer; padding: 2px 4px; opacity: 0.7; }
-
-    .pv-std-box { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-    .saving-badge { font-size: 11px; color: #856404; margin-left: 6px; }
-
-    .hidden { display: none; }
-    .form-field { padding: 12px; width: 100%; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-    .danger-btn { background: #dc3545; color: white; padding: 15px; width: 100%;
-                  border: none; border-radius: 8px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-    h2 { margin: 0 0 4px 0; }
-    h4 { margin: 16px 0 6px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    .phase-info { color: #1a3a5c; font-weight: bold; font-size: 13px; margin-bottom: 8px; }
+    .place-tied { background: #6c757d; color: white; font-style: italic; }
+    .card { background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    .mark-entry { display: flex; gap: 10px; align-items: end; margin: 12px 0; flex-wrap: wrap; }
+    .mark-entry input, .mark-entry select { padding: 12px; font-size: 18px; width: 85px; text-align: center; border: 1px solid #ccc; border-radius: 6px; }
+    .btn-row button { flex: 1; padding: 16px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-save { background: #1a3a5c; color: white; }
+    .btn-foul { background: #dc3545; color: white; }
+    .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+    .phase-btn { padding: 8px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
+    .limit-msg { color: #dc3545; font-size: 13px; font-weight: bold; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -228,262 +41,47 @@
 
 <div class="topbar">
   <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" height="38">
-  <div id="topMeetName">Loading…</div>
-</div>
-
-<!-- Flight Bar Strip -->
-<div id="flightBarStrip">
-  <label>FLIGHT BAR:</label>
-  <input type="text" id="flightBarInput" placeholder="e.g. 7-00">
-  <button class="fbar-inc" onclick="incFlightBar(2)">+2"</button>
-  <button class="fbar-inc" onclick="incFlightBar(6)">+6"</button>
-  <button class="fbar-inc" onclick="incFlightBar(12)">+1'</button>
-  <button id="flightBarSet" onclick="setFlightBar()">SET BAR ▶</button>
-  <span id="flightBarDisplay"></span>
+  <div id="topMeetName" style="flex:1; font-weight:700;">Loading...</div>
 </div>
 
 <div class="header">
-  <select id="eventSelect" onchange="loadEvent()" style="flex:2; min-width:160px;">
+  <select id="eventSelect" onchange="loadEvent()" style="flex:1; min-width:200px;">
     <option value="">— Select Event —</option>
   </select>
   <div id="hPhaseButtons">
-    <button class="phase-btn active" id="phBtn3" onclick="setHPhase('3att')">3 Att</button>
-    <button class="phase-btn"        id="phBtn4" onclick="setHPhase('4att')">4 Att</button>
-    <button class="phase-btn"        id="phBtnF" onclick="setHPhase('finals')">Finals</button>
-  </div>
-  <div id="vPhaseButtons" class="hidden">
-    <button class="phase-btn active" id="vPhBtnP" onclick="setVPhase('Prelims')">Prelims</button>
-    <button class="phase-btn"        id="vPhBtnF" onclick="setVPhase('Finals')">Finals</button>
+    <button class="phase-btn active" id="ph3" onclick="setPhase('3att')">3 Att</button>
+    <button class="phase-btn" id="ph4" onclick="setPhase('4att')">4 Att</button>
+    <button class="phase-btn" id="phF" onclick="setPhase('finals')">Finals</button>
   </div>
 </div>
 
 <div class="container">
-  <div class="left-panel" style="display:flex; flex-direction:column;">
-    <div id="athleteList" style="flex:1; overflow-y:auto;">
-      <p style="padding:20px; color:#999;">Select event to begin.</p>
-    </div>
-    <button class="roster-toggle hidden" id="rosterToggleBtn" onclick="toggleRoster()">＋ Manage Roster</button>
-    <div id="rosterMgr">
-      <h5>Add Walk-on</h5>
-      <div class="add-row">
-        <input type="text" id="addFName" placeholder="First">
-        <input type="text" id="addLName" placeholder="Last">
-      </div>
-      <input type="text" id="addTeam" placeholder="Team / School (optional)" style="margin-top:6px;">
-      <button class="btn-add-ath" style="width:100%; margin-top:6px;" onclick="doAddAthlete()">ADD TO EVENT</button>
-    </div>
-  </div>
-
-  <div class="right-panel">
-    <div id="entryUI" class="hidden">
-
-      <!-- HORIZONTAL -->
-      <div id="hEntry" class="hidden">
-        <div class="card">
-          <h2 id="hAthName">Athlete</h2>
-          <div class="phase-info" id="hPhaseInfo"></div>
-          <div id="attemptSlots"></div>
-          <div id="markEntryForm" class="card" style="background:#f0f4ff; margin-top:5px;">
-            <div style="font-weight:bold; margin-bottom:8px;" id="attemptLabel">Attempt 1</div>
-            <div class="mark-entry">
-              <div><label>Feet</label><input type="number" id="hFt" placeholder="0" min="0"></div>
-              <div><label>Inches</label><input type="number" id="hIn" placeholder="0" min="0" max="11"></div>
-              <div><label>¼"</label>
-                <select class="qtr-select" id="hQtr">
-                  <option value="0">.00</option>
-                  <option value="0.25">.25</option>
-                  <option value="0.5">.50</option>
-                  <option value="0.75">.75</option>
-                </select>
-              </div>
-            </div>
-            <div class="btn-row">
-              <button class="btn-save" onclick="saveHMark()">SAVE</button>
-              <button class="btn-foul" onclick="saveHFoul()">FOUL</button>
-            </div>
-          </div>
-          <h4>Best Mark <span id="hSavingBadge" class="saving-badge hidden">syncing…</span></h4>
-          <div id="hHistoryLog"></div>
-        </div>
-      </div>
-
-      <!-- VERTICAL -->
-      <div id="vEntry" class="hidden">
-        <div class="card">
-          <h2 id="vAthName">Athlete</h2>
-          <div class="phase-info" id="vPhaseInfo"></div>
-
-          <!-- Check-In Panel -->
-          <div id="checkInPanel" class="hidden">
-            <div class="ci-header">
-              <span class="ci-icon">📋</span>
-              <h4>Check-In — Bar is set</h4>
-            </div>
-            <div class="ci-bar-label">Current bar height</div>
-            <div class="ci-bar-height" id="checkInHeight">—</div>
-            <button class="btn-checkin-in" onclick="doCheckIn('accept')">
-              ✓ IN — Competing at <span id="ciBarInlineLabel">—</span>
-            </button>
-            <div class="pass-expander">
-              <button class="pass-expander-header" onclick="togglePassExpander()">
-                <span>↑ Pass — entering at a higher height</span>
-                <span id="passExpanderCaret">▼</span>
-              </button>
-              <div class="pass-expander-body" id="passExpanderBody">
-                <div class="ci-bar-label" style="margin-bottom:6px;">Athlete's opening height</div>
-                <div class="pass-height-row">
-                  <input type="text" id="passHeightInput" placeholder="e.g. 8-06" oninput="updatePassPreview()">
-                  <button class="ph-inc" onclick="incPassHeight(2)">+2"</button>
-                  <button class="ph-inc" onclick="incPassHeight(6)">+6"</button>
-                  <button class="ph-inc" onclick="incPassHeight(12)">+1'</button>
-                </div>
-                <div class="pass-preview" id="passPreview"></div>
-                <button class="btn-confirm-pass" onclick="doCheckIn('pass')">
-                  CONFIRM — Pass to <span id="passHeightLabel">—</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Check-in confirmed state -->
-          <div id="checkInDone">
-            <span class="ci-done-icon" id="ciDoneIcon">✓</span>
-            <div class="ci-done-text">
-              <div class="ci-done-title" id="ciDoneTitle">Competing at 7-00</div>
-              <div class="ci-done-sub"   id="ciDoneSub"></div>
-            </div>
-            <button class="btn-ci-redo" onclick="redoCheckIn()" style="color:#555;">Edit</button>
-          </div>
-
-          <div id="pvStdBox" class="pv-std-box hidden">
-            <b>PV Standards:</b>
-            <input type="number" id="pvStds" placeholder="Standard height"
-                   style="width:130px; display:inline-block; margin-left:8px;">
-          </div>
-          <div id="vEliminatedMsg" class="hidden"
-               style="background:#fff0f0; padding:10px; border-radius:8px; margin:10px 0; color:#dc3545; font-weight:bold;">
-            ❌ Eliminated — 3 misses at one height
-          </div>
-          <div id="vActiveUI">
-            <div class="height-controls">
-              <div>
-                <label style="font-size:12px; color:#666; display:block;">Bar Height (this attempt)</label>
-                <input type="text" id="vBarHeight" placeholder="e.g. 5-06"
-                       style="width:110px; padding:10px; font-size:18px;">
-              </div>
-              <button class="inc-btn" onclick="incBar(2)">+2"</button>
-              <button class="inc-btn" onclick="incBar(6)">+6"</button>
-              <button class="inc-btn" onclick="incBar(0)">Clear</button>
-            </div>
-            <div class="vmark-grid">
-              <button class="vmark-btn btn-o" onclick="submitV('O')">O</button>
-              <button class="vmark-btn btn-x" onclick="submitV('X')">X</button>
-              <button class="vmark-btn btn-p" onclick="submitV('P')">P</button>
-            </div>
-
-            <!-- Mid-competition pass -->
-            <div id="midPassBox" style="margin-top:4px;">
-              <button class="mid-pass-toggle" id="midPassToggle" onclick="toggleMidPass()">
-                ↑ Pass to a higher height…
-              </button>
-              <div id="midPassBody" style="display:none; margin-top:8px; background:#f0f4ff;
-                   border:1px solid #b0c4de; border-radius:8px; padding:12px;">
-                <div style="font-size:12px; color:#1a3a5c; font-weight:bold; margin-bottom:8px;">
-                  Pass — athlete will skip to a higher height
-                </div>
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
-                  <input type="text" id="midPassHeightInput" placeholder="e.g. 8-06"
-                         style="width:110px; padding:10px; font-size:18px; font-weight:bold;
-                                border:2px solid #1a3a5c; border-radius:6px; text-align:center;"
-                         oninput="updateMidPassPreview()">
-                  <button class="inc-btn" onclick="incMidPass(2)">+2"</button>
-                  <button class="inc-btn" onclick="incMidPass(6)">+6"</button>
-                  <button class="inc-btn" onclick="incMidPass(12)">+1'</button>
-                </div>
-                <div id="midPassPreview" style="font-size:12px; color:#555; margin-bottom:8px; font-style:italic;"></div>
-                <div style="display:flex; gap:8px;">
-                  <button onclick="confirmMidPass()"
-                          style="flex:1; padding:12px; background:#e65100; color:white; border:none;
-                                 border-radius:8px; font-size:14px; font-weight:bold; cursor:pointer;">
-                    CONFIRM PASS → <span id="midPassLabel">—</span>
-                  </button>
-                  <button onclick="toggleMidPass()"
-                          style="padding:12px 16px; background:#eee; border:1px solid #ccc;
-                                 border-radius:8px; font-size:13px; cursor:pointer;">Cancel</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <h4>Height Log</h4>
-          <div id="clearedBanner" style="display:none; background:#e8f5e9; border:2px solid #43a047;
-               border-radius:8px; padding:10px 14px; margin-bottom:8px; font-weight:bold;
-               color:#2e7d32; font-size:14px;"></div>
-          <div id="vHeightLog"></div>
-          <h4>All Attempts <span id="vSavingBadge" class="saving-badge hidden">syncing…</span></h4>
-          <div id="vHistoryLog"></div>
-        </div>
-      </div>
-
-    </div>
-  </div>
+  <div class="left-panel" id="leftPanel"></div>
+  <div class="right-panel" id="rightPanel"></div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════
-// SUPABASE CLIENT
-// ════════════════════════════════════════════════════════
-const sb = supabase.createClient(
-  'https://qjomrnguhbqfluzwuntz.supabase.co',
-  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
-);
+const sb = supabase.createClient('https://qjomrnguhbqfluzwuntz.supabase.co', 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_');
 
-// ════════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════════
-let currentMeet       = null;
-let currentAth        = null;
-let currentEventId    = '';
-let currentEventName  = '';
-let isVertical        = false;
-
-let hPhase      = '3att';
-let maxAttempts = 3;
-let vPhase      = 'Prelims';
-let stickyStds  = {};
-let stickyOpeningHeight = {};
-let lastBarHeight = '';
-
-let flightBarHeight = '';
-let checkinStatus   = {};   // { athleteId: { status: 'accepted'|'passed'|null, entryHeight } }
-
-let attemptsCache    = {};
+let currentMeet = null;
+let currentEventId = null;
+let currentAth = null;
+let attemptsCache = {};
 let athleteListCache = [];
-let _athMap          = {};
+let _athMap = {};
+let currentPhase = '3att';
+let editingAttemptId = null;
 
-// ════════════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════════════
+const PHASE_LIMIT = { '3att': 3, '4att': 4, 'finals': 3 };
+
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
   if (!stored) return window.location.href = 'index.html';
   currentMeet = JSON.parse(stored);
   document.getElementById('topMeetName').textContent = currentMeet.name || 'Meet';
-
-  window.addEventListener('online',  () => updateBanners());
-  window.addEventListener('offline', () => updateBanners());
-  updateBanners();
-
   await loadEvents();
 };
 
-function updateBanners() {
-  document.getElementById('offlineBanner').classList.toggle('show', !navigator.onLine);
-}
-
-// ════════════════════════════════════════════════════════
-// EVENTS
-// ════════════════════════════════════════════════════════
 async function loadEvents() {
   const { data } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
   const sel = document.getElementById('eventSelect');
@@ -497,30 +95,12 @@ async function loadEvents() {
 }
 
 async function loadEvent() {
-  currentEventId   = document.getElementById('eventSelect').value;
+  currentEventId = document.getElementById('eventSelect').value;
   if (!currentEventId) return;
-  currentEventName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
-  isVertical = currentEventName.includes('high jump') || currentEventName.includes('pole vault');
-
-  document.getElementById('hPhaseButtons').classList.toggle('hidden', isVertical);
-  document.getElementById('vPhaseButtons').classList.toggle('hidden', !isVertical);
-  document.getElementById('flightBarStrip').classList.toggle('show', isVertical);
-
-  flightBarHeight = '';
-  checkinStatus   = {};
-  document.getElementById('flightBarInput').value       = '';
-  document.getElementById('flightBarDisplay').textContent = '';
 
   currentAth = null;
-  athleteListCache = [];
-  if (!attemptsCache[currentEventId]) attemptsCache[currentEventId] = [];
+  editingAttemptId = null;
 
-  document.getElementById('entryUI').classList.add('hidden');
-  document.getElementById('rosterToggleBtn').classList.remove('hidden');
-  document.getElementById('rosterMgr').classList.remove('show');
-  document.getElementById('athleteList').innerHTML = '<p style="padding:20px;color:#999">Loading…</p>';
-
-  // Load athletes and attempts in parallel
   const [{ data: assigns }, { data: attempts }] = await Promise.all([
     sb.from('event_assignments')
       .select('athlete_id, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
@@ -533,891 +113,253 @@ async function loadEvent() {
     id: r.athlete_id,
     name: r.athletes ? `${r.athletes.fname} ${r.athletes.lname}`.trim() : 'Unknown',
     team: r.athletes?.team || ''
-  })).filter(a => a && a.id);
+  }));
 
-  // Map attempts to normalized shape
-  attemptsCache[currentEventId] = (attempts || []).map(normalizeAttempt);
-
-  renderAthleteList(athleteListCache);
+  attemptsCache[currentEventId] = attempts || [];
+  renderAthleteList();
+  document.getElementById('rightPanel').innerHTML = '<p style="text-align:center;color:#888;padding:60px;">Select an athlete →</p>';
 }
 
-// Normalize a Supabase attempt row into the internal shape used throughout
-function normalizeAttempt(row) {
-  if (!row) return null;
-  return {
-    id:          row.id,
-    event_id:    row.event_id,
-    athlete_id:  row.athlete_id,
-    mark:        row.mark || '',
-    foul:        row.result === 'foul' || row.is_foul || false,
-    pass:        row.result === 'pass' || row.is_pass || false,
-    phase:       row.phase || '',
-    height:      row.bar_height || row.height || '',
-    result:      row.result || '',
-    attempt_number: row.attempt_number || null,
-    _pending:    false,
-    _queued:     false,
-    _deleted:    false
-  };
-}
+function renderAthleteList() {
+  const container = document.getElementById('leftPanel');
+  container.innerHTML = '';
 
-// ════════════════════════════════════════════════════════
-// FLIGHT BAR
-// ════════════════════════════════════════════════════════
-function incFlightBar(inches) {
-  let cur = document.getElementById('flightBarInput').value || '0-00';
-  if (!cur.includes('-')) cur = '0-00';
-  let [f, i] = cur.split('-').map(Number);
-  let total = (f * 12) + (i || 0) + inches;
-  document.getElementById('flightBarInput').value =
-    Math.floor(total / 12) + '-' + (total % 12).toString().padStart(2, '0');
-}
-
-function setFlightBar() {
-  const val = document.getElementById('flightBarInput').value.trim();
-  if (!val || !val.includes('-')) { alert('Enter a valid height like 7-00'); return; }
-  flightBarHeight = val;
-  document.getElementById('flightBarDisplay').textContent = '▶ Current: ' + val;
-
-  Object.keys(checkinStatus).forEach(id => {
-    const ci = checkinStatus[id];
-    if (ci && ci.status === 'passed' && ci.entryHeight) {
-      if (parseHeight(ci.entryHeight) <= parseHeight(flightBarHeight)) {
-        checkinStatus[id] = { status: null, entryHeight: null };
-      }
-    }
-  });
-
-  if (currentAth && isVertical) {
-    document.getElementById('vBarHeight').value = val;
-    lastBarHeight = val;
-  }
-  renderAthleteList(athleteListCache);
-  if (currentAth && isVertical) renderVEntry();
-}
-
-// ════════════════════════════════════════════════════════
-// ROSTER MANAGEMENT
-// ════════════════════════════════════════════════════════
-function toggleRoster() {
-  const mgr = document.getElementById('rosterMgr');
-  const btn = document.getElementById('rosterToggleBtn');
-  const open = mgr.classList.toggle('show');
-  btn.textContent = open ? '✕ Close Roster' : '＋ Manage Roster';
-}
-
-async function doAddAthlete() {
-  const fn = document.getElementById('addFName').value.trim();
-  const ln = document.getElementById('addLName').value.trim();
-  const tm = document.getElementById('addTeam').value.trim();
-  if (!fn || !ln) { alert('Enter first and last name.'); return; }
-
-  // Insert athlete
-  const { data: athData, error: athErr } = await sb.from('athletes').insert({
-    fname: fn, lname: ln, team: tm || null,
-    meet_id: currentMeet.id
-  }).select().single();
-  if (athErr) { alert('Add failed: ' + athErr.message); return; }
-
-  // Assign to event
-  const { error: assignErr } = await sb.from('event_assignments').insert({
-    athlete_id: athData.id,
-    event_id: currentEventId,
-    meet_id: currentMeet.id
-  });
-  if (assignErr) { alert('Assignment failed: ' + assignErr.message); return; }
-
-  const newAth = { id: athData.id, name: `${fn} ${ln}`.trim(), team: tm || '' };
-  athleteListCache.push(newAth);
-  renderAthleteList(athleteListCache);
-  document.getElementById('addFName').value = '';
-  document.getElementById('addLName').value = '';
-  document.getElementById('addTeam').value  = '';
-}
-
-async function doRemoveAthlete(athleteId) {
-  const a = _athMap[athleteId];
-  if (!confirm(`Remove ${a ? a.name : 'this athlete'} from this event?\n\nAny recorded attempts will remain.`)) return;
-  athleteListCache = athleteListCache.filter(x => x.id !== athleteId);
-  renderAthleteList(athleteListCache);
-  if (currentAth && currentAth.id === athleteId) {
-    currentAth = null;
-    document.getElementById('entryUI').classList.add('hidden');
-  }
-  await sb.from('event_assignments')
-    .delete()
-    .eq('athlete_id', athleteId)
-    .eq('event_id', currentEventId);
-}
-
-// ════════════════════════════════════════════════════════
-// PLACEMENTS
-// ════════════════════════════════════════════════════════
-function calcHPlaces(athleteList) {
   const cache = attemptsCache[currentEventId] || [];
-  const markArrays = {};
-  athleteList.forEach(a => {
-    const marks = cache
-      .filter(x => x.athlete_id === a.id && !x.foul && !x.pass && !x._deleted &&
-                   !['FOUL','P','X','O'].includes(x.mark))
-      .map(x => parseMark(String(x.mark))).filter(v => v !== null).sort((a, b) => b - a);
-    markArrays[a.id] = marks;
-  });
-  const sorted = [...athleteList].sort((a, b) => {
-    const ma = markArrays[a.id] || [], mb = markArrays[b.id] || [];
-    const len = Math.max(ma.length, mb.length);
-    for (let i = 0; i < len; i++) {
-      const va = ma[i] !== undefined ? ma[i] : -1;
-      const vb = mb[i] !== undefined ? mb[i] : -1;
-      if (vb !== va) return vb - va;
-    }
-    return 0;
-  });
-  const result = {};
-  let place = 1;
-  for (let i = 0; i < sorted.length; i++) {
-    const a = sorted[i], ma = markArrays[a.id] || [];
-    const prevMa = i > 0 ? (markArrays[sorted[i-1].id] || []) : null;
-    if (i === 0 || !markArraysEqual(prevMa, ma)) place = i + 1;
-    result[a.id] = { place: ma.length > 0 ? place : null, tied: ma.length > 0 && i > 0 && markArraysEqual(prevMa, ma) };
-  }
-  return result;
-}
-
-function markArraysEqual(a, b) {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
-  return true;
-}
-
-function calcVPlaces(athleteList) {
-  const cache = attemptsCache[currentEventId] || [];
-  const athData = athleteList.map(a => {
-    const myAtts = cache.filter(x => x.athlete_id === a.id);
-    const clearedHeights = myAtts.filter(x => x.mark === 'O').map(x => parseHeight(x.height)).filter(v => v !== null);
-    const bestCleared = clearedHeights.length ? Math.max(...clearedHeights) : null;
-    const missMap = {};
-    myAtts.filter(x => x.mark === 'X').forEach(x => {
-      const h = parseHeight(x.height);
-      if (h !== null) missMap[h] = (missMap[h] || 0) + 1;
-    });
-    return { id: a.id, bestCleared, missMap, eliminated: isEliminated(myAtts) };
-  });
-  const sorted = [...athData].sort((a, b) => {
-    if (a.bestCleared === null && b.bestCleared === null) return 0;
-    if (a.bestCleared === null) return 1;
-    if (b.bestCleared === null) return -1;
-    if (b.bestCleared !== a.bestCleared) return b.bestCleared - a.bestCleared;
-    const allH = [...new Set([...Object.keys(a.missMap), ...Object.keys(b.missMap)])].map(Number).sort((x,y)=>y-x);
-    for (const h of allH) { const ma = a.missMap[h]||0, mb = b.missMap[h]||0; if (ma !== mb) return ma - mb; }
-    return 0;
-  });
-  const result = {};
-  let place = 1;
-  for (let i = 0; i < sorted.length; i++) {
-    const a = sorted[i];
-    const tied = i > 0 && vTied(a, sorted[i-1]);
-    if (!tied && i > 0) place = i + 1;
-    result[a.id] = { place: a.bestCleared !== null ? (i === 0 ? 1 : place) : null, tied };
-  }
-  return result;
-}
-
-function vTied(a, b) {
-  if (a.bestCleared !== b.bestCleared) return false;
-  const allH = [...new Set([...Object.keys(a.missMap), ...Object.keys(b.missMap)])].map(Number).sort((x,y)=>y-x);
-  for (const h of allH) { if ((a.missMap[h]||0) !== (b.missMap[h]||0)) return false; }
-  return true;
-}
-
-function placeLabel(placeObj) {
-  if (!placeObj || placeObj.place === null) return { text: 'NM', cls: 'place-nr' };
-  const p = placeObj.place, tied = placeObj.tied;
-  if (tied) return { text: `T-${p}`, cls: 'place-T' };
-  const cls = p <= 8 ? `place-${p}` : 'place-nr';
-  const suffix = p===1?'st':p===2?'nd':p===3?'rd':'th';
-  return { text: `${p}${suffix}`, cls };
-}
-
-// ════════════════════════════════════════════════════════
-// RENDER ATHLETE LIST
-// ════════════════════════════════════════════════════════
-function renderAthleteList(list) {
-  const container = document.getElementById('athleteList');
-  if (!list || !list.length) {
-    container.innerHTML = '<p style="padding:20px; color:#999">No athletes found for this event.</p>';
-    return;
-  }
-
-  _athMap = {};
-  list.forEach(a => { if (a && a.id) _athMap[a.id] = a; });
-
-  const validList = list.filter(a => a && a.id);
-  const cache = attemptsCache[currentEventId] || [];
-  let places = {};
-  try { places = isVertical ? calcVPlaces(validList) : calcHPlaces(validList); } catch(e) {}
-
-  // Sort vertical events: active → passing → eliminated
-  let displayList;
-  if (isVertical && flightBarHeight) {
-    const active = [], passing = [], elimed = [];
-    validList.forEach(a => {
-      const myAtts = cache.filter(x => x && x.athlete_id === a.id);
-      if (isEliminated(myAtts)) {
-        elimed.push(a);
-      } else {
-        const ci = checkinStatus[a.id];
-        if (ci && ci.status === 'passed' && ci.entryHeight) passing.push(a);
-        else active.push(a);
-      }
-    });
-    passing.sort((a, b) => {
-      const ha = parseHeight((checkinStatus[a.id] || {}).entryHeight || '0-00') || 0;
-      const hb = parseHeight((checkinStatus[b.id] || {}).entryHeight || '0-00') || 0;
-      return ha - hb;
-    });
-    displayList = [...active, ...passing, ...elimed];
-  } else {
-    displayList = validList;
-  }
-
-  let html = '';
-  let shownPassingHeader = false, shownElimHeader = false;
-
-  displayList.forEach(a => {
-    try {
-      const myAtts   = cache.filter(x => x && x.athlete_id === a.id);
-      const best     = isVertical ? getVBestMark(myAtts) : getBestMark(myAtts);
-      const elim     = isVertical ? isEliminated(myAtts) : false;
-      const attCount = !isVertical ? `${myAtts.filter(x => x && !x._pending).length}/${maxAttempts}` : '';
-
-      const pObj = places[a.id] || {};
-      let badge = placeLabel(pObj);
-      if (elim && (!pObj || pObj.place === null)) badge = { text: 'OUT', cls: 'place-elim' };
-
-      const isActive = currentAth && currentAth.id === a.id;
-      let rowClass = '', entryNote = '';
-
-      if (isVertical && !elim && flightBarHeight) {
-        const ci = checkinStatus[a.id];
-        const hasAttemptAtBar = myAtts.some(x => x && x.height === flightBarHeight);
-        if (ci && ci.status === 'passed' && ci.entryHeight) {
-          rowClass = ' passing-height';
-          entryNote = `<div style="margin-top:3px;"><span class="entry-badge">↑ IN @ ${ci.entryHeight}</span></div>`;
-          if (!shownPassingHeader) {
-            shownPassingHeader = true;
-            html += `<div style="background:#e8f0fe;color:#1a3a5c;font-size:11px;font-weight:bold;
-                                 padding:4px 12px;letter-spacing:0.5px;border-top:2px solid #c5d4f5;
-                                 border-bottom:1px solid #c5d4f5;">↑ PASSING CURRENT HEIGHT — waiting for bar to rise</div>`;
-          }
-        } else if (!hasAttemptAtBar && !(ci && ci.status === 'accepted')) {
-          rowClass = ' needs-checkin';
-          entryNote = `<div style="margin-top:3px;"><span class="entry-badge not-checked">⏳ Not checked in for ${flightBarHeight}</span></div>`;
-        }
-      }
-
-      if (isVertical && elim && !shownElimHeader) {
-        shownElimHeader = true;
-        html += `<div style="background:#fde8e8;color:#c62828;font-size:11px;font-weight:bold;
-                             padding:4px 12px;letter-spacing:0.5px;border-top:2px solid #f5c5c5;
-                             border-bottom:1px solid #f5c5c5;">❌ ELIMINATED</div>`;
-      }
-
-      const safeName = (a.name || 'Unknown').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
-      const safeTeam = (a.team || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
-
-      html += `<button class="ath-btn${isActive?' active':''}${elim?' eliminated':''}${rowClass}"
-                       id="ath_${a.id}" onclick="selectAth('${a.id}')">
-        <div class="ath-top-row">
-          <span class="place-badge ${badge.cls}">${badge.text}</span>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:4px;justify-content:space-between;">
-              <span class="ath-name-line">${safeName}</span>
-              <button class="del-ath-btn" title="Remove from event"
-                      onclick="event.stopPropagation();doRemoveAthlete('${a.id}');">✕</button>
-            </div>
-            <div class="ath-sub">${safeTeam}${attCount?' &nbsp;·&nbsp; '+attCount+' att':''}</div>
-          </div>
-        </div>
-        ${best ? `<div class="ath-best-line">Best: ${best}</div>` : ''}
-        ${isVertical && elim ? `<div style="font-size:11px;color:#dc3545;">❌ Eliminated</div>` : ''}
-        ${entryNote}
-      </button>`;
-    } catch(err) {
-      html += `<button class="ath-btn" onclick="selectAth('${a.id}')">
-                 <div class="ath-name-line">${(a.name||'Unknown').replace(/'/g,'&#39;')}</div>
-                 <div class="ath-sub" style="color:#c00;">⚠ Display error</div>
-               </button>`;
-    }
+  let scores = athleteListCache.map(ath => {
+    const best = cache
+      .filter(a => a.athlete_id === ath.id && a.result === 'make')
+      .map(a => parseMark(a.mark))
+      .filter(v => v !== null)
+      .sort((a,b) => b - a)[0] || -1;
+    return { ...ath, best };
   });
 
-  container.innerHTML = html;
+  if (currentPhase === 'finals') {
+    // Only Finals reorders
+    scores.sort((a, b) => b.best - a.best);
+    scores = scores.slice(0, 8);
+    scores.reverse();                    // 8th at top, 1st at bottom
+  } 
+  // else: no sorting — keep original order from loadEvent()
+
+  scores.forEach(score => {
+    _athMap[score.id] = score;
+    const btn = document.createElement('button');
+    btn.className = `ath-btn ${currentAth && currentAth.id === score.id ? 'active' : ''}`;
+    btn.innerHTML = `<span id="place_${score.id}" class="place-badge"></span><strong>${score.name}</strong><br><small>${score.team}</small>`;
+    btn.onclick = () => selectAth(score.id);
+    container.appendChild(btn);
+  });
+
+  updatePlaceBadges();
 }
 
-// ════════════════════════════════════════════════════════
-// SELECT ATHLETE
-// ════════════════════════════════════════════════════════
 function selectAth(id) {
-  const a = _athMap[id];
-  if (!a) return;
-  currentAth = { id, name: a.name, team: a.team || '' };
-  document.querySelectorAll('.ath-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('ath_' + id);
-  if (btn) btn.classList.add('active');
-
-  document.getElementById('entryUI').classList.remove('hidden');
-
-  if (isVertical) {
-    document.getElementById('hEntry').classList.add('hidden');
-    document.getElementById('vEntry').classList.remove('hidden');
-    document.getElementById('vAthName').textContent  = a.name;
-    document.getElementById('vPhaseInfo').textContent = 'PHASE: ' + vPhase.toUpperCase();
-    document.getElementById('pvStdBox').classList.toggle('hidden', !currentEventName.includes('pole vault'));
-    document.getElementById('pvStds').value = stickyStds[id] || '';
-    document.getElementById('vBarHeight').value = flightBarHeight || stickyOpeningHeight[id] || lastBarHeight;
-
-    // Reset expander states
-    document.getElementById('passExpanderBody').classList.remove('open');
-    document.getElementById('passExpanderCaret').textContent = '▼';
-    document.getElementById('passHeightInput').value = '';
-    document.getElementById('passPreview').textContent = '';
-    document.getElementById('midPassBody').style.display = 'none';
-    document.getElementById('midPassToggle').textContent = '↑ Pass to a higher height…';
-    document.getElementById('midPassHeightInput').value = '';
-    document.getElementById('midPassPreview').textContent = '';
-
-    renderVEntry();
-  } else {
-    document.getElementById('vEntry').classList.add('hidden');
-    document.getElementById('hEntry').classList.remove('hidden');
-    document.getElementById('hAthName').textContent  = a.name;
-    document.getElementById('hPhaseInfo').textContent = 'PHASE: ' + phaseLabel();
-    renderHEntry();
-  }
+  currentAth = _athMap[id];
+  editingAttemptId = null;
+  renderRightPanel();
 }
 
-function phaseLabel() {
-  if (hPhase === '3att') return '3 ATTEMPTS';
-  if (hPhase === '4att') return '4 ATTEMPTS';
-  return 'FINALS (6 Attempts)';
-}
-
-// ════════════════════════════════════════════════════════
-// CHECK-IN PANEL
-// ════════════════════════════════════════════════════════
-function togglePassExpander() {
-  const body  = document.getElementById('passExpanderBody');
-  const caret = document.getElementById('passExpanderCaret');
-  const open  = body.classList.toggle('open');
-  caret.textContent = open ? '▲' : '▼';
-  if (open && flightBarHeight) {
-    const [f, i] = flightBarHeight.split('-').map(Number);
-    const total  = (f * 12) + (i || 0) + 6;
-    document.getElementById('passHeightInput').value =
-      Math.floor(total/12) + '-' + (total % 12).toString().padStart(2, '0');
-    updatePassPreview();
-  }
-}
-
-function incPassHeight(inches) {
-  let cur = document.getElementById('passHeightInput').value || '0-00';
-  if (!cur.includes('-')) cur = '0-00';
-  let [f, i] = cur.split('-').map(Number);
-  let total = (f * 12) + (i || 0) + inches;
-  document.getElementById('passHeightInput').value =
-    Math.floor(total/12) + '-' + (total % 12).toString().padStart(2, '0');
-  updatePassPreview();
-}
-
-function updatePassPreview() {
-  const val = document.getElementById('passHeightInput').value.trim();
-  const lbl = document.getElementById('passHeightLabel');
-  const pre = document.getElementById('passPreview');
-  if (val && val.includes('-')) {
-    lbl.textContent = val;
-    if (flightBarHeight) {
-      const cur   = parseHeight(flightBarHeight);
-      const entry = parseHeight(val);
-      if (entry !== null && cur !== null) {
-        if (entry <= cur) {
-          pre.textContent = '⚠ Entry height must be higher than the current bar.';
-          pre.style.color = '#e53935';
-        } else {
-          pre.textContent = `Athlete will sit out until bar reaches ${val}.`;
-          pre.style.color = '#795548';
-        }
-      }
-    }
-  } else {
-    lbl.textContent = '—'; pre.textContent = '';
-  }
-}
-
-function renderCheckIn() {
-  const ciPanel = document.getElementById('checkInPanel');
-  const ciDone  = document.getElementById('checkInDone');
-
-  if (!flightBarHeight || !currentAth) {
-    ciPanel.classList.add('hidden'); ciDone.className = 'hidden'; return;
-  }
-
-  const cache  = attemptsCache[currentEventId] || [];
-  const myAtts = cache.filter(x => x && x.athlete_id === currentAth.id);
-  if (isEliminated(myAtts)) {
-    ciPanel.classList.add('hidden'); ciDone.className = 'hidden'; return;
-  }
-
-  const ci = checkinStatus[currentAth.id];
-  const hasAttemptAtBar = myAtts.some(x => x && x.height === flightBarHeight);
-
-  if ((ci && ci.status === 'accepted') || hasAttemptAtBar) {
-    ciPanel.classList.add('hidden');
-    ciDone.className = 'show-accepted';
-    document.getElementById('ciDoneIcon').textContent  = '✅';
-    document.getElementById('ciDoneTitle').textContent = `Competing at ${flightBarHeight}`;
-    document.getElementById('ciDoneSub').textContent   = 'Checked in for current bar';
-    document.getElementById('vBarHeight').value        = flightBarHeight;
-  } else if (ci && ci.status === 'passed' && ci.entryHeight) {
-    ciPanel.classList.add('hidden');
-    ciDone.className = 'show-passed';
-    document.getElementById('ciDoneIcon').textContent  = '⏭';
-    document.getElementById('ciDoneTitle').textContent = `Passing ${flightBarHeight} — enters at ${ci.entryHeight}`;
-    document.getElementById('ciDoneSub').textContent   = 'Sitting out until bar reaches their height';
-  } else {
-    ciPanel.classList.remove('hidden');
-    ciDone.className = 'hidden';
-    document.getElementById('checkInHeight').textContent    = flightBarHeight;
-    document.getElementById('ciBarInlineLabel').textContent = flightBarHeight;
-  }
-}
-
-function doCheckIn(decision) {
+function renderRightPanel() {
+  const panel = document.getElementById('rightPanel');
   if (!currentAth) return;
-  if (decision === 'accept') {
-    checkinStatus[currentAth.id] = { status: 'accepted', entryHeight: flightBarHeight };
-    document.getElementById('vBarHeight').value = flightBarHeight;
-    lastBarHeight = flightBarHeight;
-  } else {
-    const entryHeight = document.getElementById('passHeightInput').value.trim();
-    if (!entryHeight || !entryHeight.includes('-')) { alert('Enter a valid entry height (e.g. 8-06).'); return; }
-    if (flightBarHeight && parseHeight(entryHeight) <= parseHeight(flightBarHeight)) {
-      alert(`Entry height must be higher than the current bar (${flightBarHeight}).`); return;
-    }
-    checkinStatus[currentAth.id] = { status: 'passed', entryHeight };
-  }
-  renderVEntry();
-  renderAthleteList(athleteListCache);
+
+  const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
+  const limit = PHASE_LIMIT[currentPhase];
+  const canAddMore = myAttempts.length < limit;
+
+  let html = `
+    <div class="card">
+      <h2>${currentAth.name}</h2>
+      <div style="margin:8px 0; font-size:14px; color:#555;">Phase: <strong>${currentPhase.toUpperCase()}</strong></div>
+      ${!canAddMore ? `<div class="limit-msg">Maximum attempts reached for this phase</div>` : ''}
+      <div class="mark-entry">
+        <div><label>Feet</label><input type="number" id="hFt" placeholder="0"></div>
+        <div><label>Inches</label><input type="number" id="hIn" placeholder="0" max="11"></div>
+        <div><label>¼"</label><select id="hQtr"><option value="0">.00</option><option value="0.25">.25</option><option value="0.5">.50</option><option value="0.75">.75</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveOrUpdateMark()" id="saveBtn">SAVE MARK</button>
+        <button class="btn-foul" onclick="saveHFoul()" id="foulBtn" ${!canAddMore ? 'disabled' : ''}>FOUL</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Past Attempts</h3>
+      <div id="attemptHistory"></div>
+    </div>
+  `;
+  panel.innerHTML = html;
+  renderAttemptHistory(myAttempts);
 }
 
-function redoCheckIn() {
-  if (!currentAth) return;
-  checkinStatus[currentAth.id] = { status: null, entryHeight: null };
-  document.getElementById('passExpanderBody').classList.remove('open');
-  document.getElementById('passExpanderCaret').textContent = '▼';
-  document.getElementById('passHeightInput').value = '';
-  document.getElementById('passPreview').textContent = '';
-  renderVEntry();
-  renderAthleteList(athleteListCache);
+function renderAttemptHistory(attempts) {
+  const el = document.getElementById('attemptHistory');
+  const sorted = currentPhase === 'finals' 
+    ? [...attempts].sort((a,b) => a.attempt_number - b.attempt_number)
+    : [...attempts].sort((a,b) => a.attempt_number - b.attempt_number);
+
+  el.innerHTML = sorted.length ? sorted.map(a => `
+    <div class="att-row">
+      <span class="att-num">Att ${a.attempt_number}</span>
+      <span style="flex:1;font-weight:700;">${a.mark || '—'}</span>
+      <span style="color:${a.result==='make'?'#0a2a18':'#c00'};">${(a.result || '').toUpperCase()}</span>
+      <button onclick="editAttempt('${a.id}', '${a.mark}', '${a.result}')">Edit</button>
+    </div>
+  `).join('') : '<p style="color:#888;text-align:center;">No attempts yet</p>';
 }
 
-// ════════════════════════════════════════════════════════
-// HORIZONTAL
-// ════════════════════════════════════════════════════════
-function setHPhase(phase) {
-  hPhase = phase;
-  maxAttempts = phase === '4att' ? 4 : phase === 'finals' ? 6 : 3;
-  ['phBtn3','phBtn4','phBtnF'].forEach(id => document.getElementById(id).classList.remove('active'));
-  document.getElementById({ '3att':'phBtn3','4att':'phBtn4','finals':'phBtnF' }[phase]).classList.add('active');
-  if (currentAth) {
-    document.getElementById('hPhaseInfo').textContent = 'PHASE: ' + phaseLabel();
-    renderHEntry();
-  }
-  renderAthleteList(athleteListCache);
-}
+async function saveOrUpdateMark() {
+  if (!currentAth || !currentEventId) return alert("Select athlete and event");
 
-function renderHEntry() {
-  if (!currentAth) return;
-  const cache  = attemptsCache[currentEventId] || [];
-  const myAtts = cache.filter(x => x.athlete_id === currentAth.id && !x._deleted);
-
-  let html = '';
-  for (let i = 0; i < maxAttempts; i++) {
-    const att = myAtts[i];
-    if (att) {
-      const isFoul = att.foul || att.mark === 'FOUL';
-      const isPass = att.pass || att.mark === 'P';
-      const cls = isFoul ? 'foul' : isPass ? 'passed' : 'done';
-      html += `<div class="attempt-slot ${cls}">
-        <div class="slot-label">Attempt ${i+1}</div>
-        ${isFoul
-          ? `<div style="color:#dc3545;font-weight:bold;font-size:18px;">FOUL</div>`
-          : isPass
-            ? `<div style="color:#6c757d;font-weight:bold;font-size:16px;">PASS</div>`
-            : `<div class="slot-mark">${att.mark}</div>`
-        }
-        ${att._pending
-          ? '<span style="font-size:11px;color:#999">saving…</span>'
-          : `<button class="del-btn" onclick="delAttempt('${att.id}')">✕</button>`
-        }
-      </div>`;
-    } else if (i === myAtts.length) {
-      html += `<div class="attempt-slot active-slot"><div class="slot-label">Attempt ${i+1} — Current</div></div>`;
-    } else {
-      html += `<div class="attempt-slot"><div class="slot-label">Attempt ${i+1}</div><div style="color:#ccc;font-size:13px;">—</div></div>`;
-    }
-  }
-  document.getElementById('attemptSlots').innerHTML = html;
-
-  const formDiv = document.getElementById('markEntryForm');
-  if (myAtts.length < maxAttempts) {
-    formDiv.classList.remove('hidden');
-    document.getElementById('attemptLabel').textContent = `Attempt ${myAtts.length + 1} of ${maxAttempts}`;
-  } else {
-    formDiv.classList.add('hidden');
-  }
-
-  const best = getBestMark(myAtts);
-  document.getElementById('hHistoryLog').innerHTML = best
-    ? `<div style="padding:8px;background:#f0fff4;border-radius:6px;font-weight:bold;color:#28a745;font-size:18px;">${best}</div>`
-    : '<div style="color:#999;font-size:13px;">No valid marks yet.</div>';
-}
-
-function saveHMark() {
-  const ft  = parseInt(document.getElementById('hFt').value)  || 0;
-  const ins = parseInt(document.getElementById('hIn').value)  || 0;
+  const ft = parseInt(document.getElementById('hFt').value) || 0;
+  const ins = parseInt(document.getElementById('hIn').value) || 0;
   const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
-  if (ft === 0 && ins === 0) { alert('Enter a distance.'); return; }
-  const inTotal = ins + qtr;
-  const mark = `${ft}-${String(inTotal.toFixed(2)).replace(/\.?0+$/, '')}`;
-  submitHAttempt(mark, false, false);
+  if (ft === 0 && ins === 0) return alert("Enter a distance");
+
+  const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
+
+  if (editingAttemptId) {
+    const { error } = await sb.from('attempts').update({ mark, result: 'make' }).eq('id', editingAttemptId);
+    if (error) return alert('Update failed: ' + error.message);
+    editingAttemptId = null;
+    document.getElementById('saveBtn').textContent = 'SAVE MARK';
+  } else {
+    const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
+    const limit = PHASE_LIMIT[currentPhase];
+    if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
+
+    const nextNum = myAttempts.length + 1;
+
+    const { error } = await sb.from('attempts').insert({
+      meet_id: currentMeet.id,
+      event_id: currentEventId,
+      athlete_id: currentAth.id,
+      attempt_number: nextNum,
+      mark: mark,
+      result: 'make'
+    });
+
+    if (error) return alert('Save failed: ' + error.message);
+  }
+
+  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
+  attemptsCache[currentEventId] = data || [];
+
   document.getElementById('hFt').value = '';
   document.getElementById('hIn').value = '';
   document.getElementById('hQtr').value = '0';
+
+  renderRightPanel();
+  renderAthleteList();
 }
 
-function saveHFoul() { submitHAttempt('FOUL', true, false); }
-
-async function submitHAttempt(mark, isFoul, isPass) {
+async function saveHFoul() {
   if (!currentAth || !currentEventId) return;
-  const eventId = currentEventId;
-  const cache   = attemptsCache[eventId] || [];
-  const myAtts  = cache.filter(x => x.athlete_id === currentAth.id && !x._deleted);
-  if (myAtts.length >= maxAttempts) { alert(`Maximum ${maxAttempts} attempts reached.`); return; }
 
-  const nextNum = myAtts.length + 1;
-  const tempId  = '_tmp_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
+  const limit = PHASE_LIMIT[currentPhase];
+  if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
 
-  // Optimistic local update
-  if (!attemptsCache[eventId]) attemptsCache[eventId] = [];
-  attemptsCache[eventId].push({
-    id: tempId, event_id: eventId, athlete_id: currentAth.id,
-    mark, foul: isFoul, pass: isPass, phase: hPhase, height: '',
-    attempt_number: nextNum, _pending: true, _queued: false, _deleted: false
+  const nextNum = myAttempts.length + 1;
+
+  const { error } = await sb.from('attempts').insert({
+    meet_id: currentMeet.id,
+    event_id: currentEventId,
+    athlete_id: currentAth.id,
+    attempt_number: nextNum,
+    mark: 'FOUL',
+    result: 'foul'
   });
-  renderHEntry();
-  renderAthleteList(athleteListCache);
-  document.getElementById('hSavingBadge').classList.remove('hidden');
 
-  const { data, error } = await sb.from('attempts').insert({
-    meet_id:        currentMeet.id,
-    event_id:       eventId,
-    athlete_id:     currentAth.id,
-    mark:           mark,
-    result:         isFoul ? 'foul' : isPass ? 'pass' : 'make',
-    phase:          hPhase,
-    attempt_number: nextNum
-  }).select().single();
+  if (error) return alert('Save failed: ' + error.message);
 
-  document.getElementById('hSavingBadge').classList.add('hidden');
-
-  if (error) {
-    alert('Save failed: ' + error.message);
-    attemptsCache[eventId] = attemptsCache[eventId].filter(x => x.id !== tempId);
-    renderHEntry();
-    return;
-  }
-
-  // Replace temp record with real one
-  attemptsCache[eventId] = attemptsCache[eventId].filter(x => x.id !== tempId);
-  attemptsCache[eventId].push(normalizeAttempt(data));
-  renderHEntry();
-  renderAthleteList(athleteListCache);
+  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
+  attemptsCache[currentEventId] = data || [];
+  renderRightPanel();
+  renderAthleteList();
 }
 
-// ════════════════════════════════════════════════════════
-// VERTICAL
-// ════════════════════════════════════════════════════════
-function setVPhase(phase) {
-  vPhase = phase;
-  document.getElementById('vPhBtnP').classList.toggle('active', phase === 'Prelims');
-  document.getElementById('vPhBtnF').classList.toggle('active', phase === 'Finals');
-  if (currentAth) {
-    document.getElementById('vPhaseInfo').textContent = 'PHASE: ' + phase.toUpperCase();
-    renderVEntry();
+function editAttempt(attemptId, mark, result) {
+  editingAttemptId = attemptId;
+  document.getElementById('saveBtn').textContent = 'UPDATE MARK';
+
+  if (mark && mark.includes('-')) {
+    const [ft, insPart] = mark.split('-');
+    const ins = parseFloat(insPart);
+    document.getElementById('hFt').value = ft || '';
+    document.getElementById('hIn').value = Math.floor(ins) || '';
+    const qtr = (ins % 1).toFixed(2);
+    document.getElementById('hQtr').value = qtr === '0.00' ? '0' : qtr;
   }
 }
 
-function incBar(amt) {
-  if (amt === 0) { document.getElementById('vBarHeight').value = ''; lastBarHeight = ''; return; }
-  let cur = document.getElementById('vBarHeight').value || '0-00';
-  if (!cur.includes('-')) cur = '0-00';
-  let [f, i] = cur.split('-').map(Number);
-  let total = (f * 12) + (i || 0) + amt;
-  const res = Math.floor(total/12) + '-' + (total % 12).toString().padStart(2, '0');
-  document.getElementById('vBarHeight').value = res;
-  lastBarHeight = res;
+function setPhase(phase) {
+  currentPhase = phase;
+  document.querySelectorAll('.phase-btn').forEach(btn => btn.classList.remove('active'));
+  if (phase === '3att') document.getElementById('ph3').classList.add('active');
+  if (phase === '4att') document.getElementById('ph4').classList.add('active');
+  if (phase === 'finals') document.getElementById('phF').classList.add('active');
+
+  renderAthleteList();   // Only reorders when Finals is clicked
+  if (currentAth) renderRightPanel();
 }
 
-function toggleMidPass() {
-  const body = document.getElementById('midPassBody');
-  const open = body.style.display === 'none';
-  body.style.display = open ? 'block' : 'none';
-  document.getElementById('midPassToggle').textContent = open ? '✕ Cancel pass' : '↑ Pass to a higher height…';
-  if (open) {
-    const cur = document.getElementById('vBarHeight').value || flightBarHeight || '0-00';
-    if (cur.includes('-')) {
-      const [f, i] = cur.split('-').map(Number);
-      const total  = (f * 12) + (i || 0) + 6;
-      document.getElementById('midPassHeightInput').value =
-        Math.floor(total/12) + '-' + (total % 12).toString().padStart(2, '0');
-      updateMidPassPreview();
+function updatePlaceBadges() {
+  const cache = attemptsCache[currentEventId] || [];
+  let scores = athleteListCache.map(ath => {
+    const best = cache
+      .filter(a => a.athlete_id === ath.id && a.result === 'make')
+      .map(a => parseMark(a.mark))
+      .filter(v => v !== null)
+      .sort((a,b) => b - a)[0] || -1;
+    return { ...ath, best };
+  });
+
+  if (currentPhase === 'finals') {
+    scores.sort((a, b) => b.best - a.best);
+    scores = scores.slice(0, 8);
+    scores.reverse();                    // 8th at top, 1st at bottom
+  } 
+  // else: no sorting — keep original order
+
+  let place = 1;
+  for (let i = 0; i < scores.length; i++) {
+    const curr = scores[i];
+    const prev = i > 0 ? scores[i-1] : null;
+    if (prev && curr.best === prev.best) {
+      curr.place = place;
+      curr.tied = true;
+    } else {
+      place = i + 1;
+      curr.place = place;
+      curr.tied = false;
     }
-  }
-}
 
-function incMidPass(inches) {
-  let cur = document.getElementById('midPassHeightInput').value || '0-00';
-  if (!cur.includes('-')) cur = '0-00';
-  let [f, i] = cur.split('-').map(Number);
-  let total = (f * 12) + (i || 0) + inches;
-  document.getElementById('midPassHeightInput').value =
-    Math.floor(total/12) + '-' + (total % 12).toString().padStart(2, '0');
-  updateMidPassPreview();
-}
-
-function updateMidPassPreview() {
-  const val    = document.getElementById('midPassHeightInput').value.trim();
-  const lbl    = document.getElementById('midPassLabel');
-  const pre    = document.getElementById('midPassPreview');
-  const curBar = document.getElementById('vBarHeight').value || flightBarHeight;
-  if (val && val.includes('-')) {
-    lbl.textContent = val;
-    if (curBar) {
-      const curVal  = parseHeight(curBar);
-      const passVal = parseHeight(val);
-      if (passVal !== null && curVal !== null) {
-        if (passVal <= curVal) {
-          pre.textContent = '⚠ Must be higher than the current bar height.';
-          pre.style.color = '#e53935';
-        } else {
-          pre.textContent = `Athlete passes ${curBar} and will enter at ${val}.`;
-          pre.style.color = '#1a3a5c';
-        }
+    const badge = document.getElementById(`place_${curr.id}`);
+    if (badge) {
+      if (curr.best === -1) {
+        badge.textContent = '';
+      } else if (curr.tied) {
+        badge.textContent = `T-${curr.place}`;
+        badge.className = 'place-badge place-tied';
+      } else {
+        badge.textContent = `${curr.place}${getOrdinal(curr.place)}`;
+        badge.className = `place-badge place-${Math.min(curr.place, 8)}`;
       }
     }
-  } else {
-    lbl.textContent = '—'; pre.textContent = '';
   }
 }
 
-function confirmMidPass() {
-  if (!currentAth) return;
-  const entryHeight = document.getElementById('midPassHeightInput').value.trim();
-  const curBar = document.getElementById('vBarHeight').value || flightBarHeight;
-  if (!entryHeight || !entryHeight.includes('-')) { alert('Enter a valid height (e.g. 8-06).'); return; }
-  if (curBar && parseHeight(entryHeight) <= parseHeight(curBar)) {
-    alert(`Entry height must be higher than the current bar (${curBar}).`); return;
-  }
-  checkinStatus[currentAth.id] = { status: 'passed', entryHeight };
-  document.getElementById('midPassBody').style.display = 'none';
-  document.getElementById('midPassToggle').textContent = '↑ Pass to a higher height…';
-  document.getElementById('midPassHeightInput').value = '';
-  document.getElementById('midPassPreview').textContent = '';
-  renderAthleteList(athleteListCache);
-  renderVEntry();
-}
-
-async function submitV(result) {
-  const height = (document.getElementById('vBarHeight').value || '').trim();
-  if (!height) { alert('Enter a bar height first.'); return; }
-  if (!attemptsCache[currentEventId]) attemptsCache[currentEventId] = [];
-  const cache  = attemptsCache[currentEventId].filter(x => x);
-  const myAtts = cache.filter(x => x.athlete_id === currentAth.id);
-  if (isEliminated(myAtts)) { alert('This athlete is eliminated.'); return; }
-
-  const isPass = result === 'P';
-  const tempId = '_tmp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-
-  attemptsCache[currentEventId].push({
-    id: tempId, event_id: currentEventId, athlete_id: currentAth.id,
-    mark: result, foul: false, pass: isPass, phase: vPhase,
-    height: height, _pending: true, _queued: false, _deleted: false
-  });
-
-  stickyOpeningHeight[currentAth.id] = height;
-
-  if (flightBarHeight && height === flightBarHeight) {
-    const ci = checkinStatus[currentAth.id];
-    if (!ci || ci.status !== 'accepted') {
-      checkinStatus[currentAth.id] = { status: 'accepted', entryHeight: flightBarHeight };
-    }
-  }
-
-  renderVEntry();
-  renderAthleteList(athleteListCache);
-  document.getElementById('vSavingBadge').classList.remove('hidden');
-
-  const { data, error } = await sb.from('attempts').insert({
-    meet_id:    currentMeet.id,
-    event_id:   currentEventId,
-    athlete_id: currentAth.id,
-    mark:       result,
-    result:     result === 'O' ? 'make' : result === 'X' ? 'foul' : 'pass',
-    bar_height: height,
-    phase:      vPhase,
-    is_foul:    false,
-    is_pass:    isPass
-  }).select().single();
-
-  document.getElementById('vSavingBadge').classList.add('hidden');
-
-  if (error) {
-    alert('Save failed: ' + error.message);
-    attemptsCache[currentEventId] = attemptsCache[currentEventId].filter(x => x.id !== tempId);
-    renderVEntry();
-    return;
-  }
-
-  attemptsCache[currentEventId] = attemptsCache[currentEventId].filter(x => x.id !== tempId);
-  attemptsCache[currentEventId].push(normalizeAttempt(data));
-  renderVEntry();
-  renderAthleteList(athleteListCache);
-}
-
-function renderVEntry() {
-  if (!currentAth) return;
-  if (attemptsCache[currentEventId]) {
-    attemptsCache[currentEventId] = attemptsCache[currentEventId].filter(x => x);
-  }
-
-  const cache  = attemptsCache[currentEventId] || [];
-  const myAtts = cache.filter(x => x.athlete_id === currentAth.id && !x._deleted);
-  const elim   = isEliminated(myAtts);
-
-  document.getElementById('vEliminatedMsg').classList.toggle('hidden', !elim);
-  document.getElementById('vActiveUI').classList.toggle('hidden', elim);
-  if (elim) {
-    document.getElementById('midPassBody').style.display = 'none';
-    document.getElementById('midPassToggle').textContent = '↑ Pass to a higher height…';
-  }
-
-  renderCheckIn();
-
-  // Height log
-  const heightMap = {};
-  myAtts.forEach(a => {
-    if (!a || !a.height) return;
-    const ht = a.height;
-    if (!heightMap[ht]) heightMap[ht] = [];
-    heightMap[ht].push(a);
-  });
-
-  const curBar = (document.getElementById('vBarHeight').value || '').trim();
-  const clearedCurrent = curBar && heightMap[curBar] && heightMap[curBar].some(a => a.mark === 'O');
-
-  document.getElementById('vHeightLog').innerHTML = Object.keys(heightMap).length
-    ? Object.entries(heightMap).map(([ht, atts]) => {
-        const made   = atts.some(a => a.mark === 'O');
-        const misses = atts.filter(a => a.mark === 'X').length;
-        const dots   = atts.map(a =>
-          a.mark === 'O' ? '<span style="color:#28a745;font-weight:bold;">O</span>' :
-          a.mark === 'X' ? '<span style="color:#dc3545;font-weight:bold;">X</span>' :
-          a.mark === 'P' ? '<span style="color:#6c757d;">P</span>' : '?'
-        ).join(' ');
-        let statusHtml;
-        if (made) statusHtml = '<span style="color:#28a745;font-weight:bold;">✅ Cleared</span>';
-        else if (misses >= 3) statusHtml = '<span style="color:#dc3545;font-weight:bold;">❌ Out</span>';
-        else statusHtml = '<span style="color:#999;">…</span>';
-        return `<div class="height-row${ht === curBar ? ' current-ht' : ''}${made ? ' height-cleared' : ''}">
-                  <span><b>${ht}</b> &nbsp; ${dots}</span>
-                  <span>${statusHtml}</span>
-                </div>`;
-      }).join('')
-    : '<div style="color:#999;font-size:13px;">No attempts yet.</div>';
-
-  const clearedBanner = document.getElementById('clearedBanner');
-  if (clearedCurrent && !elim) {
-    clearedBanner.style.display = 'block';
-    clearedBanner.textContent   = '✅ Cleared ' + curBar + ' — done until bar rises';
-  } else {
-    clearedBanner.style.display = 'none';
-  }
-
-  const rows = myAtts.slice().reverse().map(a => `
-    <div class="history-item${a._pending ? ' pending' : ''}">
-      <div>
-        <b>${a.phase || ''}</b>${a.height ? ': ' + a.height + ' — ' : ': '}
-        <b>${a.mark || ''}</b>
-      </div>
-      ${!a._pending ? `<button class="del-btn" onclick="delAttempt('${a.id}')">✕</button>` : ''}
-    </div>`).join('');
-
-  document.getElementById('vHistoryLog').innerHTML =
-    rows || '<div style="color:#999;font-size:13px;">No attempts yet.</div>';
-}
-
-// ════════════════════════════════════════════════════════
-// DELETE
-// ════════════════════════════════════════════════════════
-async function delAttempt(id) {
-  if (!confirm('Delete this attempt?')) return;
-  attemptsCache[currentEventId] = attemptsCache[currentEventId].filter(x => x.id !== id);
-  if (isVertical) renderVEntry(); else renderHEntry();
-  renderAthleteList(athleteListCache);
-
-  const { error } = await sb.from('attempts').delete().eq('id', id);
-  if (error) console.error('Delete failed:', error.message);
-}
-
-// ════════════════════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════════════════════
-function getBestMark(atts) {
-  let best = null, bestVal = -1;
-  atts.forEach(a => {
-    if (a.foul || a.pass || ['FOUL','P','X','O'].includes(a.mark)) return;
-    const val = parseMark(String(a.mark));
-    if (val !== null && val > bestVal) { bestVal = val; best = a.mark; }
-  });
-  return best;
-}
-
-function getVBestMark(atts) {
-  const cleared = atts.filter(a => a.mark === 'O' && a.height)
-    .map(a => a.height).sort((a, b) => (parseHeight(b) || 0) - (parseHeight(a) || 0));
-  return cleared[0] || null;
+function getOrdinal(n) {
+  const s = ["th","st","nd","rd"];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
 }
 
 function parseMark(mark) {
-  if (!mark || typeof mark !== 'string' || !mark.includes('-')) return null;
-  const p = mark.split('-');
-  const ft = parseFloat(p[0]), ins = parseFloat(p[1]);
-  if (isNaN(ft) || isNaN(ins)) return null;
-  return ft * 12 + ins;
-}
-
-function parseHeight(h) {
-  if (!h) return null;
-  return parseMark(String(h).trim());
-}
-
-function isEliminated(atts) {
-  const m = {};
-  atts.forEach(a => {
-    if (a.mark !== 'X' || !a.height) return;
-    m[a.height] = (m[a.height] || 0) + 1;
-  });
-  return Object.values(m).some(v => v >= 3);
+  if (!mark || !mark.includes('-')) return null;
+  const [ft, ins] = mark.split('-').map(Number);
+  return (ft || 0) * 12 + (ins || 0);
 }
 </script>
 </body>
