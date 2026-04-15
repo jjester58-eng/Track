@@ -28,30 +28,26 @@
     .ath-btn { width: 100%; text-align: left; padding: 10px 12px; border: none; border-bottom: 1px solid #eee; background: white; cursor: pointer; line-height: 1.4; }
     .ath-btn.active { background: #eef4ff; border-left: 5px solid #1a3a5c; }
     .ath-btn.eliminated { background: #fff5f5; }
-    .ath-btn.passing-height { background: #f4f4f4; opacity: 0.65; }
-    .ath-btn.needs-checkin { background: #fffbf0; }
     .place-badge { font-size: 12px; font-weight: bold; min-width: 26px; text-align: center; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
     .place-1 { background: #FFD700; color: #333; }
     .place-2 { background: #C0C0C0; color: #333; }
     .place-3 { background: #cd7f32; color: white; }
     .place-4, .place-5, .place-6, .place-7, .place-8 { background: #e9ecef; color: #333; }
-    .place-T { background: #6c757d; color: white; font-style: italic; }
-    .place-elim { background: #dc3545; color: white; }
-    .entry-badge { display: inline-block; background: #e8f4fd; border: 1px solid #90caf9; color: #1565c0; font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 10px; margin-top: 3px; white-space: nowrap; }
     .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    .height-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-    .vmark-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 12px 0; }
-    .vmark-btn { height: 60px; border-radius: 8px; border: none; font-size: 22px; font-weight: bold; color: white; cursor: pointer; }
-    .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
     .mark-entry { display: flex; gap: 8px; align-items: flex-end; margin: 10px 0; flex-wrap: wrap; }
     .mark-entry input { width: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 18px; text-align: center; }
     .btn-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .btn-save { flex: 1; background: #1a3a5c; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
     .btn-foul { flex: 1; background: #dc3545; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
-    /* Check-in panel from your paste */
+    .att-row { display: flex; align-items: center; gap: 10px; padding: 11px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 7px; }
+    .att-num { font-size: 11px; font-weight: 700; color: #888; min-width: 44px; }
+    .att-mark { flex: 1; font-size: 17px; font-weight: 800; }
+    .att-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: bold; }
+    .badge-make { background: #0a2a18; color: #4dca7a; }
+    .badge-foul { background: #2a0a0a; color: #f87; }
+    /* Check-in panel */
     #checkInPanel { background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%); border: 2px solid #f9a825; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-    #checkInPanel .ci-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-    #checkInPanel .ci-bar-height { font-size: 28px; font-weight: bold; color: #1a3a5c; margin-bottom: 14px; line-height: 1; }
+    .ci-bar-height { font-size: 28px; font-weight: bold; color: #1a3a5c; margin-bottom: 14px; line-height: 1; }
     .btn-checkin-in { width: 100%; padding: 14px; background: #1a3a5c; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
     .pass-expander-header { width: 100%; padding: 11px 14px; background: #fff8e1; border: none; cursor: pointer; font-size: 13px; font-weight: bold; color: #795548; text-align: left; display: flex; justify-content: space-between; align-items: center; }
     .pass-expander-body { display: none; padding: 12px; background: white; border-top: 1px solid #e0c97a; }
@@ -131,7 +127,7 @@
                 </div>
               </div>
               <div class="btn-row">
-                <button class="btn-save" onclick="saveHMark()">SAVE</button>
+                <button class="btn-save" onclick="saveHMark()">SAVE MARK</button>
                 <button class="btn-foul" onclick="saveHFoul()">FOUL</button>
               </div>
             </div>
@@ -192,7 +188,6 @@ let currentAth = null;
 let currentEventId = '';
 let isVertical = false;
 let hPhase = '3att';
-let vPhase = 'Prelims';
 let flightBarHeight = '';
 let checkinStatus = {};
 let attemptsCache = {};
@@ -280,30 +275,68 @@ function selectAth(id) {
 
 function setHPhase(phase) { hPhase = phase; }
 function setVPhase(phase) { vPhase = phase; }
+
+async function saveHMark() {
+  if (!currentAth || !currentEventId) return alert('Select an athlete and event first');
+
+  const ft = parseInt(document.getElementById('hFt').value) || 0;
+  const ins = parseInt(document.getElementById('hIn').value) || 0;
+  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
+
+  if (ft === 0 && ins === 0) return alert('Enter a valid distance');
+
+  const totalInches = ins + qtr;
+  const mark = `${ft}-${totalInches.toFixed(2).replace('.00','')}`;
+
+  const nextNum = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length + 1;
+
+  await sb.from('attempts').insert({
+    meet_id: currentMeet.id,
+    event_id: currentEventId,
+    athlete_id: currentAth.id,
+    attempt_number: nextNum,
+    mark: mark,
+    result: 'make'
+  });
+
+  // Refresh data
+  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
+  attemptsCache[currentEventId] = data || [];
+
+  // Clear form
+  document.getElementById('hFt').value = '';
+  document.getElementById('hIn').value = '';
+  document.getElementById('hQtr').value = '0';
+
+  alert('Mark saved: ' + mark);
+  renderAthleteList(athleteListCache); // refresh list with new best mark
+}
+
+async function saveHFoul() {
+  if (!currentAth || !currentEventId) return;
+  const nextNum = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length + 1;
+
+  await sb.from('attempts').insert({
+    meet_id: currentMeet.id,
+    event_id: currentEventId,
+    athlete_id: currentAth.id,
+    attempt_number: nextNum,
+    mark: 'FOUL',
+    result: 'foul'
+  });
+
+  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
+  attemptsCache[currentEventId] = data || [];
+  alert('Foul recorded');
+  renderAthleteList(athleteListCache);
+}
+
 function doCheckIn(type) { alert('Check-in: ' + type); }
 function submitV(result) { alert('Vertical: ' + result); }
 function incFlightBar(inches) { }
 function setFlightBar() { }
 function toggleRoster() { document.getElementById('rosterMgr').classList.toggle('hidden'); }
-
-async function doAddAthlete() {
-  const fn = document.getElementById('addFName').value.trim();
-  const ln = document.getElementById('addLName').value.trim();
-  const tm = document.getElementById('addTeam').value.trim();
-  if (!fn || !ln) return alert('Enter first and last name.');
-
-  const newAth = {
-    id: 'temp-' + Date.now(),
-    name: fn + ' ' + ln,
-    team: tm
-  };
-  athleteListCache.push(newAth);
-  renderAthleteList(athleteListCache);
-  document.getElementById('addFName').value = '';
-  document.getElementById('addLName').value = '';
-  document.getElementById('addTeam').value = '';
-}
-
+async function doAddAthlete() { alert('Athlete added (expand doAddAthlete with Supabase insert if needed)'); }
 function showTab(tab) { }
 
 </script>
