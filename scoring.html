@@ -516,15 +516,18 @@ function renderVertical() {
 
   renderVHistory(myAtts);
 }
-// Inside the onclick for P button (or in submitV)
-if (result === 'P' && !flightBar) {
-  alert("Set a bar height before passing.");
-  return;
-}
+
 async function submitV(result) {
   if (!currentAth || !currentEventId) return;
 
+  // Guard for Pass without bar height
+  if (result === 'P' && !flightBar) {
+    alert("Set a bar height before passing.");
+    return;
+  }
+
   const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+
   const heightValue = (result === 'O' || result === 'P') && flightBar ? flightBar : null;
 
   const markValue = result === 'O' ? (flightBar || 'O') 
@@ -540,7 +543,7 @@ async function submitV(result) {
     event_id: currentEventId,
     athlete_id: currentAth.id,
     attempt_number: myAtts.length + 1,
-    height: heightValue,        // only send when we have a bar height
+    height: heightValue,
     mark: markValue,
     result: dbResult
   });
@@ -551,8 +554,10 @@ async function submitV(result) {
     return;
   }
 
+  // Clear the bar input after a successful Pass (optional but nice UX)
+  if (result === 'P') flightBar = '';
+
   await refresh();
-}
 }
 
 function renderVHistory(attempts) {
