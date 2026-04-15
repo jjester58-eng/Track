@@ -4,319 +4,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0d1b2a">
-  <title>Field Events Pro — Scoring</title>
+  <title>Field Events Pro — Scoring DEBUG</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    #offlineBanner { display: none; background: #dc3545; color: white; font-size: 13px; font-weight: bold; text-align: center; padding: 6px 12px; flex-shrink: 0; }
-    #offlineBanner.show { display: block; }
-    #flightBarStrip { display: none; background: #1e3a1e; color: white; padding: 8px 12px; flex-shrink: 0; align-items: center; gap: 10px; flex-wrap: wrap; }
-    #flightBarStrip.show { display: flex; }
-    .nav-bar { background: #0d1b2a; display: flex; justify-content: space-around; padding: 10px; border-bottom: 2px solid #1a3a5c; flex-shrink: 0; }
-    .nav-bar button { background: none; border: 1px solid white; color: white; padding: 8px 14px; border-radius: 5px; cursor: pointer; font-size: 14px; }
-    .nav-bar button.active { background: white; color: #0d1b2a; font-weight: bold; }
-    .header { background: #1a3a5c; color: white; padding: 10px; display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
-    .header select { flex: 2; min-width: 160px; }
-    .phase-btn { padding: 8px 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 5px; cursor: pointer; font-size: 13px; white-space: nowrap; }
-    .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
-    .container { display: flex; flex: 1; overflow: hidden; }
-    .left-panel { width: 38%; border-right: 2px solid #ddd; overflow-y: auto; background: white; flex-shrink: 0; }
-    .right-panel { flex: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
-    .ath-btn { width: 100%; text-align: left; padding: 10px 12px; border: none; border-bottom: 1px solid #eee; background: white; cursor: pointer; line-height: 1.4; }
-    .ath-btn.active { background: #eef4ff; border-left: 5px solid #1a3a5c; }
-    .ath-btn.eliminated { background: #fff5f5; }
-    .place-badge { font-size: 12px; font-weight: bold; min-width: 26px; text-align: center; padding: 2px 5px; border-radius: 4px; flex-shrink: 0; }
-    .place-1 { background: #FFD700; color: #333; }
-    .place-2 { background: #C0C0C0; color: #333; }
-    .place-3 { background: #cd7f32; color: white; }
-    .place-4, .place-5, .place-6, .place-7, .place-8 { background: #e9ecef; color: #333; }
-    .place-T { background: #6c757d; color: white; font-style: italic; }
-    .place-elim { background: #dc3545; color: white; }
-    .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    .mark-entry { display: flex; gap: 8px; align-items: flex-end; margin: 10px 0; flex-wrap: wrap; }
-    .mark-entry input { width: 70px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 18px; text-align: center; }
-    .btn-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-    .btn-save { flex: 1; background: #1a3a5c; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
-    .btn-foul { flex: 1; background: #dc3545; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; }
-    .att-row { display: flex; align-items: center; gap: 10px; padding: 11px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 7px; }
-    .att-num { font-size: 11px; font-weight: 700; color: #888; min-width: 44px; }
-    .att-mark { flex: 1; font-size: 17px; font-weight: 800; }
-    .att-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: bold; }
-    .badge-make { background: #0a2a18; color: #4dca7a; }
-    .badge-foul { background: #2a0a0a; color: #f87; }
-    .del-btn { background: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-    .hidden { display: none; }
+    body { font-family: system-ui; padding: 20px; background: #f0f2f5; }
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 15px 0; }
+    button { padding: 14px 20px; font-size: 16px; margin: 5px; }
   </style>
 </head>
 <body>
 
-<div id="offlineBanner">⚠ NO CONNECTION — Attempts are being saved locally and will sync when back online</div>
-
-<div class="nav-bar">
-  <button id="navScore" class="active" onclick="showTab('score')">SCORING</button>
-  <button id="navAdmin" onclick="showTab('admin')">ADMIN / IMPORT</button>
-</div>
-
-<div id="flightBarStrip">
-  <label>FLIGHT BAR:</label>
-  <input type="text" id="flightBarInput" placeholder="e.g. 7-00">
-  <button class="fbar-inc" onclick="incFlightBar(2)">+2"</button>
-  <button class="fbar-inc" onclick="incFlightBar(6)">+6"</button>
-  <button class="fbar-inc" onclick="incFlightBar(12)">+1'</button>
-  <button id="flightBarSet" onclick="setFlightBar()">SET BAR ▶</button>
-  <span id="flightBarDisplay"></span>
-</div>
-
-<div id="tabScore" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-  <div class="header">
-    <select id="eventSelect" onchange="loadEvent()" style="flex:2; min-width:160px">
-      <option value="">-- Select Event --</option>
-    </select>
-    <div id="hPhaseButtons">
-      <button class="phase-btn active" id="phBtn3" onclick="setHPhase('3att')">3 Att</button>
-      <button class="phase-btn" id="phBtn4" onclick="setHPhase('4att')">4 Att</button>
-      <button class="phase-btn" id="phBtnF" onclick="setHPhase('finals')">Finals</button>
-    </div>
-    <div id="vPhaseButtons" class="hidden">
-      <button class="phase-btn active" id="vPhBtnP" onclick="setVPhase('Prelims')">Prelims</button>
-      <button class="phase-btn" id="vPhBtnF" onclick="setVPhase('Finals')">Finals</button>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="left-panel" style="display:flex; flex-direction:column;">
-      <div id="athleteList" style="flex:1; overflow-y:auto;"></div>
-      <button class="roster-toggle hidden" id="rosterToggleBtn" onclick="toggleRoster()">＋ Manage Roster</button>
-      <div id="rosterMgr" class="hidden">
-        <h5>Add Walk-on</h5>
-        <div class="add-row">
-          <input type="text" id="addFName" placeholder="First">
-          <input type="text" id="addLName" placeholder="Last">
-        </div>
-        <input type="text" id="addTeam" placeholder="Team (optional)" style="margin-top:6px;">
-        <button class="btn-add-ath" style="width:100%; margin-top:6px;" onclick="doAddAthlete()">ADD TO EVENT</button>
-      </div>
-    </div>
-    <div class="right-panel">
-      <div id="entryUI" class="hidden">
-        <!-- HORIZONTAL -->
-        <div id="hEntry" class="hidden">
-          <div class="card">
-            <h2 id="hAthName"></h2>
-            <div class="phase-info" id="hPhaseInfo"></div>
-            <div id="attemptSlots"></div>
-            <div id="markEntryForm" class="card" style="background:#f0f4ff; margin-top:5px;">
-              <div id="attemptLabel" style="font-weight:bold; margin-bottom:8px;">Attempt 1</div>
-              <div class="mark-entry">
-                <div><label>Feet</label><input type="number" id="hFt" placeholder="0" min="0"></div>
-                <div><label>Inches</label><input type="number" id="hIn" placeholder="0" min="0" max="11"></div>
-                <div><label>¼"</label>
-                  <select class="qtr-select" id="hQtr">
-                    <option value="0">.00</option>
-                    <option value="0.25">.25</option>
-                    <option value="0.5">.50</option>
-                    <option value="0.75">.75</option>
-                  </select>
-                </div>
-              </div>
-              <div class="btn-row">
-                <button class="btn-save" onclick="saveHMark()">SAVE MARK</button>
-                <button class="btn-foul" onclick="saveHFoul()">FOUL</button>
-              </div>
-            </div>
-            <h4>Best Mark</h4>
-            <div id="hHistoryLog"></div>
-          </div>
-        </div>
-        <!-- VERTICAL -->
-        <div id="vEntry" class="hidden">
-          <div class="card">
-            <h2 id="vAthName"></h2>
-            <div class="vmark-grid">
-              <button class="vmark-btn btn-o" onclick="submitV('O')">O</button>
-              <button class="vmark-btn btn-x" onclick="submitV('X')">X</button>
-              <button class="vmark-btn btn-p" onclick="submitV('P')">P</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="card">
+  <h2>Debug Save Test</h2>
+  <button onclick="testSave()">TEST SAVE TO ATTEMPTS TABLE</button>
+  <pre id="debugLog" style="background:#222;color:#0f0;padding:15px;font-size:13px;white-space:pre-wrap;"></pre>
 </div>
 
 <script>
 const sb = supabase.createClient('https://qjomrnguhbqfluzwuntz.supabase.co', 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_');
 
-let currentMeet = null;
-let currentAth = null;
-let currentEventId = '';
-let isVertical = false;
-let hPhase = '3att';
-let attemptsCache = {};
-let athleteListCache = [];
-let _athMap = {};
+async function testSave() {
+  const log = document.getElementById('debugLog');
+  log.textContent = 'Attempting insert...\n';
 
-window.onload = async () => {
-  const stored = sessionStorage.getItem('fep_meet');
-  if (!stored) return window.location.href = 'index.html';
-  currentMeet = JSON.parse(stored);
-  await loadEvents();
-};
+  try {
+    const { data, error } = await sb
+      .from('attempts')
+      .insert({
+        meet_id: 'test-meet-123',     // change if your column name is different
+        event_id: 'test-event-456',
+        athlete_id: 'test-ath-789',
+        attempt_number: 1,
+        mark: '42-06',
+        result: 'make'
+      })
+      .select();
 
-async function loadEvents() {
-  const { data } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
-  const sel = document.getElementById('eventSelect');
-  sel.innerHTML = '<option value="">-- Select Event --</option>';
-  (data || []).forEach(e => {
-    const opt = document.createElement('option');
-    opt.value = e.id;
-    opt.textContent = `${e.name} (${e.gender || ''} ${e.level || ''})`.trim();
-    sel.appendChild(opt);
-  });
-}
+    if (error) throw error;
 
-async function loadEvent() {
-  currentEventId = document.getElementById('eventSelect').value;
-  if (!currentEventId) return;
-
-  const nameLower = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
-  isVertical = nameLower.includes('high jump') || nameLower.includes('pole vault');
-
-  document.getElementById('hPhaseButtons').classList.toggle('hidden', isVertical);
-  document.getElementById('vPhaseButtons').classList.toggle('hidden', !isVertical);
-  document.getElementById('flightBarStrip').classList.toggle('show', isVertical);
-
-  currentAth = null;
-  attemptsCache[currentEventId] = attemptsCache[currentEventId] || [];
-
-  const [{ data: assigns }, { data: attempts }] = await Promise.all([
-    sb.from('event_assignments')
-      .select('athlete_id, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
-      .eq('event_id', currentEventId)
-      .eq('meet_id', currentMeet.id),
-    sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id)
-  ]);
-
-  athleteListCache = (assigns || []).map(r => ({
-    id: r.athlete_id,
-    name: r.athletes ? `${r.athletes.fname} ${r.athletes.lname}`.trim() : 'Unknown',
-    team: r.athletes?.team || ''
-  }));
-
-  attemptsCache[currentEventId] = attempts || [];
-  renderAthleteList(athleteListCache);
-}
-
-function renderAthleteList(list) {
-  const container = document.getElementById('athleteList');
-  container.innerHTML = '';
-  list.forEach(a => {
-    _athMap[a.id] = a;
-    const btn = document.createElement('button');
-    btn.className = `ath-btn ${currentAth && currentAth.id === a.id ? 'active' : ''}`;
-    btn.innerHTML = `<strong>${a.name}</strong> <span class="place-badge" id="place_${a.id}"></span>`;
-    btn.onclick = () => selectAth(a.id);
-    container.appendChild(btn);
-  });
-  updatePlaceBadges();
-}
-
-function selectAth(id) {
-  currentAth = _athMap[id];
-  document.getElementById('entryUI').classList.remove('hidden');
-  if (isVertical) {
-    document.getElementById('hEntry').classList.add('hidden');
-    document.getElementById('vEntry').classList.remove('hidden');
-    document.getElementById('vAthName').textContent = currentAth.name;
-  } else {
-    document.getElementById('vEntry').classList.add('hidden');
-    document.getElementById('hEntry').classList.remove('hidden');
-    document.getElementById('hAthName').textContent = currentAth.name;
+    log.textContent += '✅ SUCCESS!\n' + JSON.stringify(data, null, 2);
+  } catch (err) {
+    log.textContent += '❌ ERROR:\n' + err.message + '\n\n' + JSON.stringify(err, null, 2);
+    console.error(err);
   }
 }
-
-async function saveHMark() {
-  if (!currentAth || !currentEventId) return alert('Select athlete and event');
-
-  const ft = parseInt(document.getElementById('hFt').value) || 0;
-  const ins = parseInt(document.getElementById('hIn').value) || 0;
-  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
-  if (ft === 0 && ins === 0) return alert('Enter a distance');
-
-  const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
-
-  const nextNum = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length + 1;
-
-  await sb.from('attempts').insert({
-    meet_id: currentMeet.id,
-    event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: nextNum,
-    mark: mark,
-    result: 'make'
-  });
-
-  // Immediate refresh
-  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
-  attemptsCache[currentEventId] = data || [];
-
-  // Clear form
-  document.getElementById('hFt').value = '';
-  document.getElementById('hIn').value = '';
-  document.getElementById('hQtr').value = '0';
-
-  renderAthleteList(athleteListCache); // updates list + place badges
-}
-
-async function saveHFoul() {
-  if (!currentAth || !currentEventId) return;
-  const nextNum = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length + 1;
-
-  await sb.from('attempts').insert({
-    meet_id: currentMeet.id,
-    event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: nextNum,
-    mark: 'FOUL',
-    result: 'foul'
-  });
-
-  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
-  attemptsCache[currentEventId] = data || [];
-  renderAthleteList(athleteListCache);
-}
-
-function updatePlaceBadges() {
-  const cache = attemptsCache[currentEventId] || [];
-  athleteListCache.forEach(ath => {
-    const myMarks = cache.filter(a => a.athlete_id === ath.id && a.result === 'make')
-      .map(a => parseMark(a.mark)).filter(v => v != null).sort((a,b) => b-a);
-    const badgeEl = document.getElementById('place_' + ath.id);
-    if (badgeEl && myMarks.length > 0) {
-      badgeEl.textContent = '1st';
-      badgeEl.className = 'place-badge place-1';
-    }
-  });
-}
-
-function parseMark(mark) {
-  if (!mark || !mark.includes('-')) return null;
-  const [ft, ins] = mark.split('-').map(Number);
-  return (ft || 0) * 12 + (ins || 0);
-}
-
-function setHPhase(phase) { hPhase = phase; }
-function setVPhase(phase) { }
-function doCheckIn(type) { }
-function submitV(result) { }
-function incFlightBar(inches) { }
-function setFlightBar() { }
-function toggleRoster() { document.getElementById('rosterMgr').classList.toggle('hidden'); }
-async function doAddAthlete() { alert('Add athlete ready - expand with Supabase insert if needed'); }
-function showTab(tab) { }
 </script>
 </body>
 </html>
