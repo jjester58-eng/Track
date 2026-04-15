@@ -44,7 +44,10 @@ async function loadEvent() {
       .select('athlete_id, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
       .eq('event_id', currentEventId)
       .eq('meet_id', currentMeet.id),
-    sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id)
+    sb.from('attempts')
+      .select('*')
+      .eq('event_id', currentEventId)
+      .eq('meet_id', currentMeet.id)
   ]);
 
   athleteListCache = (assigns || []).map(r => ({
@@ -54,6 +57,7 @@ async function loadEvent() {
   }));
 
   attemptsCache[currentEventId] = attempts || [];
+
   renderAthleteList();
   document.getElementById('rightPanel').innerHTML = '<p style="text-align:center;color:#888;padding:60px;">Select an athlete →</p>';
 }
@@ -69,21 +73,25 @@ function renderAthleteList() {
       .filter(a => a.athlete_id === ath.id && a.result === 'make')
       .map(a => parseMark(a.mark))
       .filter(v => v !== null)
-      .sort((a,b) => b - a)[0] || -1;
+      .sort((a,b) => b - a)[0] ?? -1;
+
     return { ...ath, best };
   });
 
   if (currentPhase === 'finals') {
-    scores.sort((a, b) => b.best - a.best);
-    scores = scores.slice(0, 8);
+    scores.sort((a,b) => b.best - a.best);
+    scores = scores.slice(0,8);
     scores.reverse();
   }
 
   scores.forEach(score => {
     _athMap[score.id] = score;
+
     const btn = document.createElement('button');
     btn.className = `ath-btn ${currentAth && currentAth.id === score.id ? 'active' : ''}`;
-    btn.innerHTML = `<span id="place_${score.id}" class="place-badge"></span><strong>${score.name}</strong><br><small>${score.team}</small>`;
+    btn.innerHTML = `<span id="place_${score.id}" class="place-badge"></span>
+      <strong>${score.name}</strong><br><small>${score.team}</small>`;
+
     btn.onclick = () => selectAth(score.id);
     container.appendChild(btn);
   });
@@ -98,8 +106,9 @@ function selectAth(id) {
 }
 
 function renderRightPanel() {
-  const panel = document.getElementById('rightPanel');
   if (!currentAth) return;
+
+  const panel = document.getElementById('rightPanel');
 
   const myAttempts = (attemptsCache[currentEventId] || [])
     .filter(a => a.athlete_id === currentAth.id && a.phase === currentPhase);
@@ -107,60 +116,46 @@ function renderRightPanel() {
   const limit = PHASE_LIMIT[currentPhase];
   const canAddMore = myAttempts.length < limit;
 
-  let html = `
+  panel.innerHTML = `
     <div class="card">
       <h2>${currentAth.name}</h2>
-      <div style="margin:8px 0; font-size:14px; color:#555;">Phase: <strong>${currentPhase.toUpperCase()}</strong></div>
-      ${!canAddMore ? `<div class="limit-msg">Maximum attempts reached for this phase</div>` : ''}
+      <div>Phase: <strong>${currentPhase}</strong></div>
+      ${!canAddMore ? '<div class="limit-msg">Max attempts reached</div>' : ''}
       <div class="mark-entry">
-        <div><label>Feet</label><input type="number" id="hFt"></div>
-        <div><label>Inches</label><input type="number" id="hIn"></div>
-        <div><label>¼"</label><select id="hQtr">
+        <input id="hFt" type="number" placeholder="ft">
+        <input id="hIn" type="number" placeholder="in">
+        <select id="hQtr">
           <option value="0">.00</option>
           <option value="0.25">.25</option>
           <option value="0.5">.50</option>
           <option value="0.75">.75</option>
-        </select></div>
+        </select>
       </div>
-      <div class="btn-row">
-        <button class="btn-save" onclick="saveOrUpdateMark()" id="saveBtn">SAVE MARK</button>
-        <button class="btn-foul" onclick="saveHFoul()" ${!canAddMore ? 'disabled' : ''}>FOUL</button>
-      </div>
+      <button onclick="saveOrUpdateMark()">SAVE</button>
+      <button onclick="saveHFoul()" ${!canAddMore ? 'disabled' : ''}>FOUL</button>
     </div>
+
     <div class="card">
-      <h3>Past Attempts</h3>
-      <div id="attemptHistory"></div>
+      ${myAttempts.map(a => `
+        <div class="att-row">
+          Att ${a.attempt_number} — ${a.mark}
+          <button onclick="editAttempt('${a.id}','${a.mark}')">Edit</button>
+          <button onclick="deleteAttempt('${a.id}')">Delete</button>
+        </div>
+      `).join('')}
     </div>
   `;
-  panel.innerHTML = html;
-  renderAttemptHistory(myAttempts);
-}
-
-function renderAttemptHistory(attempts) {
-  const el = document.getElementById('attemptHistory');
-
-  el.innerHTML = attempts.length ? attempts.map(a => `
-    <div class="att-row">
-      <span>Att ${a.attempt_number}</span>
-      <span style="flex:1;font-weight:700;">${a.mark || '—'}</span>
-      <span>${(a.result || '').toUpperCase()}</span>
-      <button onclick="editAttempt('${a.id}', '${a.mark}', '${a.result}')">Edit</button>
-      <button onclick="deleteAttempt('${a.id}')">Delete</button>
-    </div>
-  `).join('') : 'No attempts';
 }
 
 async function saveOrUpdateMark() {
-  if (!currentAth || !currentEventId) return;
-
-  const ft = parseInt(document.getElementById('hFt').value) || 0;
-  const ins = parseInt(document.getElementById('hIn').value) || 0;
-  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
+  const ft = parseInt(hFt.value) || 0;
+  const ins = parseInt(hIn.value) || 0;
+  const qtr = parseFloat(hQtr.value) || 0;
 
   const mark = `${ft}-${(ins + qtr).toFixed(2)}`;
 
   if (editingAttemptId) {
-    await sb.from('attempts').update({ mark, result: 'make' }).eq('id', editingAttemptId);
+    await sb.from('attempts').update({ mark }).eq('id', editingAttemptId);
     editingAttemptId = null;
   } else {
     const myAttempts = (attemptsCache[currentEventId] || [])
@@ -201,9 +196,19 @@ async function saveHFoul() {
   await reloadAttempts();
 }
 
-async function deleteAttempt(id) {
-  if (!confirm("Delete this attempt?")) return;
+function editAttempt(id, mark) {
+  editingAttemptId = id;
 
+  if (!mark || !mark.includes('-')) return;
+
+  const [ft, ins] = mark.split('-');
+  hFt.value = ft;
+  hIn.value = Math.floor(ins);
+  hQtr.value = (ins % 1).toFixed(2);
+}
+
+async function deleteAttempt(id) {
+  if (!confirm("Delete attempt?")) return;
   await sb.from('attempts').delete().eq('id', id);
   await reloadAttempts();
 }
@@ -219,6 +224,12 @@ async function reloadAttempts() {
   renderAthleteList();
 }
 
+function setPhase(phase) {
+  currentPhase = phase;
+  renderAthleteList();
+  if (currentAth) renderRightPanel();
+}
+
 function updatePlaceBadges() {
   const cache = attemptsCache[currentEventId] || [];
 
@@ -232,22 +243,19 @@ function updatePlaceBadges() {
     return { ...ath, best };
   });
 
-  let ranked = [...scores].sort((a, b) => b.best - a.best);
+  let ranked = [...scores].sort((a,b) => b.best - a.best);
 
   let place = 1;
-  for (let i = 0; i < ranked.length; i++) {
-    const curr = ranked[i];
-    const prev = ranked[i-1];
-
-    if (prev && curr.best === prev.best) {
-      curr.place = place;
-      curr.tied = true;
+  ranked.forEach((r,i) => {
+    if (i > 0 && r.best === ranked[i-1].best) {
+      r.place = place;
+      r.tied = true;
     } else {
       place = i + 1;
-      curr.place = place;
-      curr.tied = false;
+      r.place = place;
+      r.tied = false;
     }
-  }
+  });
 
   const map = {};
   ranked.forEach(r => map[r.id] = r);
@@ -257,18 +265,14 @@ function updatePlaceBadges() {
     const badge = document.getElementById(`place_${s.id}`);
     if (!badge) return;
 
-    badge.textContent = curr.best === -1 ? '' :
-      curr.tied ? `T-${curr.place}` : `${curr.place}${getOrdinal(curr.place)}`;
+    badge.textContent = curr.best <= 0 ? '' :
+      curr.tied ? `T-${curr.place}` : `${curr.place}`;
   });
 }
 
 function parseMark(mark) {
-  if (!mark.includes('-')) return null;
+  if (!mark || !mark.includes('-')) return null;
   const [ft, ins] = mark.split('-').map(Number);
   return ft * 12 + ins;
-}
-
-function getOrdinal(n) {
-  return ["th","st","nd","rd"][(n%100-20)%10] || ["th","st","nd","rd"][n%100] || "th";
 }
 </script>
