@@ -30,7 +30,6 @@
     .btn-save { background: #1a3a5c; color: white; }
     .btn-foul { background: #dc3545; color: white; }
     .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 8px; }
-    .att-row button { padding: 4px 10px; font-size: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
     .phase-btn { padding: 8px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
     .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
     .limit-msg { color: #dc3545; font-size: 13px; font-weight: bold; margin-top: 8px; }
@@ -124,14 +123,35 @@ async function loadEvent() {
 function renderAthleteList() {
   const container = document.getElementById('leftPanel');
   container.innerHTML = '';
-  athleteListCache.forEach(ath => {
-    _athMap[ath.id] = ath;
+
+  // Get best marks for sorting
+  const cache = attemptsCache[currentEventId] || [];
+  let scores = athleteListCache.map(ath => {
+    const best = cache
+      .filter(a => a.athlete_id === ath.id && a.result === 'make')
+      .map(a => parseMark(a.mark))
+      .filter(v => v !== null)
+      .sort((a,b) => b - a)[0] || -1;
+    return { ...ath, best };
+  });
+
+  // Finals: only top 8, highest best mark first
+  if (currentPhase === 'finals') {
+    scores.sort((a, b) => b.best - a.best);
+    scores = scores.slice(0, 8);
+  } else {
+    scores.sort((a, b) => b.best - a.best);
+  }
+
+  scores.forEach(score => {
+    _athMap[score.id] = score;
     const btn = document.createElement('button');
-    btn.className = `ath-btn ${currentAth && currentAth.id === ath.id ? 'active' : ''}`;
-    btn.innerHTML = `<span id="place_${ath.id}" class="place-badge"></span><strong>${ath.name}</strong><br><small>${ath.team}</small>`;
-    btn.onclick = () => selectAth(ath.id);
+    btn.className = `ath-btn ${currentAth && currentAth.id === score.id ? 'active' : ''}`;
+    btn.innerHTML = `<span id="place_${score.id}" class="place-badge"></span><strong>${score.name}</strong><br><small>${score.team}</small>`;
+    btn.onclick = () => selectAth(score.id);
     container.appendChild(btn);
   });
+
   updatePlaceBadges();
 }
 
@@ -175,9 +195,8 @@ function renderRightPanel() {
 
 function renderAttemptHistory(attempts) {
   const el = document.getElementById('attemptHistory');
-  // In Finals, sort lowest to highest attempt number
   const sorted = currentPhase === 'finals' 
-    ? [...attempts].sort((a,b) => a.attempt_number - b.attempt_number)
+    ? [...attempts].sort((a,b) => a.attempt_number - b.attempt_number)   // lowest to highest in Finals
     : [...attempts].sort((a,b) => a.attempt_number - b.attempt_number);
 
   el.innerHTML = sorted.length ? sorted.map(a => `
@@ -201,13 +220,11 @@ async function saveOrUpdateMark() {
   const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
 
   if (editingAttemptId) {
-    // Update existing
     const { error } = await sb.from('attempts').update({ mark, result: 'make' }).eq('id', editingAttemptId);
     if (error) return alert('Update failed: ' + error.message);
     editingAttemptId = null;
     document.getElementById('saveBtn').textContent = 'SAVE MARK';
   } else {
-    // Insert new
     const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
     const limit = PHASE_LIMIT[currentPhase];
     if (currentPhase !== 'finals' && myAttempts.length >= limit) {
@@ -228,7 +245,6 @@ async function saveOrUpdateMark() {
     if (error) return alert('Save failed: ' + error.message);
   }
 
-  // Refresh
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
 
@@ -287,8 +303,8 @@ function setPhase(phase) {
   if (phase === '4att') document.getElementById('ph4').classList.add('active');
   if (phase === 'finals') document.getElementById('phF').classList.add('active');
 
-  renderRightPanel();
-  renderAthleteList();   // re-calculate top 8 + places
+  renderAthleteList();   // re-sort athletes for Finals
+  if (currentAth) renderRightPanel();
 }
 
 function updatePlaceBadges() {
@@ -302,7 +318,6 @@ function updatePlaceBadges() {
     return { ...ath, best };
   });
 
-  // Finals: only top 8, sorted by best mark
   if (currentPhase === 'finals') {
     scores.sort((a, b) => b.best - a.best);
     scores = scores.slice(0, 8);
