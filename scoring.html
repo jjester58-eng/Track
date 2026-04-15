@@ -11,7 +11,7 @@
     #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; }
     #offlineBanner.show { display: block; }
     .topbar { background: #0d1b2a; color: white; padding: 12px; display: flex; align-items: center; gap: 12px; }
-    .header { background: #1a3a5c; color: white; padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .header { background: #1a3a5c; color: white; padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .container { display: flex; flex: 1; overflow: hidden; }
     .left-panel { width: 38%; overflow-y: auto; background: white; border-right: 2px solid #ddd; }
     .right-panel { flex: 1; overflow-y: auto; padding: 15px; }
@@ -30,6 +30,8 @@
     .btn-save { background: #1a3a5c; color: white; }
     .btn-foul { background: #dc3545; color: white; }
     .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 12px; }
+    .phase-btn { padding: 8px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -45,6 +47,11 @@
   <select id="eventSelect" onchange="loadEvent()" style="flex:1; min-width:200px;">
     <option value="">— Select Event —</option>
   </select>
+  <div id="hPhaseButtons">
+    <button class="phase-btn active" id="ph3" onclick="setPhase('3att')">3 Att</button>
+    <button class="phase-btn" id="ph4" onclick="setPhase('4att')">4 Att</button>
+    <button class="phase-btn" id="phF" onclick="setPhase('finals')">Finals</button>
+  </div>
 </div>
 
 <div class="container">
@@ -61,6 +68,7 @@ let currentAth = null;
 let attemptsCache = {};
 let athleteListCache = [];
 let _athMap = {};
+let currentPhase = '3att';   // 3att, 4att, finals
 
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
@@ -135,6 +143,7 @@ function renderRightPanel() {
   let html = `
     <div class="card">
       <h2>${currentAth.name}</h2>
+      <div style="margin:10px 0; font-size:14px; color:#555;">Phase: <strong>${currentPhase.toUpperCase()}</strong></div>
       <div class="mark-entry">
         <div><label>Feet</label><input type="number" id="hFt" placeholder="0"></div>
         <div><label>Inches</label><input type="number" id="hIn" placeholder="0" max="11"></div>
@@ -187,11 +196,9 @@ async function saveHMark() {
 
   if (error) {
     alert('Save failed: ' + error.message);
-    console.error(error);
     return;
   }
 
-  // Refresh data
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
 
@@ -224,51 +231,50 @@ async function saveHFoul() {
   renderAthleteList();
 }
 
-// ── Proper Ranking Logic ─────────────────────────────────────
+function setPhase(phase) {
+  currentPhase = phase;
+  document.querySelectorAll('.phase-btn').forEach(btn => btn.classList.remove('active'));
+  if (phase === '3att') document.getElementById('ph3').classList.add('active');
+  if (phase === '4att') document.getElementById('ph4').classList.add('active');
+  if (phase === 'finals') document.getElementById('phF').classList.add('active');
+}
+
 function updatePlaceBadges() {
   const cache = attemptsCache[currentEventId] || [];
-
-  // Get best mark for each athlete
   const scores = athleteListCache.map(ath => {
-    const bestMark = cache
+    const best = cache
       .filter(a => a.athlete_id === ath.id && a.result === 'make')
       .map(a => parseMark(a.mark))
       .filter(v => v !== null)
       .sort((a,b) => b - a)[0] || -1;
-
-    return { ...ath, best: bestMark };
+    return { ...ath, best };
   });
 
-  // Sort by best mark (descending)
   scores.sort((a, b) => b.best - a.best);
 
-  // Assign places with tie handling
   let place = 1;
   for (let i = 0; i < scores.length; i++) {
-    const current = scores[i];
+    const curr = scores[i];
     const prev = i > 0 ? scores[i-1] : null;
-
-    if (prev && current.best === prev.best) {
-      // Tied
-      current.place = place;
-      current.tied = true;
+    if (prev && curr.best === prev.best) {
+      curr.place = place;
+      curr.tied = true;
     } else {
       place = i + 1;
-      current.place = place;
-      current.tied = false;
+      curr.place = place;
+      curr.tied = false;
     }
 
-    // Update badge on screen
-    const badgeEl = document.getElementById(`place_${current.id}`);
-    if (badgeEl) {
-      if (current.best === -1) {
-        badgeEl.textContent = '';
-      } else if (current.tied) {
-        badgeEl.textContent = `T-${current.place}`;
-        badgeEl.className = 'place-badge place-tied';
+    const badge = document.getElementById(`place_${curr.id}`);
+    if (badge) {
+      if (curr.best === -1) {
+        badge.textContent = '';
+      } else if (curr.tied) {
+        badge.textContent = `T-${curr.place}`;
+        badge.className = 'place-badge place-tied';
       } else {
-        badgeEl.textContent = `${current.place}${getOrdinal(current.place)}`;
-        badgeEl.className = `place-badge place-${Math.min(current.place, 8)}`;
+        badge.textContent = `${curr.place}${getOrdinal(curr.place)}`;
+        badge.className = `place-badge place-${Math.min(curr.place, 8)}`;
       }
     }
   }
