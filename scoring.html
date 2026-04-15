@@ -516,21 +516,43 @@ function renderVertical() {
 
   renderVHistory(myAtts);
 }
-
+// Inside the onclick for P button (or in submitV)
+if (result === 'P' && !flightBar) {
+  alert("Set a bar height before passing.");
+  return;
+}
 async function submitV(result) {
   if (!currentAth || !currentEventId) return;
+
   const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const mark   = result === 'O' ? (flightBar || 'O') : result;
-  const dbRes  = result === 'O' ? 'make' : result === 'P' ? 'pass' : 'foul';
+  const heightValue = (result === 'O' || result === 'P') && flightBar ? flightBar : null;
+
+  const markValue = result === 'O' ? (flightBar || 'O') 
+                  : result === 'P' ? 'P' 
+                  : 'X';
+
+  const dbResult = result === 'O' ? 'make' 
+                 : result === 'P' ? 'pass' 
+                 : 'foul';
+
   const { error } = await sb.from('attempts').insert({
-    meet_id: currentMeet.id, event_id: currentEventId,
+    meet_id: currentMeet.id,
+    event_id: currentEventId,
     athlete_id: currentAth.id,
     attempt_number: myAtts.length + 1,
-    height: flightBar || null,
-    mark, result: dbRes
+    height: heightValue,        // only send when we have a bar height
+    mark: markValue,
+    result: dbResult
   });
-  if (error) { alert('Save failed: ' + error.message); return; }
+
+  if (error) {
+    alert('Save failed: ' + error.message);
+    console.error(error);
+    return;
+  }
+
   await refresh();
+}
 }
 
 function renderVHistory(attempts) {
