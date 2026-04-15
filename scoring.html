@@ -4,84 +4,171 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0d1b2a">
   <title>Field Events Pro — Scoring</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
     body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; }
+
+    /* ── Topbar ── */
+    .topbar { background: #0d1b2a; color: white; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    #topLogo { height: 36px; width: auto; }
+    .meet-pill { background: #162438; border: 1px solid #1e3a5f; border-radius: 20px; padding: 3px 11px; font-size: 12px; font-weight: 700; color: #7eb8f7; white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-title { font-size: 16px; font-weight: 800; color: #7eb8f7; flex: 1; }
+    .nav-home { color: white; text-decoration: none; font-size: 20px; }
+
+    #offlineBanner { display: none; background: #dc3545; color: white; padding: 7px; text-align: center; font-weight: bold; font-size: 13px; flex-shrink: 0; }
     #offlineBanner.show { display: block; }
-    .topbar { background: #0d1b2a; color: white; padding: 12px; display: flex; align-items: center; gap: 12px; }
-    .header { background: #1a3a5c; color: white; padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    /* ── Event + phase header ── */
+    .ev-header { background: #1a3a5c; padding: 8px 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+    .ev-header select { flex: 1; min-width: 160px; padding: 8px 10px; background: #0d2a4a; color: white; border: 1px solid #2a5a8c; border-radius: 6px; font-size: 14px; }
+    .phase-btn { padding: 7px 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .phase-btn.active { background: white; color: #1a3a5c; }
+
+    /* ── Split layout ── */
     .container { display: flex; flex: 1; overflow: hidden; }
-    .left-panel { width: 38%; overflow-y: auto; background: white; border-right: 2px solid #ddd; }
-    .right-panel { flex: 1; overflow-y: auto; padding: 15px; }
-    .ath-btn { width: 100%; padding: 12px; border: none; border-bottom: 1px solid #eee; text-align: left; background: white; cursor: pointer; }
-    .ath-btn.active { background: #eef4ff; border-left: 5px solid #1a3a5c; }
-    .place-badge { float: right; padding: 4px 9px; border-radius: 4px; font-weight: bold; min-width: 32px; text-align: center; }
-    .place-1 { background: gold; color: #222; }
-    .place-2 { background: silver; color: #222; }
-    .place-3 { background: #cd7f32; color: white; }
-    .place-4, .place-5, .place-6, .place-7, .place-8 { background: #e9ecef; color: #333; }
-    .place-tied { background: #6c757d; color: white; font-style: italic; }
-    .card { background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    .mark-entry { display: flex; gap: 10px; align-items: end; margin: 12px 0; flex-wrap: wrap; }
-    .mark-entry input, .mark-entry select { padding: 12px; font-size: 18px; width: 85px; text-align: center; border: 1px solid #ccc; border-radius: 6px; }
-    .btn-row button { flex: 1; padding: 16px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
-    .btn-save { background: #1a3a5c; color: white; }
-    .btn-foul { background: #dc3545; color: white; }
-    .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 8px; }
-    .phase-btn { padding: 8px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
-    .phase-btn.active { background: white; color: #1a3a5c; font-weight: bold; }
-    .limit-msg { color: #dc3545; font-size: 13px; font-weight: bold; margin-top: 8px; }
+    .left-panel  { width: 40%; border-right: 2px solid #ddd; overflow-y: auto; background: white; }
+    .right-panel { flex: 1; overflow-y: auto; padding: 14px; background: #fdfdfd; }
+
+    /* ── Athlete list ── */
+    .ath-btn { width: 100%; padding: 11px 12px; border: none; border-bottom: 1px solid #eee; background: white; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .ath-btn:hover  { background: #f4f7ff; }
+    .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
+    .ath-info { flex: 1; min-width: 0; }
+    .ath-name-txt  { font-weight: 700; font-size: 14px; color: #1a2a3a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ath-team-txt  { font-size: 11px; color: #888; }
+    .ath-best-txt  { font-size: 13px; font-weight: 700; color: #1a5a8c; }
+
+    /* Place badges */
+    .place-badge { flex-shrink: 0; width: 36px; height: 24px; border-radius: 5px; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .pl-1 { background: #d4af37; color: #000; }
+    .pl-2 { background: #a8a9ad; color: #000; }
+    .pl-3 { background: #a0522d; color: #fff; }
+    .pl-4,.pl-5,.pl-6,.pl-7,.pl-8 { background: #e9ecef; color: #333; }
+    .pl-T { background: #6c757d; color: #fff; font-style: italic; }
+    .pl-0 { background: transparent; }
+
+    /* ── Right panel ── */
+    .rcard { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 14px; }
+    .rcard h2 { margin: 0 0 2px; font-size: 20px; color: #1a2a3a; }
+    .rcard .sub { font-size: 13px; color: #888; margin-bottom: 14px; }
+
+    /* Phase / attempt info */
+    .phase-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .phase-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4a7aaa; background: #e8f0ff; padding: 3px 10px; border-radius: 12px; }
+    .att-counter { font-size: 13px; color: #555; }
+    .limit-warn { font-size: 13px; font-weight: 700; color: #dc3545; }
+
+    /* Mark entry */
+    .mark-entry { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+    .mark-field { display: flex; flex-direction: column; gap: 4px; }
+    .mark-field label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+    .mark-field input, .mark-field select { padding: 11px 8px; font-size: 20px; font-weight: 700; width: 72px; text-align: center; border: 2px solid #ccc; border-radius: 8px; background: #f8f9fa; color: #1a2a3a; }
+    .mark-field input:focus, .mark-field select:focus { border-color: #1a5a8c; outline: none; background: white; }
+    .mark-sep { font-size: 24px; font-weight: 900; color: #aaa; padding-bottom: 6px; }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 8px; margin-top: 4px; }
+    .btn-save  { flex: 2; padding: 14px; background: #1a5a8c; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+    .btn-save:hover { background: #1e6aa0; }
+    .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-foul  { flex: 1; padding: 14px; background: #dc3545; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+    .btn-foul:hover { background: #c82333; }
+    .btn-foul:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-cancel { width: 100%; padding: 10px; background: #f8f9fa; color: #666; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 8px; }
+    .btn-cancel:hover { background: #e9ecef; }
+
+    /* Attempt history */
+    .att-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 7px; }
+    .att-num  { font-size: 11px; font-weight: 700; color: #888; min-width: 40px; }
+    .att-mark { flex: 1; font-size: 17px; font-weight: 800; color: #1a2a3a; }
+    .att-result { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    .res-make  { background: #d4edda; color: #155724; }
+    .res-foul  { background: #f8d7da; color: #721c24; }
+    .att-edit { padding: 5px 10px; background: #e8f0ff; color: #1a5a8c; border: 1px solid #b8d0f0; border-radius: 5px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .att-edit:hover { background: #d0e4ff; }
+    .att-del  { padding: 5px 10px; background: #fde8e8; color: #c00; border: 1px solid #f5c0c0; border-radius: 5px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .att-del:hover { background: #fcc; }
+    .editing-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 700; color: #856404; margin-bottom: 12px; }
+
+    /* Vertical events */
+    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .bar-input { width: 90px; padding: 10px; font-size: 20px; font-weight: 700; text-align: center; background: #f0f4ff; border: 2px solid #1e5a8c; border-radius: 8px; color: #1a2a3a; }
+    .bar-inc { padding: 8px 12px; background: #0d2a4a; color: #7eb8f7; border: 1px solid #1e5a8c; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .bar-inc:hover { background: #1a3a5c; }
+    .bar-set { padding: 8px 12px; background: #155724; color: #4dca7a; border: 1px solid #28a745; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .vmark-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .vmark-btn { height: 70px; border-radius: 10px; font-size: 30px; font-weight: 900; color: white; border: none; cursor: pointer; }
+    .vmark-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
+    .vmark-lbl { text-align: center; font-size: 11px; color: #888; margin-top: 3px; }
+    .cleared-row { font-size: 13px; color: #28a745; font-weight: 700; margin-bottom: 10px; }
+    .elim-banner { background: #f8d7da; border: 1px solid #dc3545; color: #721c24; padding: 10px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; margin-bottom: 10px; text-align: center; }
   </style>
 </head>
 <body>
 
-<div id="offlineBanner">⚠ NO CONNECTION — saving locally</div>
+<div id="offlineBanner">⚠ NO CONNECTION — Attempts saved locally</div>
 
 <div class="topbar">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" height="38">
-  <div id="topMeetName" style="flex:1; font-weight:700;">Loading...</div>
+  <img id="topLogo" src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="Logo">
+  <div class="meet-pill" id="topMeetName">Loading…</div>
+  <div class="topbar-title">SCORING</div>
+  <a href="index.html" class="nav-home">⌂</a>
 </div>
 
-<div class="header">
-  <select id="eventSelect" onchange="loadEvent()" style="flex:1; min-width:200px;">
+<div class="ev-header">
+  <select id="eventSelect" onchange="loadEvent()">
     <option value="">— Select Event —</option>
   </select>
-  <div id="hPhaseButtons">
+  <div id="phaseBtns" style="display:flex;gap:6px;">
     <button class="phase-btn active" id="ph3" onclick="setPhase('3att')">3 Att</button>
-    <button class="phase-btn" id="ph4" onclick="setPhase('4att')">4 Att</button>
-    <button class="phase-btn" id="phF" onclick="setPhase('finals')">Finals</button>
+    <button class="phase-btn"        id="ph4" onclick="setPhase('4att')">4 Att</button>
+    <button class="phase-btn"        id="phF" onclick="setPhase('finals')">Finals</button>
   </div>
 </div>
 
 <div class="container">
-  <div class="left-panel" id="leftPanel"></div>
-  <div class="right-panel" id="rightPanel"></div>
+  <div class="left-panel"  id="leftPanel"><div style="padding:40px;text-align:center;color:#aaa;font-size:14px;">Select an event above</div></div>
+  <div class="right-panel" id="rightPanel"><div style="padding:40px;text-align:center;color:#aaa;font-size:14px;">Select an athlete</div></div>
 </div>
 
 <script>
-const sb = supabase.createClient('https://qjomrnguhbqfluzwuntz.supabase.co', 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_');
+const sb = supabase.createClient(
+  'https://qjomrnguhbqfluzwuntz.supabase.co',
+  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
+);
 
-let currentMeet = null;
-let currentEventId = null;
-let currentAth = null;
-let attemptsCache = {};
-let athleteListCache = [];
-let _athMap = {};
-let currentPhase = '3att';
-let editingAttemptId = null;
-
+const IRONCLAD    = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
 const PHASE_LIMIT = { '3att': 3, '4att': 4, 'finals': 3 };
 
+let currentMeet    = null;
+let currentEventId = null;
+let isVertical     = false;
+let currentPhase   = '3att';
+let currentAth     = null;   // { id, name, team }
+let athleteList    = [];     // original load order — NEVER re-sorted in prelims
+let allAttempts    = [];     // all attempts for current event
+let editingId      = null;   // attempt UUID being edited, or null
+let flightBar      = '';
+
+// ── Init ──────────────────────────────────────────────────
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
-  if (!stored) return window.location.href = 'index.html';
+  if (!stored) { window.location.href = 'index.html'; return; }
   currentMeet = JSON.parse(stored);
+  document.getElementById('topLogo').src = currentMeet.logo_url || IRONCLAD;
   document.getElementById('topMeetName').textContent = currentMeet.name || 'Meet';
   await loadEvents();
+  const b = document.getElementById('offlineBanner');
+  const chk = () => b.classList.toggle('show', !navigator.onLine);
+  chk(); window.addEventListener('online', chk); window.addEventListener('offline', chk);
 };
 
+// ── Load events ───────────────────────────────────────────
 async function loadEvents() {
   const { data } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
   const sel = document.getElementById('eventSelect');
@@ -89,277 +176,430 @@ async function loadEvents() {
   (data || []).forEach(e => {
     const opt = document.createElement('option');
     opt.value = e.id;
-    opt.textContent = e.name;
+    opt.textContent = `${e.name}${e.gender ? ' — ' + e.gender : ''}${e.level ? ' (' + e.level + ')' : ''}`;
     sel.appendChild(opt);
   });
 }
 
+// ── Load event ────────────────────────────────────────────
 async function loadEvent() {
   currentEventId = document.getElementById('eventSelect').value;
+  currentAth     = null;
+  editingId      = null;
+  allAttempts    = [];
   if (!currentEventId) return;
 
-  currentAth = null;
-  editingAttemptId = null;
+  const evName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
+  isVertical = evName.includes('high jump') || evName.includes('pole vault');
+  document.getElementById('phaseBtns').style.display = isVertical ? 'none' : 'flex';
 
   const [{ data: assigns }, { data: attempts }] = await Promise.all([
     sb.from('event_assignments')
       .select('athlete_id, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
       .eq('event_id', currentEventId)
-      .eq('meet_id', currentMeet.id),
-    sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id)
+      .eq('meet_id',  currentMeet.id),
+    sb.from('attempts').select('*')
+      .eq('event_id', currentEventId)
+      .eq('meet_id',  currentMeet.id)
+      .order('attempt_number')
   ]);
 
-  athleteListCache = (assigns || []).map(r => ({
-    id: r.athlete_id,
+  // Lock in the original import order — this is the permanent prelim order
+  athleteList = (assigns || []).map(r => ({
+    id:   r.athlete_id,
     name: r.athletes ? `${r.athletes.fname} ${r.athletes.lname}`.trim() : 'Unknown',
     team: r.athletes?.team || ''
   }));
+  allAttempts = attempts || [];
 
-  attemptsCache[currentEventId] = attempts || [];
-  renderAthleteList();
-  document.getElementById('rightPanel').innerHTML = '<p style="text-align:center;color:#888;padding:60px;">Select an athlete →</p>';
+  renderLeft();
+  document.getElementById('rightPanel').innerHTML =
+    '<div style="padding:40px;text-align:center;color:#aaa;">Select an athlete</div>';
 }
 
-function renderAthleteList() {
-  const container = document.getElementById('leftPanel');
-  container.innerHTML = '';
-
-  const cache = attemptsCache[currentEventId] || [];
-  let scores = athleteListCache.map(ath => {
-    const best = cache
-      .filter(a => a.athlete_id === ath.id && a.result === 'make')
-      .map(a => parseMark(a.mark))
-      .filter(v => v !== null)
-      .sort((a,b) => b - a)[0] || -1;
-    return { ...ath, best };
-  });
-
-  if (currentPhase === 'finals') {
-    // Finals only: calculate top 8 by best mark, then reverse so 8th is at top
-    scores.sort((a, b) => b.best - a.best);
-    scores = scores.slice(0, 8);
-    scores.reverse();   // 8th at top, 1st at bottom
-  } 
-  // else: NO SORTING in 3 Att / 4 Att — keep original load order
-
-  scores.forEach(score => {
-    _athMap[score.id] = score;
-    const btn = document.createElement('button');
-    btn.className = `ath-btn ${currentAth && currentAth.id === score.id ? 'active' : ''}`;
-    btn.innerHTML = `<span id="place_${score.id}" class="place-badge"></span><strong>${score.name}</strong><br><small>${score.team}</small>`;
-    btn.onclick = () => selectAth(score.id);
-    container.appendChild(btn);
-  });
-
-  updatePlaceBadges();
-}
-
-function selectAth(id) {
-  currentAth = _athMap[id];
-  editingAttemptId = null;
-  renderRightPanel();
-}
-
-function renderRightPanel() {
-  const panel = document.getElementById('rightPanel');
-  if (!currentAth) return;
-
-  const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
-  const limit = PHASE_LIMIT[currentPhase];
-  const canAddMore = myAttempts.length < limit;
-
-  let html = `
-    <div class="card">
-      <h2>${currentAth.name}</h2>
-      <div style="margin:8px 0; font-size:14px; color:#555;">Phase: <strong>${currentPhase.toUpperCase()}</strong></div>
-      ${!canAddMore ? `<div class="limit-msg">Maximum attempts reached for this phase</div>` : ''}
-      <div class="mark-entry">
-        <div><label>Feet</label><input type="number" id="hFt" placeholder="0"></div>
-        <div><label>Inches</label><input type="number" id="hIn" placeholder="0" max="11"></div>
-        <div><label>¼"</label><select id="hQtr"><option value="0">.00</option><option value="0.25">.25</option><option value="0.5">.50</option><option value="0.75">.75</option></select></div>
-      </div>
-      <div class="btn-row">
-        <button class="btn-save" onclick="saveOrUpdateMark()" id="saveBtn">SAVE MARK</button>
-        <button class="btn-foul" onclick="saveHFoul()" id="foulBtn" ${!canAddMore ? 'disabled' : ''}>FOUL</button>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Past Attempts</h3>
-      <div id="attemptHistory"></div>
-    </div>
-  `;
-  panel.innerHTML = html;
-  renderAttemptHistory(myAttempts);
-}
-
-function renderAttemptHistory(attempts) {
-  const el = document.getElementById('attemptHistory');
-  const sorted = currentPhase === 'finals' 
-    ? [...attempts].sort((a,b) => a.attempt_number - b.attempt_number)
-    : [...attempts].sort((a,b) => a.attempt_number - b.attempt_number);
-
-  el.innerHTML = sorted.length ? sorted.map(a => `
-    <div class="att-row">
-      <span class="att-num">Att ${a.attempt_number}</span>
-      <span style="flex:1;font-weight:700;">${a.mark || '—'}</span>
-      <span style="color:${a.result==='make'?'#0a2a18':'#c00'};">${(a.result || '').toUpperCase()}</span>
-      <button onclick="editAttempt('${a.id}', '${a.mark}', '${a.result}')">Edit</button>
-    </div>
-  `).join('') : '<p style="color:#888;text-align:center;">No attempts yet</p>';
-}
-
-async function saveOrUpdateMark() {
-  if (!currentAth || !currentEventId) return alert("Select athlete and event");
-
-  const ft = parseInt(document.getElementById('hFt').value) || 0;
-  const ins = parseInt(document.getElementById('hIn').value) || 0;
-  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
-  if (ft === 0 && ins === 0) return alert("Enter a distance");
-
-  const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
-
-  if (editingAttemptId) {
-    const { error } = await sb.from('attempts').update({ mark, result: 'make' }).eq('id', editingAttemptId);
-    if (error) return alert('Update failed: ' + error.message);
-    editingAttemptId = null;
-    document.getElementById('saveBtn').textContent = 'SAVE MARK';
-  } else {
-    const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
-    const limit = PHASE_LIMIT[currentPhase];
-    if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
-
-    const nextNum = myAttempts.length + 1;
-
-    const { error } = await sb.from('attempts').insert({
-      meet_id: currentMeet.id,
-      event_id: currentEventId,
-      athlete_id: currentAth.id,
-      attempt_number: nextNum,
-      mark: mark,
-      result: 'make'
-    });
-
-    if (error) return alert('Save failed: ' + error.message);
-  }
-
-  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
-  attemptsCache[currentEventId] = data || [];
-
-  document.getElementById('hFt').value = '';
-  document.getElementById('hIn').value = '';
-  document.getElementById('hQtr').value = '0';
-
-  renderRightPanel();
-  renderAthleteList();
-}
-
-async function saveHFoul() {
-  if (!currentAth || !currentEventId) return;
-
-  const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
-  const limit = PHASE_LIMIT[currentPhase];
-  if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
-
-  const nextNum = myAttempts.length + 1;
-
-  const { error } = await sb.from('attempts').insert({
-    meet_id: currentMeet.id,
-    event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: nextNum,
-    mark: 'FOUL',
-    result: 'foul'
-  });
-
-  if (error) return alert('Save failed: ' + error.message);
-
-  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
-  attemptsCache[currentEventId] = data || [];
-  renderRightPanel();
-  renderAthleteList();
-}
-
-function editAttempt(attemptId, mark, result) {
-  editingAttemptId = attemptId;
-  document.getElementById('saveBtn').textContent = 'UPDATE MARK';
-
-  if (mark && mark.includes('-')) {
-    const [ft, insPart] = mark.split('-');
-    const ins = parseFloat(insPart);
-    document.getElementById('hFt').value = ft || '';
-    document.getElementById('hIn').value = Math.floor(ins) || '';
-    const qtr = (ins % 1).toFixed(2);
-    document.getElementById('hQtr').value = qtr === '0.00' ? '0' : qtr;
-  }
-}
-
+// ── Phase switch ──────────────────────────────────────────
 function setPhase(phase) {
   currentPhase = phase;
-  document.querySelectorAll('.phase-btn').forEach(btn => btn.classList.remove('active'));
-  if (phase === '3att') document.getElementById('ph3').classList.add('active');
-  if (phase === '4att') document.getElementById('ph4').classList.add('active');
-  if (phase === 'finals') document.getElementById('phF').classList.add('active');
-
-  renderAthleteList();   // Only reorders when Finals is clicked
-  if (currentAth) renderRightPanel();
-}
-
-function updatePlaceBadges() {
-  const cache = attemptsCache[currentEventId] || [];
-  let scores = athleteListCache.map(ath => {
-    const best = cache
-      .filter(a => a.athlete_id === ath.id && a.result === 'make')
-      .map(a => parseMark(a.mark))
-      .filter(v => v !== null)
-      .sort((a,b) => b - a)[0] || -1;
-    return { ...ath, best };
+  ['3att','4att','finals'].forEach(p => {
+    const id = p === '3att' ? 'ph3' : p === '4att' ? 'ph4' : 'phF';
+    document.getElementById(id).classList.toggle('active', p === phase);
   });
+  renderLeft();
+  if (currentAth) renderRight();
+}
 
-  if (currentPhase === 'finals') {
-    scores.sort((a, b) => b.best - a.best);
-    scores = scores.slice(0, 8);
-    scores.reverse();   // 8th at top, 1st at bottom
-  } 
-  // else: no sorting in prelims
-
-  let place = 1;
-  for (let i = 0; i < scores.length; i++) {
-    const curr = scores[i];
-    const prev = i > 0 ? scores[i-1] : null;
-    if (prev && curr.best === prev.best) {
-      curr.place = place;
-      curr.tied = true;
-    } else {
-      place = i + 1;
-      curr.place = place;
-      curr.tied = false;
-    }
-
-    const badge = document.getElementById(`place_${curr.id}`);
-    if (badge) {
-      if (curr.best === -1) {
-        badge.textContent = '';
-      } else if (curr.tied) {
-        badge.textContent = `T-${curr.place}`;
-        badge.className = 'place-badge place-tied';
-      } else {
-        badge.textContent = `${curr.place}${getOrdinal(curr.place)}`;
-        badge.className = `place-badge place-${Math.min(curr.place, 8)}`;
-      }
-    }
+// ═══════════════════════════════════════════════════════════
+//  LEFT PANEL
+// ═══════════════════════════════════════════════════════════
+function renderLeft() {
+  const left = document.getElementById('leftPanel');
+  if (!athleteList.length) {
+    left.innerHTML = '<div style="padding:30px;text-align:center;color:#aaa;">No athletes in this event.</div>';
+    return;
   }
+
+  // Compute best marks for place badges (never reorders the list)
+  const scoreMap = buildScoreMap();
+
+  // For finals: show top-8 only, ordered 8th→1st (worst to best visually, so 1st is at bottom)
+  let displayList = athleteList;
+  if (currentPhase === 'finals') {
+    const ranked = [...athleteList]
+      .map(a => ({ ...a, best: scoreMap[a.id] ?? -1 }))
+      .sort((a, b) => b.best - a.best)
+      .slice(0, 8)
+      .reverse(); // 8th at top, 1st at bottom
+    displayList = ranked;
+  }
+
+  left.innerHTML = '';
+  displayList.forEach(ath => {
+    const score  = scoreMap[ath.id] ?? -1;
+    const place  = getPlace(ath.id, scoreMap);
+    const bestStr = score >= 0 ? inchesToMark(score) : null;
+    const badgeHtml = placeBadgeHtml(place, ath.id, scoreMap);
+
+    const btn = document.createElement('button');
+    btn.className = 'ath-btn' + (currentAth && currentAth.id === ath.id ? ' active' : '');
+    btn.innerHTML = `
+      ${badgeHtml}
+      <div class="ath-info">
+        <div class="ath-name-txt">${ath.name}</div>
+        ${ath.team ? `<div class="ath-team-txt">${ath.team}</div>` : ''}
+        ${bestStr  ? `<div class="ath-best-txt">${bestStr}</div>` : ''}
+      </div>`;
+    btn.onclick = () => { currentAth = ath; editingId = null; renderLeft(); renderRight(); };
+    left.appendChild(btn);
+  });
 }
 
-function getOrdinal(n) {
-  const s = ["th","st","nd","rd"];
-  const v = n % 100;
-  return s[(v - 20) % 10] || s[v] || s[0];
+// Build athleteId → best mark in inches (or -1)
+function buildScoreMap() {
+  const map = {};
+  athleteList.forEach(a => { map[a.id] = -1; });
+  allAttempts.forEach(a => {
+    if (a.result !== 'make') return;
+    const v = parseMark(a.mark);
+    if (v !== null && v > (map[a.athlete_id] ?? -1)) map[a.athlete_id] = v;
+  });
+  return map;
 }
 
+// Get place number for an athlete (1-based, ties share place)
+function getPlace(athId, scoreMap) {
+  const myBest = scoreMap[athId] ?? -1;
+  if (myBest < 0) return null;
+  let place = 1;
+  for (const [id, best] of Object.entries(scoreMap)) {
+    if (id !== athId && best > myBest) place++;
+  }
+  return place;
+}
+
+// Check if tied
+function isTied(athId, scoreMap) {
+  const myBest = scoreMap[athId] ?? -1;
+  if (myBest < 0) return false;
+  return Object.entries(scoreMap).some(([id, best]) => id !== athId && best === myBest);
+}
+
+function placeBadgeHtml(place, athId, scoreMap) {
+  if (place === null) return '<div class="place-badge pl-0"></div>';
+  const tied = isTied(athId, scoreMap);
+  if (tied) return `<div class="place-badge pl-T">T${place}</div>`;
+  const cls = place <= 8 ? `pl-${place}` : 'pl-0';
+  return `<div class="place-badge ${cls}">${place}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RIGHT PANEL
+// ═══════════════════════════════════════════════════════════
+function renderRight() {
+  if (!currentAth) return;
+  isVertical ? renderVertical() : renderHorizontal();
+}
+
+// ── HORIZONTAL ────────────────────────────────────────────
+function renderHorizontal() {
+  const right    = document.getElementById('rightPanel');
+  const myAtts   = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  const limit    = PHASE_LIMIT[currentPhase];
+  const used     = editingId ? myAtts.length : myAtts.length; // same value, clarity
+  const canAdd   = !editingId && myAtts.length < limit;
+  const done     = !editingId && myAtts.length >= limit;
+
+  right.innerHTML = `
+    <div class="rcard">
+      <h2>${currentAth.name}</h2>
+      <div class="sub">${currentAth.team || ''}</div>
+
+      <div class="phase-info">
+        <span class="phase-label">${currentPhase === '3att' ? '3-Attempt Prelims' : currentPhase === '4att' ? '4-Attempt Prelims' : 'Finals'}</span>
+        <span class="att-counter">${myAtts.length} / ${limit} attempts</span>
+        ${done ? '<span class="limit-warn">All attempts complete</span>' : ''}
+      </div>
+
+      ${editingId ? `<div class="editing-banner">✏️ Editing Attempt ${myAtts.find(a=>a.id===editingId)?.attempt_number || ''} — change values and press UPDATE</div>` : ''}
+
+      <div class="mark-entry">
+        <div class="mark-field">
+          <label>Feet</label>
+          <input type="number" id="hFt" min="0" max="99" placeholder="0">
+        </div>
+        <div class="mark-sep">-</div>
+        <div class="mark-field">
+          <label>Inches</label>
+          <input type="number" id="hIn" min="0" max="11" placeholder="0">
+        </div>
+        <div class="mark-field">
+          <label>¼"</label>
+          <select id="hQtr">
+            <option value="0">.00</option>
+            <option value="0.25">.25</option>
+            <option value="0.5">.50</option>
+            <option value="0.75">.75</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveMark()" ${!canAdd && !editingId ? 'disabled' : ''}>
+          ${editingId ? 'UPDATE MARK' : 'SAVE MARK'}
+        </button>
+        <button class="btn-foul" onclick="saveFoul()" ${!canAdd ? 'disabled' : ''}>FOUL</button>
+      </div>
+      ${editingId ? `<button class="btn-cancel" onclick="cancelEdit()">Cancel Edit</button>` : ''}
+    </div>
+
+    <div class="rcard">
+      <h3 style="margin:0 0 12px;font-size:16px;">Attempt History</h3>
+      <div id="attHistory"></div>
+    </div>`;
+
+  renderHistory(myAtts);
+}
+
+async function saveMark() {
+  if (!currentAth || !currentEventId) return;
+  const ft  = parseInt(document.getElementById('hFt').value)  || 0;
+  const ins = parseInt(document.getElementById('hIn').value)  || 0;
+  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
+  if (ft === 0 && ins === 0 && qtr === 0) { alert('Enter a distance.'); return; }
+
+  // Format: 42-06.25 or 42-06
+  const totalInches = ins + qtr;
+  const inStr = totalInches % 1 === 0
+    ? String(totalInches).padStart(2, '0')
+    : totalInches.toFixed(2).replace(/^(\d)\./, '0$1.').padStart(4, '0');
+  const mark = `${ft}-${inStr}`;
+
+  if (editingId) {
+    const { error } = await sb.from('attempts').update({ mark, result: 'make' }).eq('id', editingId);
+    if (error) { alert('Update failed: ' + error.message); return; }
+    editingId = null;
+  } else {
+    const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+    if (myAtts.length >= PHASE_LIMIT[currentPhase]) return;
+    const { error } = await sb.from('attempts').insert({
+      meet_id: currentMeet.id, event_id: currentEventId,
+      athlete_id: currentAth.id,
+      attempt_number: myAtts.length + 1,
+      mark, result: 'make'
+    });
+    if (error) { alert('Save failed: ' + error.message); return; }
+  }
+  await refresh();
+}
+
+async function saveFoul() {
+  if (!currentAth || !currentEventId) return;
+  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  if (myAtts.length >= PHASE_LIMIT[currentPhase]) return;
+  const { error } = await sb.from('attempts').insert({
+    meet_id: currentMeet.id, event_id: currentEventId,
+    athlete_id: currentAth.id,
+    attempt_number: myAtts.length + 1,
+    mark: 'FOUL', result: 'foul'
+  });
+  if (error) { alert('Save failed: ' + error.message); return; }
+  await refresh();
+}
+
+function editAttempt(id) {
+  const att = allAttempts.find(a => a.id === id);
+  if (!att) return;
+  editingId = id;
+
+  // Pre-fill fields if it's a mark (not a foul)
+  if (att.mark && att.mark !== 'FOUL' && att.mark.includes('-')) {
+    const [ftStr, insPart] = att.mark.split('-');
+    const totalIns = parseFloat(insPart) || 0;
+    const wholeIns = Math.floor(totalIns);
+    const qtr = +(totalIns - wholeIns).toFixed(2);
+    document.getElementById('hFt').value  = ftStr || '';
+    document.getElementById('hIn').value  = wholeIns || '';
+    document.getElementById('hQtr').value = [0, 0.25, 0.5, 0.75].includes(qtr) ? qtr : 0;
+  }
+  renderRight();
+}
+
+function cancelEdit() {
+  editingId = null;
+  document.getElementById('hFt').value  = '';
+  document.getElementById('hIn').value  = '';
+  document.getElementById('hQtr').value = '0';
+  renderRight();
+}
+
+async function deleteAttempt(id) {
+  if (!confirm('Delete this attempt? It cannot be undone.')) return;
+  const { error } = await sb.from('attempts').delete().eq('id', id);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  if (editingId === id) editingId = null;
+  await refresh();
+}
+
+function renderHistory(attempts) {
+  const el = document.getElementById('attHistory');
+  if (!el) return;
+  if (!attempts.length) {
+    el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
+    return;
+  }
+  el.innerHTML = [...attempts]
+    .sort((a, b) => a.attempt_number - b.attempt_number)
+    .map(a => `
+      <div class="att-row">
+        <span class="att-num">ATT ${a.attempt_number}</span>
+        <span class="att-mark">${a.mark || '—'}</span>
+        <span class="att-result ${a.result === 'make' ? 'res-make' : 'res-foul'}">${a.result === 'make' ? 'MAKE' : 'FOUL'}</span>
+        <button class="att-edit" onclick="editAttempt('${a.id}')">Edit</button>
+        <button class="att-del"  onclick="deleteAttempt('${a.id}')">Del</button>
+      </div>`).join('');
+}
+
+// ── VERTICAL ──────────────────────────────────────────────
+function renderVertical() {
+  const right   = document.getElementById('rightPanel');
+  const myAtts  = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  const elim    = isEliminated(myAtts);
+  const cleared = getClearedHeights(myAtts);
+
+  right.innerHTML = `
+    <div class="rcard">
+      <h2>${currentAth.name}</h2>
+      <div class="sub">${currentAth.team || ''}</div>
+      ${elim ? '<div class="elim-banner">❌ Eliminated — 3 consecutive misses</div>' : ''}
+      ${cleared.length ? `<div class="cleared-row">✅ Cleared: ${cleared.join(', ')}</div>` : ''}
+
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin-bottom:6px;">Bar Height</div>
+      <div class="bar-row">
+        <input class="bar-input" id="barInput" value="${flightBar}" placeholder="12-00" oninput="flightBar=this.value">
+        <button class="bar-inc" onclick="incBar(2)">+2"</button>
+        <button class="bar-inc" onclick="incBar(6)">+6"</button>
+        <button class="bar-inc" onclick="incBar(12)">+1'</button>
+        <button class="bar-set" onclick="setBar()">SET</button>
+      </div>
+      ${flightBar ? `<div style="font-size:20px;font-weight:900;color:#1a5a8c;margin-bottom:10px;">${flightBar}</div>` : ''}
+
+      <div class="vmark-grid">
+        <div><button class="vmark-btn btn-o" onclick="submitV('O')" ${elim?'disabled':''}>O</button><div class="vmark-lbl">Clear</div></div>
+        <div><button class="vmark-btn btn-x" onclick="submitV('X')" ${elim?'disabled':''}>X</button><div class="vmark-lbl">Miss</div></div>
+        <div><button class="vmark-btn btn-p" onclick="submitV('P')" ${elim?'disabled':''}>P</button><div class="vmark-lbl">Pass</div></div>
+      </div>
+    </div>
+
+    <div class="rcard">
+      <h3 style="margin:0 0 12px;font-size:16px;">Attempt History</h3>
+      <div id="attHistory"></div>
+    </div>`;
+
+  renderVHistory(myAtts);
+}
+
+async function submitV(result) {
+  if (!currentAth || !currentEventId) return;
+  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  const mark   = result === 'O' ? (flightBar || 'O') : result;
+  const dbRes  = result === 'O' ? 'make' : result === 'P' ? 'pass' : 'foul';
+  const { error } = await sb.from('attempts').insert({
+    meet_id: currentMeet.id, event_id: currentEventId,
+    athlete_id: currentAth.id,
+    attempt_number: myAtts.length + 1,
+    height: flightBar || null,
+    mark, result: dbRes
+  });
+  if (error) { alert('Save failed: ' + error.message); return; }
+  await refresh();
+}
+
+function renderVHistory(attempts) {
+  const el = document.getElementById('attHistory');
+  if (!el) return;
+  if (!attempts.length) {
+    el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
+    return;
+  }
+  el.innerHTML = [...attempts]
+    .sort((a, b) => a.attempt_number - b.attempt_number)
+    .map(a => {
+      const resLabel = a.result === 'make' ? 'O' : a.result === 'pass' ? 'P' : 'X';
+      const resCls   = a.result === 'make' ? 'res-make' : 'res-foul';
+      const ht = a.height ? `<span style="font-size:11px;color:#4a7aaa;min-width:44px;">${a.height}</span>` : '';
+      return `<div class="att-row">
+        <span class="att-num">ATT ${a.attempt_number}</span>
+        ${ht}
+        <span class="att-mark">${a.mark || '—'}</span>
+        <span class="att-result ${resCls}">${resLabel}</span>
+        <button class="att-del" onclick="deleteAttempt('${a.id}')">Del</button>
+      </div>`;
+    }).join('');
+}
+
+// Bar helpers
+function parseHeight(str) { const m = str && str.match(/^(\d+)-(\d{2})$/); return m ? +m[1]*12 + +m[2] : null; }
+function toHeightStr(n)    { return Math.floor(n/12) + '-' + String(n%12).padStart(2,'0'); }
+function incBar(n)  { const v = parseHeight(document.getElementById('barInput').value.trim()); if (v===null){alert('Set a valid height first (e.g. 12-00)');return;} document.getElementById('barInput').value = flightBar = toHeightStr(v+n); }
+function setBar()   { const v = document.getElementById('barInput').value.trim(); if (!parseHeight(v)){alert('Format: feet-inches, e.g. 12-06');return;} flightBar = v; renderRight(); }
+
+// Eliminated: 3 consecutive fouls (no make between them)
+function isEliminated(atts) {
+  let streak = 0;
+  for (let i = atts.length - 1; i >= 0; i--) {
+    if (atts[i].result === 'make') break;
+    if (atts[i].result === 'foul') { if (++streak >= 3) return true; }
+  }
+  return false;
+}
+
+function getClearedHeights(atts) {
+  return [...new Set(atts.filter(a => a.result === 'make').map(a => a.height || a.mark).filter(Boolean))];
+}
+
+// ── Shared helpers ────────────────────────────────────────
+async function refresh() {
+  const { data } = await sb.from('attempts').select('*')
+    .eq('event_id', currentEventId)
+    .eq('meet_id',  currentMeet.id)
+    .order('attempt_number');
+  allAttempts = data || [];
+  renderLeft();
+  renderRight();
+}
+
+// Parse "42-06.25" or "42-06" into total inches (float)
 function parseMark(mark) {
-  if (!mark || !mark.includes('-')) return null;
-  const [ft, ins] = mark.split('-').map(Number);
-  return (ft || 0) * 12 + (ins || 0);
+  if (!mark || mark === 'FOUL') return null;
+  const m = mark.match(/^(\d+)-(\d{1,2}(?:\.\d+)?)$/);
+  if (!m) return null;
+  return parseInt(m[1]) * 12 + parseFloat(m[2]);
+}
+
+// Total inches back to "42-06" display
+function inchesToMark(total) {
+  const ft  = Math.floor(total / 12);
+  const ins = total % 12;
+  return `${ft}-${ins < 10 ? '0' : ''}${ins % 1 === 0 ? ins.toFixed(0).padStart(2,'0') : ins.toFixed(2)}`;
 }
 </script>
 </body>
