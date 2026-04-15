@@ -72,7 +72,7 @@ let _athMap = {};
 let currentPhase = '3att';
 let editingAttemptId = null;
 
-const PHASE_LIMIT = { '3att': 3, '4att': 4, 'finals': 999 };
+const PHASE_LIMIT = { '3att': 3, '4att': 4, 'finals': 3 };   // Finals gives 3 attempts
 
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
@@ -125,6 +125,7 @@ function renderAthleteList() {
   container.innerHTML = '';
 
   const cache = attemptsCache[currentEventId] || [];
+
   let scores = athleteListCache.map(ath => {
     const best = cache
       .filter(a => a.athlete_id === ath.id && a.result === 'make')
@@ -135,12 +136,13 @@ function renderAthleteList() {
   });
 
   if (currentPhase === 'finals') {
-    // Finals: top 8, highest best mark first (so 1st at bottom after reverse)
+    // Finals: top 8 by best mark, then reverse so 8th is at top
     scores.sort((a, b) => b.best - a.best);
     scores = scores.slice(0, 8);
-    scores.reverse();                    // ← This makes 8th at top, 1st at bottom
+    scores.reverse();                    // 8th at top, 1st at bottom
   } else {
-    scores.sort((a, b) => b.best - a.best);
+    // Normal prelims: no sorting, keep original load order
+    // (you can change this later if you want alphabetical or entry order)
   }
 
   scores.forEach(score => {
@@ -167,13 +169,13 @@ function renderRightPanel() {
 
   const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
   const limit = PHASE_LIMIT[currentPhase];
-  const canAddMore = myAttempts.length < limit && currentPhase !== 'finals';
+  const canAddMore = myAttempts.length < limit;
 
   let html = `
     <div class="card">
       <h2>${currentAth.name}</h2>
       <div style="margin:8px 0; font-size:14px; color:#555;">Phase: <strong>${currentPhase.toUpperCase()}</strong></div>
-      ${!canAddMore && currentPhase !== 'finals' ? `<div class="limit-msg">Maximum attempts reached for this phase</div>` : ''}
+      ${!canAddMore ? `<div class="limit-msg">Maximum attempts reached for this phase</div>` : ''}
       <div class="mark-entry">
         <div><label>Feet</label><input type="number" id="hFt" placeholder="0"></div>
         <div><label>Inches</label><input type="number" id="hIn" placeholder="0" max="11"></div>
@@ -227,9 +229,7 @@ async function saveOrUpdateMark() {
   } else {
     const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
     const limit = PHASE_LIMIT[currentPhase];
-    if (currentPhase !== 'finals' && myAttempts.length >= limit) {
-      return alert(`Maximum ${limit} attempts reached for this phase`);
-    }
+    if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
 
     const nextNum = myAttempts.length + 1;
 
@@ -261,7 +261,7 @@ async function saveHFoul() {
 
   const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
   const limit = PHASE_LIMIT[currentPhase];
-  if (currentPhase !== 'finals' && myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
+  if (myAttempts.length >= limit) return alert(`Maximum ${limit} attempts reached for this phase`);
 
   const nextNum = myAttempts.length + 1;
 
@@ -303,7 +303,7 @@ function setPhase(phase) {
   if (phase === '4att') document.getElementById('ph4').classList.add('active');
   if (phase === 'finals') document.getElementById('phF').classList.add('active');
 
-  renderAthleteList();   // This forces reordering only when Finals is clicked
+  renderAthleteList();   // Re-sort only when Finals is clicked
   if (currentAth) renderRightPanel();
 }
 
@@ -323,7 +323,7 @@ function updatePlaceBadges() {
     scores = scores.slice(0, 8);
     scores.reverse();                    // 8th at top, 1st at bottom
   } else {
-    scores.sort((a, b) => b.best - a.best);
+    // No sorting in prelims — keep original order
   }
 
   let place = 1;
