@@ -26,6 +26,7 @@
     .btn-save { background: #1a3a5c; color: white; }
     .btn-foul { background: #dc3545; color: white; }
     .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 12px; }
+    #debug { background: #222; color: #0f0; padding: 10px; font-size: 12px; white-space: pre-wrap; max-height: 150px; overflow: auto; }
   </style>
 </head>
 <body>
@@ -48,6 +49,8 @@
   <div class="right-panel" id="rightPanel"></div>
 </div>
 
+<div id="debug"></div>
+
 <script>
 const sb = supabase.createClient('https://qjomrnguhbqfluzwuntz.supabase.co', 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_');
 
@@ -58,6 +61,13 @@ let attemptsCache = {};
 let athleteListCache = [];
 let _athMap = {};
 
+const debugEl = document.getElementById('debug');
+
+function log(msg) {
+  console.log(msg);
+  debugEl.textContent += msg + '\n';
+}
+
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
   if (!stored) return window.location.href = 'index.html';
@@ -67,7 +77,8 @@ window.onload = async () => {
 };
 
 async function loadEvents() {
-  const { data } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
+  const { data, error } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
+  if (error) log('Events load error: ' + error.message);
   const sel = document.getElementById('eventSelect');
   sel.innerHTML = '<option value="">— Select Event —</option>';
   (data || []).forEach(e => {
@@ -84,13 +95,16 @@ async function loadEvent() {
 
   currentAth = null;
 
-  const [{ data: assigns }, { data: attempts }] = await Promise.all([
+  const [{ data: assigns, error: aErr }, { data: attempts, error: attErr }] = await Promise.all([
     sb.from('event_assignments')
       .select('athlete_id, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
       .eq('event_id', currentEventId)
       .eq('meet_id', currentMeet.id),
     sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id).order('attempt_number')
   ]);
+
+  if (aErr) log('Athletes load error: ' + aErr.message);
+  if (attErr) log('Attempts load error: ' + attErr.message);
 
   athleteListCache = (assigns || []).map(r => ({
     id: r.athlete_id,
@@ -154,15 +168,19 @@ function renderAttemptHistory(attempts) {
   const el = document.getElementById('attemptHistory');
   el.innerHTML = attempts.length ? attempts.map(a => `
     <div class="att-row">
-      <span class="att-num">Att ${a.attempt_number}</span>
-      <span style="flex:1;font-weight:700;">${a.mark}</span>
-      <span style="color:${a.result==='make'?'#0a2a18':'#c00'};">${a.result.toUpperCase()}</span>
+      <span class="att-num">Att ${a.attempt_number || '?'}</span>
+      <span style="flex:1;font-weight:700;">${a.mark || '—'}</span>
+      <span style="color:${a.result==='make'?'#0a2a18':'#c00'};">${(a.result || '').toUpperCase()}</span>
     </div>
   `).join('') : '<p style="color:#888;text-align:center;">No attempts yet</p>';
 }
 
 async function saveHMark() {
+  debugEl.textContent = '';
+  log('Save attempt started...');
+
   if (!currentAth || !currentEventId) return alert("Select athlete and event");
+
   const ft = parseInt(document.getElementById('hFt').value) || 0;
   const ins = parseInt(document.getElementById('hIn').value) || 0;
   const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
@@ -170,6 +188,8 @@ async function saveHMark() {
 
   const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
   const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
+
+  log(`Inserting: meet_id=${currentMeet.id}, event_id=${currentEventId}, athlete_id=${currentAth.id}, attempt_number=${nextNum}, mark=${mark}`);
 
   const { error } = await sb.from('attempts').insert({
     meet_id: currentMeet.id,
@@ -180,12 +200,22 @@ async function saveHMark() {
     result: 'make'
   });
 
-  if (error) return alert("Save failed: " + error.message);
+  if (error) {
+    log('INSERT ERROR: ' + error.message);
+    alert('Save failed: ' + error.message);
+    return;
+  }
 
-  // Refresh everything
-  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
-  attemptsCache[currentEventId] = data || [];
+  log('Insert successful — refreshing data...');
 
+  // Refresh
+  const { data, error: fetchErr } = await sb.from('attempts').select('*')
+    .eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
+
+  if (fetchErr) log('Refresh error: ' + fetchErr.message);
+  else attemptsCache[currentEventId] = data || [];
+
+  // Clear form
   document.getElementById('hFt').value = '';
   document.getElementById('hIn').value = '';
   document.getElementById('hQtr').value = '0';
@@ -195,10 +225,11 @@ async function saveHMark() {
 }
 
 async function saveHFoul() {
+  // Same as above but with FOUL — copy-paste for simplicity
   if (!currentAth || !currentEventId) return;
   const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
 
-  await sb.from('attempts').insert({
+  const { error } = await sb.from('attempts').insert({
     meet_id: currentMeet.id,
     event_id: currentEventId,
     athlete_id: currentAth.id,
@@ -206,6 +237,8 @@ async function saveHFoul() {
     mark: 'FOUL',
     result: 'foul'
   });
+
+  if (error) return alert('Foul save failed: ' + error.message);
 
   const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
   attemptsCache[currentEventId] = data || [];
@@ -218,11 +251,8 @@ function updatePlaceBadges() {
   athleteListCache.forEach(ath => {
     const badge = document.getElementById(`place_${ath.id}`);
     if (!badge) return;
-    const best = cache.filter(a => a.athlete_id === ath.id && a.result === 'make')
-      .map(a => parseMark(a.mark))
-      .filter(v => v != null)
-      .sort((a,b) => b-a)[0];
-    if (best) {
+    const hasMark = cache.some(a => a.athlete_id === ath.id && a.result === 'make');
+    if (hasMark) {
       badge.textContent = '1st';
       badge.className = 'place-badge place-1';
     } else {
@@ -236,6 +266,8 @@ function parseMark(mark) {
   const [ft, ins] = mark.split('-').map(Number);
   return (ft || 0) * 12 + (ins || 0);
 }
+
+function log(msg) { console.log(msg); debugEl.textContent += msg + '\n'; }
 </script>
 </body>
 </html>
