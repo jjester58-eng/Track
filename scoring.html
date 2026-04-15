@@ -4,49 +4,237 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
-  <title>Field Events Pro — Scoring DEBUG</title>
+  <title>Field Events Pro — Scoring</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: system-ui; padding: 20px; background: #f0f2f5; }
-    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 15px 0; }
-    button { padding: 14px 20px; font-size: 16px; margin: 5px; }
+    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    #offlineBanner { display: none; background: #dc3545; color: white; padding: 8px; text-align: center; font-weight: bold; }
+    #offlineBanner.show { display: block; }
+    .topbar { background: #0d1b2a; color: white; padding: 12px; display: flex; align-items: center; gap: 12px; }
+    .header { background: #1a3a5c; color: white; padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .container { display: flex; flex: 1; overflow: hidden; }
+    .left-panel { width: 38%; overflow-y: auto; background: white; border-right: 2px solid #ddd; }
+    .right-panel { flex: 1; overflow-y: auto; padding: 15px; }
+    .ath-btn { width: 100%; padding: 12px; border: none; border-bottom: 1px solid #eee; text-align: left; background: white; cursor: pointer; }
+    .ath-btn.active { background: #eef4ff; border-left: 5px solid #1a3a5c; }
+    .place-badge { float: right; padding: 4px 9px; border-radius: 4px; font-weight: bold; }
+    .place-1 { background: gold; color: #222; }
+    .card { background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    .mark-entry { display: flex; gap: 10px; align-items: end; margin: 12px 0; flex-wrap: wrap; }
+    .mark-entry input, .mark-entry select { padding: 12px; font-size: 18px; width: 85px; text-align: center; border: 1px solid #ccc; border-radius: 6px; }
+    .btn-row button { flex: 1; padding: 16px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+    .btn-save { background: #1a3a5c; color: white; }
+    .btn-foul { background: #dc3545; color: white; }
+    .att-row { padding: 12px; background: #f8f9fa; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 12px; }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>Debug Save Test</h2>
-  <button onclick="testSave()">TEST SAVE TO ATTEMPTS TABLE</button>
-  <pre id="debugLog" style="background:#222;color:#0f0;padding:15px;font-size:13px;white-space:pre-wrap;"></pre>
+<div id="offlineBanner">⚠ NO CONNECTION — saving locally</div>
+
+<div class="topbar">
+  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" height="38">
+  <div id="topMeetName" style="flex:1; font-weight:700;">Loading...</div>
+</div>
+
+<div class="header">
+  <select id="eventSelect" onchange="loadEvent()" style="flex:1; min-width:200px;">
+    <option value="">— Select Event —</option>
+  </select>
+</div>
+
+<div class="container">
+  <div class="left-panel" id="leftPanel"></div>
+  <div class="right-panel" id="rightPanel"></div>
 </div>
 
 <script>
 const sb = supabase.createClient('https://qjomrnguhbqfluzwuntz.supabase.co', 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_');
 
-async function testSave() {
-  const log = document.getElementById('debugLog');
-  log.textContent = 'Attempting insert...\n';
+let currentMeet = null;
+let currentEventId = null;
+let currentAth = null;
+let attemptsCache = {};
+let athleteListCache = [];
+let _athMap = {};
 
-  try {
-    const { data, error } = await sb
-      .from('attempts')
-      .insert({
-        meet_id: 'test-meet-123',     // change if your column name is different
-        event_id: 'test-event-456',
-        athlete_id: 'test-ath-789',
-        attempt_number: 1,
-        mark: '42-06',
-        result: 'make'
-      })
-      .select();
+window.onload = async () => {
+  const stored = sessionStorage.getItem('fep_meet');
+  if (!stored) return window.location.href = 'index.html';
+  currentMeet = JSON.parse(stored);
+  document.getElementById('topMeetName').textContent = currentMeet.name || 'Meet';
+  await loadEvents();
+};
 
-    if (error) throw error;
+async function loadEvents() {
+  const { data } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
+  const sel = document.getElementById('eventSelect');
+  sel.innerHTML = '<option value="">— Select Event —</option>';
+  (data || []).forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id;
+    opt.textContent = e.name;
+    sel.appendChild(opt);
+  });
+}
 
-    log.textContent += '✅ SUCCESS!\n' + JSON.stringify(data, null, 2);
-  } catch (err) {
-    log.textContent += '❌ ERROR:\n' + err.message + '\n\n' + JSON.stringify(err, null, 2);
-    console.error(err);
-  }
+async function loadEvent() {
+  currentEventId = document.getElementById('eventSelect').value;
+  if (!currentEventId) return;
+
+  currentAth = null;
+
+  const [{ data: assigns }, { data: attempts }] = await Promise.all([
+    sb.from('event_assignments')
+      .select('athlete_id, athletes!event_assignments_athlete_id_fkey(fname, lname, team)')
+      .eq('event_id', currentEventId)
+      .eq('meet_id', currentMeet.id),
+    sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id).order('attempt_number')
+  ]);
+
+  athleteListCache = (assigns || []).map(r => ({
+    id: r.athlete_id,
+    name: r.athletes ? `${r.athletes.fname} ${r.athletes.lname}`.trim() : 'Unknown',
+    team: r.athletes?.team || ''
+  }));
+
+  attemptsCache[currentEventId] = attempts || [];
+  renderAthleteList();
+  document.getElementById('rightPanel').innerHTML = '<p style="text-align:center;color:#888;padding:60px;">Select an athlete →</p>';
+}
+
+function renderAthleteList() {
+  const container = document.getElementById('leftPanel');
+  container.innerHTML = '';
+  athleteListCache.forEach(ath => {
+    _athMap[ath.id] = ath;
+    const btn = document.createElement('button');
+    btn.className = `ath-btn ${currentAth && currentAth.id === ath.id ? 'active' : ''}`;
+    btn.innerHTML = `<span id="place_${ath.id}" class="place-badge"></span><strong>${ath.name}</strong><br><small>${ath.team}</small>`;
+    btn.onclick = () => selectAth(ath.id);
+    container.appendChild(btn);
+  });
+  updatePlaceBadges();
+}
+
+function selectAth(id) {
+  currentAth = _athMap[id];
+  renderRightPanel();
+}
+
+function renderRightPanel() {
+  const panel = document.getElementById('rightPanel');
+  if (!currentAth) return;
+
+  const myAttempts = (attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id);
+
+  let html = `
+    <div class="card">
+      <h2>${currentAth.name}</h2>
+      <div class="mark-entry">
+        <div><label>Feet</label><input type="number" id="hFt" placeholder="0"></div>
+        <div><label>Inches</label><input type="number" id="hIn" placeholder="0" max="11"></div>
+        <div><label>¼"</label><select id="hQtr"><option value="0">.00</option><option value="0.25">.25</option><option value="0.5">.50</option><option value="0.75">.75</option></select></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveHMark()">SAVE MARK</button>
+        <button class="btn-foul" onclick="saveHFoul()">FOUL</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Past Attempts</h3>
+      <div id="attemptHistory"></div>
+    </div>
+  `;
+  panel.innerHTML = html;
+  renderAttemptHistory(myAttempts);
+}
+
+function renderAttemptHistory(attempts) {
+  const el = document.getElementById('attemptHistory');
+  el.innerHTML = attempts.length ? attempts.map(a => `
+    <div class="att-row">
+      <span class="att-num">Att ${a.attempt_number}</span>
+      <span style="flex:1;font-weight:700;">${a.mark}</span>
+      <span style="color:${a.result==='make'?'#0a2a18':'#c00'};">${a.result.toUpperCase()}</span>
+    </div>
+  `).join('') : '<p style="color:#888;text-align:center;">No attempts yet</p>';
+}
+
+async function saveHMark() {
+  if (!currentAth || !currentEventId) return alert("Select athlete and event");
+  const ft = parseInt(document.getElementById('hFt').value) || 0;
+  const ins = parseInt(document.getElementById('hIn').value) || 0;
+  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
+  if (ft === 0 && ins === 0) return alert("Enter a distance");
+
+  const mark = `${ft}-${(ins + qtr).toFixed(2).replace('.00','')}`;
+  const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
+
+  const { error } = await sb.from('attempts').insert({
+    meet_id: currentMeet.id,
+    event_id: currentEventId,
+    athlete_id: currentAth.id,
+    attempt_number: nextNum,
+    mark: mark,
+    result: 'make'
+  });
+
+  if (error) return alert("Save failed: " + error.message);
+
+  // Refresh everything
+  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
+  attemptsCache[currentEventId] = data || [];
+
+  document.getElementById('hFt').value = '';
+  document.getElementById('hIn').value = '';
+  document.getElementById('hQtr').value = '0';
+
+  renderRightPanel();
+  renderAthleteList();
+}
+
+async function saveHFoul() {
+  if (!currentAth || !currentEventId) return;
+  const nextNum = ((attemptsCache[currentEventId] || []).filter(a => a.athlete_id === currentAth.id).length) + 1;
+
+  await sb.from('attempts').insert({
+    meet_id: currentMeet.id,
+    event_id: currentEventId,
+    athlete_id: currentAth.id,
+    attempt_number: nextNum,
+    mark: 'FOUL',
+    result: 'foul'
+  });
+
+  const { data } = await sb.from('attempts').select('*').eq('event_id', currentEventId).eq('meet_id', currentMeet.id);
+  attemptsCache[currentEventId] = data || [];
+  renderRightPanel();
+  renderAthleteList();
+}
+
+function updatePlaceBadges() {
+  const cache = attemptsCache[currentEventId] || [];
+  athleteListCache.forEach(ath => {
+    const badge = document.getElementById(`place_${ath.id}`);
+    if (!badge) return;
+    const best = cache.filter(a => a.athlete_id === ath.id && a.result === 'make')
+      .map(a => parseMark(a.mark))
+      .filter(v => v != null)
+      .sort((a,b) => b-a)[0];
+    if (best) {
+      badge.textContent = '1st';
+      badge.className = 'place-badge place-1';
+    } else {
+      badge.textContent = '';
+    }
+  });
+}
+
+function parseMark(mark) {
+  if (!mark || !mark.includes('-')) return null;
+  const [ft, ins] = mark.split('-').map(Number);
+  return (ft || 0) * 12 + (ins || 0);
 }
 </script>
 </body>
