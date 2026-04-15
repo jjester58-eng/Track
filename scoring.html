@@ -124,7 +124,6 @@ function renderAthleteList() {
   const container = document.getElementById('leftPanel');
   container.innerHTML = '';
 
-  // Get best marks for sorting
   const cache = attemptsCache[currentEventId] || [];
   let scores = athleteListCache.map(ath => {
     const best = cache
@@ -135,10 +134,11 @@ function renderAthleteList() {
     return { ...ath, best };
   });
 
-  // Finals: only top 8, highest best mark first
   if (currentPhase === 'finals') {
+    // Finals: top 8, highest best mark first (so 1st at bottom after reverse)
     scores.sort((a, b) => b.best - a.best);
     scores = scores.slice(0, 8);
+    scores.reverse();                    // ← This makes 8th at top, 1st at bottom
   } else {
     scores.sort((a, b) => b.best - a.best);
   }
@@ -303,7 +303,7 @@ function setPhase(phase) {
   if (phase === '4att') document.getElementById('ph4').classList.add('active');
   if (phase === 'finals') document.getElementById('phF').classList.add('active');
 
-  renderAthleteList();   // re-sort athletes for Finals
+  renderAthleteList();   // This forces reordering only when Finals is clicked
   if (currentAth) renderRightPanel();
 }
 
@@ -321,6 +321,7 @@ function updatePlaceBadges() {
   if (currentPhase === 'finals') {
     scores.sort((a, b) => b.best - a.best);
     scores = scores.slice(0, 8);
+    scores.reverse();                    // 8th at top, 1st at bottom
   } else {
     scores.sort((a, b) => b.best - a.best);
   }
