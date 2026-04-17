@@ -143,13 +143,19 @@ let currentAth     = null;
 let athleteList    = [];
 let allAttempts    = [];
 let editingId      = null;
-let flightBar      = '';
+let verticalState  = {};
+
+const VSTATE_KEY = 'fep_vertical_state_v1';
+
 
 // ── Init ──────────────────────────────────────────────────────
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
   if (!stored) { window.location.href = 'index.html'; return; }
   currentMeet = JSON.parse(stored);
+
+  loadVerticalState();
+
   document.getElementById('topLogo').src = currentMeet.logo_url || IRONCLAD;
   document.getElementById('topMeetName').textContent = currentMeet.name || 'Meet';
   await loadEvents();
@@ -464,11 +470,149 @@ function renderHHistory(attempts) {
 // ─────────────────────────────────────────────────────────────
 //  VERTICAL EVENTS (high jump, pole vault)
 // ─────────────────────────────────────────────────────────────
+function loadVerticalState() {
+  try {
+    verticalState = JSON.parse(localStorage.getItem(VSTATE_KEY) || '{}');
+  } catch {
+    verticalState = {};
+  }
+}
+
+function saveVerticalState() {
+  localStorage.setItem(VSTATE_KEY, JSON.stringify(verticalState));
+}
+
+function ensureEventState() {
+  if (!currentEventId) return null;
+
+  if (!verticalState[currentEventId]) {
+    verticalState[currentEventId] = {
+      blanketBar: '',
+      athleteHeights: {},
+      standards: '24'
+    };
+  }
+
+  if (!verticalState[currentEventId].athleteHeights) {
+    verticalState[currentEventId].athleteHeights = {};
+  }
+
+  if (!verticalState[currentEventId].standards) {
+    verticalState[currentEventId].standards = '24';
+  }
+
+  return verticalState[currentEventId];
+}
+
+function isPoleVaultEvent() {
+  const txt = (document.getElementById('eventSelect').selectedOptions[0]?.textContent || '').toLowerCase();
+  return txt.includes('pole vault');
+}
+
+function getBlanketBar() {
+  const st = ensureEventState();
+  return st?.blanketBar || '';
+}
+
+function getAthleteBar(athleteId) {
+  const st = ensureEventState();
+  if (!st) return '';
+  return st.athleteHeights[String(athleteId)] || st.blanketBar || '';
+}
+
+function setAthleteBar(athleteId, bar) {
+  const st = ensureEventState();
+  if (!st) return;
+  st.athleteHeights[String(athleteId)] = bar;
+  saveVerticalState();
+}
+
+function getStandards() {
+  const st = ensureEventState();
+  return st?.standards || '24';
+}
+
+function setStandards(val) {
+  const st = ensureEventState();
+  if (!st) return;
+  st.standards = String(val);
+  saveVerticalState();
+}
+
+function buildStandardsOptions(selected) {
+  let html = '';
+  for (let i = 18; i <= 32; i++) {
+    html += `<option value="${i}" ${String(selected) === String(i) ? 'selected' : ''}>${i}</option>`;
+  }
+  return html;
+}
+
+function applyBlanketBar() {
+  const input = document.getElementById('blanketInput');
+  const bar = input.value.trim();
+
+  if (parseHeight(bar) === null) {
+    alert('Format must be feet-inches, like 6-00 or 12-06');
+    return;
+  }
+
+  const st = ensureEventState();
+  const oldBar = st.blanketBar || '';
+
+  st.blanketBar = bar;
+
+  athleteList.forEach(a => {
+    const key = String(a.id);
+    const cur = st.athleteHeights[key];
+
+    // Apply new blanket only to kids who were still at the old blanket
+    if (!cur || cur === oldBar) {
+      st.athleteHeights[key] = bar;
+    }
+  });
+
+  saveVerticalState();
+  renderLeft();
+  renderRight();
+}
+
+function saveAthleteBar() {
+  if (!currentAth) return;
+
+  const input = document.getElementById('athleteBarInput');
+  const bar = input.value.trim();
+
+  if (parseHeight(bar) === null) {
+    alert('Format must be feet-inches, like 6-00 or 12-06');
+    return;
+  }
+
+  setAthleteBar(currentAth.id, bar);
+  renderRight();
+}
+
+function incBar(inputId, n) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+
+  const v = parseHeight(el.value.trim());
+  if (v === null) {
+    alert('Set a valid height first (example: 6-00)');
+    return;
+  }
+
+  el.value = toHeightStr(v + n);
+}
+
 function renderVertical() {
-  const right  = document.getElementById('rightPanel');
-  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const elim   = isEliminated(myAtts);
+  const right   = document.getElementById('rightPanel');
+  const myAtts  = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  const elim    = isEliminated(myAtts);
   const cleared = getClearedHeights(myAtts);
+  const blanketBar = getBlanketBar();
+  const myBar      = getAthleteBar(currentAth.id);
+  const isPV       = isPoleVaultEvent();
+  const standards  = getStandards();
 
   right.innerHTML = `
     <div class="rcard">
@@ -477,20 +621,40 @@ function renderVertical() {
       ${elim ? '<div class="elim-banner">❌ Eliminated — 3 consecutive misses</div>' : ''}
       ${cleared.length ? `<div class="cleared-row">✅ Cleared: ${cleared.join(', ')}</div>` : ''}
 
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin-bottom:6px;">Bar Height</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin-bottom:6px;">Blanket Bar Height</div>
       <div class="bar-row">
-        <input class="bar-input" id="barInput" value="${flightBar}" placeholder="12-00" oninput="flightBar=this.value">
-        <button class="bar-inc" onclick="incBar(2)">+2"</button>
-        <button class="bar-inc" onclick="incBar(6)">+6"</button>
-        <button class="bar-inc" onclick="incBar(12)">+1'</button>
-        <button class="bar-set" onclick="setBar()">SET</button>
+        <input class="bar-input" id="blanketInput" value="${blanketBar}" placeholder="6-00">
+        <button class="bar-inc" onclick="incBar('blanketInput', 2)">+2"</button>
+        <button class="bar-inc" onclick="incBar('blanketInput', 6)">+6"</button>
+        <button class="bar-inc" onclick="incBar('blanketInput', 12)">+1'</button>
+        <button class="bar-set" onclick="applyBlanketBar()">APPLY ALL</button>
       </div>
-      ${flightBar ? `<div style="font-size:20px;font-weight:900;color:#1a5a8c;margin-bottom:10px;">${flightBar}</div>` : ''}
+
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin:14px 0 6px;">Athlete Height</div>
+      <div class="bar-row">
+        <input class="bar-input" id="athleteBarInput" value="${myBar}" placeholder="6-00">
+        <button class="bar-inc" onclick="incBar('athleteBarInput', 2)">+2"</button>
+        <button class="bar-inc" onclick="incBar('athleteBarInput', 6)">+6"</button>
+        <button class="bar-inc" onclick="incBar('athleteBarInput', 12)">+1'</button>
+        <button class="bar-set" onclick="saveAthleteBar()">SET ATHLETE</button>
+      </div>
+
+      ${myBar ? `<div style="font-size:20px;font-weight:900;color:#1a5a8c;margin-bottom:10px;">Current Height: ${myBar}</div>` : ''}
+
+      ${isPV ? `
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin:14px 0 6px;">Standards</div>
+        <div class="bar-row">
+          <select id="pvStandards" class="bar-input" style="width:110px;font-size:18px;" onchange="setStandards(this.value)">
+            ${buildStandardsOptions(standards)}
+          </select>
+          <div style="font-size:13px;color:#666;">Saved for this event</div>
+        </div>
+      ` : ''}
 
       <div class="vmark-grid">
-        <div><button class="vmark-btn btn-o" onclick="submitV('O')" ${elim?'disabled':''}>O</button><div class="vmark-lbl">Clear</div></div>
-        <div><button class="vmark-btn btn-x" onclick="submitV('X')" ${elim?'disabled':''}>X</button><div class="vmark-lbl">Miss</div></div>
-        <div><button class="vmark-btn btn-p" onclick="submitV('P')" ${elim?'disabled':''}>P</button><div class="vmark-lbl">Pass</div></div>
+        <div><button class="vmark-btn btn-o" onclick="submitV('O')" ${elim ? 'disabled' : ''}>O</button><div class="vmark-lbl">Clear</div></div>
+        <div><button class="vmark-btn btn-x" onclick="submitV('X')" ${elim ? 'disabled' : ''}>X</button><div class="vmark-lbl">Miss</div></div>
+        <div><button class="vmark-btn btn-p" onclick="submitV('P')" ${elim ? 'disabled' : ''}>P</button><div class="vmark-lbl">Pass</div></div>
       </div>
     </div>
 
@@ -501,6 +665,7 @@ function renderVertical() {
 
   renderVHistory(myAtts);
 }
+
 
 async function submitV(result) {
   if (!currentAth || !currentEventId) return;
@@ -534,44 +699,50 @@ async function submitV(result) {
 function renderVHistory(attempts) {
   const el = document.getElementById('attHistory');
   if (!el) return;
+
+  const isPV = isPoleVaultEvent();
+
   if (!attempts.length) {
     el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
     return;
   }
+
   el.innerHTML = [...attempts]
     .sort((a, b) => a.attempt_number - b.attempt_number)
     .map(a => {
       const resLabel = a.result === 'make' ? 'O' : a.result === 'pass' ? 'P' : 'X';
       const resCls   = a.result === 'make' ? 'res-make' : a.result === 'pass' ? 'res-pass' : 'res-foul';
-      const ht = a.height ? `<span style="font-size:11px;color:#4a7aaa;min-width:44px;">${a.height}</span>` : '';
-      return `<div class="att-row">
-        <span class="att-num">ATT ${a.attempt_number}</span>
-        ${ht}
-        <span class="att-mark">${a.mark || '—'}</span>
-        <span class="att-result ${resCls}">${resLabel}</span>
-        <button class="att-del" onclick="deleteAttempt('${a.id}')">Del</button>
-      </div>`;
+      const ht       = a.height ? `<span style="font-size:11px;color:#4a7aaa;min-width:52px;">${a.height}</span>` : '';
+      const std      = isPV && a.standards ? `<span style="font-size:11px;color:#666;min-width:58px;">Std ${a.standards}</span>` : '';
+
+      return `
+        <div class="att-row">
+          <span class="att-num">ATT ${a.attempt_number}</span>
+          ${ht}
+          ${std}
+          <span class="att-mark">${a.mark || '—'}</span>
+          <span class="att-result ${resCls}">${resLabel}</span>
+          <button class="att-del" onclick="deleteAttempt('${a.id}')">Del</button>
+        </div>
+      `;
     }).join('');
 }
 
+
 // ── Bar helpers ───────────────────────────────────────────────
 function parseHeight(str) {
-  const m = str && str.match(/^(\d+)-(\d{2})$/);
-  return m ? +m[1] * 12 + +m[2] : null;
+  const m = str && str.trim().match(/^(\d+)-(\d{1,2})$/);
+  if (!m) return null;
+
+  const ft = parseInt(m[1], 10);
+  const ins = parseInt(m[2], 10);
+  if (ins < 0 || ins > 11) return null;
+
+  return ft * 12 + ins;
 }
+
 function toHeightStr(n) {
   return Math.floor(n / 12) + '-' + String(n % 12).padStart(2, '0');
-}
-function incBar(n) {
-  const v = parseHeight(document.getElementById('barInput').value.trim());
-  if (v === null) { alert('Set a valid height first (e.g. 12-00)'); return; }
-  document.getElementById('barInput').value = flightBar = toHeightStr(v + n);
-}
-function setBar() {
-  const v = document.getElementById('barInput').value.trim();
-  if (!parseHeight(v)) { alert('Format: feet-inches, e.g. 12-06'); return; }
-  flightBar = v;
-  renderRight();
 }
 
 function isEliminated(atts) {
