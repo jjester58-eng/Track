@@ -97,6 +97,12 @@
     .vmark-lbl { text-align: center; font-size: 11px; color: #888; margin-top: 3px; }
     .cleared-row { font-size: 13px; color: #28a745; font-weight: 700; margin-bottom: 10px; }
     .elim-banner { background: #f8d7da; border: 1px solid #dc3545; color: #721c24; padding: 10px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; margin-bottom: 10px; text-align: center; }
+
+    /* New styles for global bar and standards */
+    .global-bar { background: #1a3a5c; color: white; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 18px; font-weight: 800; text-align: center; }
+    .standards-row { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+    .standards-label { font-size: 13px; font-weight: 700; color: #666; }
+    .standards-select { padding: 8px 12px; font-size: 16px; font-weight: 700; border: 2px solid #1e5a8c; border-radius: 6px; background: white; }
   </style>
 </head>
 <body>
@@ -143,9 +149,15 @@ let currentAth     = null;
 let athleteList    = [];
 let allAttempts    = [];
 let editingId      = null;
-let flightBar      = '';
+let flightBar      = '';   // kept for backward compatibility but no longer used
 
-// ── Init ──────────────────────────────────────────────────────
+// NEW: Global bar height (applies to all athletes until changed)
+let currentBarHeight = '6-00';
+
+// NEW: Pole Vault standards memory (athleteId → inches)
+let poleStandards = {};
+
+// ── Init ──────────────────────────────────────────────────
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
   if (!stored) { window.location.href = 'index.html'; return; }
@@ -155,12 +167,14 @@ window.onload = async () => {
   await loadEvents();
   const b = document.getElementById('offlineBanner');
   const chk = () => b.classList.toggle('show', !navigator.onLine);
-  chk();
-  window.addEventListener('online',  chk);
-  window.addEventListener('offline', chk);
+  chk(); window.addEventListener('online', chk); window.addEventListener('offline', chk);
+
+  // Load saved pole vault standards
+  const saved = localStorage.getItem(`pv_standards_${currentMeet.id}`);
+  if (saved) poleStandards = JSON.parse(saved);
 };
 
-// ── Load events ───────────────────────────────────────────────
+// ── Load events ───────────────────────────────────────────
 async function loadEvents() {
   const { data } = await sb.from('events').select('*').eq('meet_id', currentMeet.id).order('name');
   const sel = document.getElementById('eventSelect');
@@ -173,10 +187,12 @@ async function loadEvents() {
   });
 }
 
-// ── Load event ────────────────────────────────────────────────
+// ── Load event ────────────────────────────────────────────
 async function loadEvent() {
   currentEventId = document.getElementById('eventSelect').value;
-  currentAth = null; editingId = null; allAttempts = [];
+  currentAth     = null;
+  editingId      = null;
+  allAttempts    = [];
   if (!currentEventId) return;
 
   const evName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
@@ -199,11 +215,10 @@ async function loadEvent() {
   allAttempts = attempts || [];
 
   renderLeft();
-  document.getElementById('rightPanel').innerHTML =
-    '<div style="padding:40px;text-align:center;color:#aaa;">Select an athlete</div>';
+  document.getElementById('rightPanel').innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;">Select an athlete</div>';
 }
 
-// ── Phase switch ──────────────────────────────────────────────
+// ── Phase switch ──────────────────────────────────────────
 function setPhase(phase) {
   currentPhase = phase;
   ['3att','4att','finals'].forEach(p => {
@@ -214,9 +229,7 @@ function setPhase(phase) {
   if (currentAth) renderRight();
 }
 
-// ─────────────────────────────────────────────────────────────
-//  LEFT PANEL
-// ─────────────────────────────────────────────────────────────
+// LEFT PANEL (unchanged)
 function renderLeft() {
   const left = document.getElementById('leftPanel');
   if (!athleteList.length) {
@@ -226,29 +239,29 @@ function renderLeft() {
 
   const scoreMap = buildScoreMap();
   let displayList = athleteList;
-
   if (currentPhase === 'finals') {
     displayList = [...athleteList]
       .map(a => ({ ...a, best: scoreMap[a.id] ?? -1 }))
       .sort((a, b) => b.best - a.best)
       .slice(0, 8)
-      .reverse(); // 8th at top, 1st at bottom
+      .reverse();
   }
 
   left.innerHTML = '';
   displayList.forEach(ath => {
-    const score   = scoreMap[ath.id] ?? -1;
-    const place   = getPlace(ath.id, scoreMap);
+    const score  = scoreMap[ath.id] ?? -1;
+    const place  = getPlace(ath.id, scoreMap);
     const bestStr = score >= 0 ? inchesToMark(score) : null;
+    const badgeHtml = placeBadgeHtml(place, ath.id, scoreMap);
 
     const btn = document.createElement('button');
     btn.className = 'ath-btn' + (currentAth && currentAth.id === ath.id ? ' active' : '');
     btn.innerHTML = `
-      ${placeBadgeHtml(place, ath.id, scoreMap)}
+      ${badgeHtml}
       <div class="ath-info">
         <div class="ath-name-txt">${ath.name}</div>
-        ${ath.team   ? `<div class="ath-team-txt">${ath.team}</div>` : ''}
-        ${bestStr    ? `<div class="ath-best-txt">${bestStr}</div>`  : ''}
+        ${ath.team ? `<div class="ath-team-txt">${ath.team}</div>` : ''}
+        ${bestStr  ? `<div class="ath-best-txt">${bestStr}</div>` : ''}
       </div>`;
     btn.onclick = () => { currentAth = ath; editingId = null; renderLeft(); renderRight(); };
     left.appendChild(btn);
@@ -286,27 +299,23 @@ function placeBadgeHtml(place, athId, scoreMap) {
   if (place === null) return '<div class="place-badge pl-0"></div>';
   const tied = isTied(athId, scoreMap);
   if (tied) return `<div class="place-badge pl-T">T${place}</div>`;
-  const cls  = place <= 8 ? `pl-${place}` : 'pl-0';
+  const cls = place <= 8 ? `pl-${place}` : 'pl-0';
   return `<div class="place-badge ${cls}">${place}</div>`;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  RIGHT PANEL
-// ─────────────────────────────────────────────────────────────
+// RIGHT PANEL
 function renderRight() {
   if (!currentAth) return;
   isVertical ? renderVertical() : renderHorizontal();
 }
 
-// ─────────────────────────────────────────────────────────────
-//  HORIZONTAL EVENTS
-// ─────────────────────────────────────────────────────────────
+// ── HORIZONTAL (unchanged from your last version) ─────────────────────────────
 function renderHorizontal() {
-  const right  = document.getElementById('rightPanel');
-  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const limit  = PHASE_LIMIT[currentPhase];
-  const canAdd = !editingId && myAtts.length < limit;
-  const done   = !editingId && myAtts.length >= limit;
+  const right    = document.getElementById('rightPanel');
+  const myAtts   = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  const limit    = PHASE_LIMIT[currentPhase];
+  const canAdd   = !editingId && myAtts.length < limit;
+  const done     = !editingId && myAtts.length >= limit;
   const editingNum = editingId ? (myAtts.find(a => a.id === editingId)?.attempt_number ?? '') : '';
 
   right.innerHTML = `
@@ -362,15 +371,15 @@ function renderHorizontal() {
 
 async function saveMark() {
   if (!currentAth || !currentEventId) return;
-  const ft  = parseInt(document.getElementById('hFt').value)    || 0;
-  const ins = parseInt(document.getElementById('hIn').value)    || 0;
+  const ft  = parseInt(document.getElementById('hFt').value)  || 0;
+  const ins = parseInt(document.getElementById('hIn').value)  || 0;
   const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
   if (ft === 0 && ins === 0 && qtr === 0) { alert('Enter a distance.'); return; }
 
-  const totalIns = ins + qtr;
-  const inStr    = totalIns % 1 === 0
-    ? String(Math.round(totalIns)).padStart(2, '0')
-    : totalIns.toFixed(2);
+  const totalInches = ins + qtr;
+  const inStr = totalInches % 1 === 0
+    ? String(Math.round(totalInches)).padStart(2, '0')
+    : totalInches.toFixed(2);
   const mark = `${ft}-${inStr}`;
 
   if (editingId) {
@@ -414,14 +423,11 @@ function editAttempt(id) {
     const [ftStr, insPart] = att.mark.split('-');
     const totalIns = parseFloat(insPart) || 0;
     const wholeIns = Math.floor(totalIns);
-    const qtr      = +(totalIns - wholeIns).toFixed(2);
+    const qtr = +(totalIns - wholeIns).toFixed(2);
     setTimeout(() => {
-      const ftEl  = document.getElementById('hFt');
-      const inEl  = document.getElementById('hIn');
-      const qEl   = document.getElementById('hQtr');
-      if (ftEl) ftEl.value = ftStr || '';
-      if (inEl) inEl.value = wholeIns || '';
-      if (qEl)  qEl.value  = [0, 0.25, 0.5, 0.75].includes(qtr) ? qtr : 0;
+      document.getElementById('hFt').value = ftStr || '';
+      document.getElementById('hIn').value = wholeIns || '';
+      document.getElementById('hQtr').value = [0, 0.25, 0.5, 0.75].includes(qtr) ? qtr : 0;
     }, 30);
   }
   renderRight();
@@ -433,188 +439,4 @@ function cancelEdit() {
 }
 
 async function deleteAttempt(id) {
-  if (!confirm('Delete this attempt? This cannot be undone.')) return;
-  const { error } = await sb.from('attempts').delete().eq('id', id);
-  if (error) { alert('Delete failed: ' + error.message); return; }
-  if (editingId === id) editingId = null;
-  await refresh();
-}
-
-function renderHHistory(attempts) {
-  const el = document.getElementById('attHistory');
-  if (!el) return;
-  if (!attempts.length) {
-    el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
-    return;
-  }
-  el.innerHTML = [...attempts]
-    .sort((a, b) => a.attempt_number - b.attempt_number)
-    .map(a => `
-      <div class="att-row">
-        <span class="att-num">ATT ${a.attempt_number}</span>
-        <span class="att-mark">${a.mark || '—'}</span>
-        <span class="att-result ${a.result === 'make' ? 'res-make' : 'res-foul'}">
-          ${a.result === 'make' ? 'MAKE' : 'FOUL'}
-        </span>
-        <button class="att-edit" onclick="editAttempt('${a.id}')">Edit</button>
-        <button class="att-del"  onclick="deleteAttempt('${a.id}')">Del</button>
-      </div>`).join('');
-}
-
-// ─────────────────────────────────────────────────────────────
-//  VERTICAL EVENTS (high jump, pole vault)
-// ─────────────────────────────────────────────────────────────
-function renderVertical() {
-  const right  = document.getElementById('rightPanel');
-  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const elim   = isEliminated(myAtts);
-  const cleared = getClearedHeights(myAtts);
-
-  right.innerHTML = `
-    <div class="rcard">
-      <h2>${currentAth.name}</h2>
-      <div class="sub">${currentAth.team || ''}</div>
-      ${elim ? '<div class="elim-banner">❌ Eliminated — 3 consecutive misses</div>' : ''}
-      ${cleared.length ? `<div class="cleared-row">✅ Cleared: ${cleared.join(', ')}</div>` : ''}
-
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin-bottom:6px;">Bar Height</div>
-      <div class="bar-row">
-        <input class="bar-input" id="barInput" value="${flightBar}" placeholder="12-00" oninput="flightBar=this.value">
-        <button class="bar-inc" onclick="incBar(2)">+2"</button>
-        <button class="bar-inc" onclick="incBar(6)">+6"</button>
-        <button class="bar-inc" onclick="incBar(12)">+1'</button>
-        <button class="bar-set" onclick="setBar()">SET</button>
-      </div>
-      ${flightBar ? `<div style="font-size:20px;font-weight:900;color:#1a5a8c;margin-bottom:10px;">${flightBar}</div>` : ''}
-
-      <div class="vmark-grid">
-        <div><button class="vmark-btn btn-o" onclick="submitV('O')" ${elim?'disabled':''}>O</button><div class="vmark-lbl">Clear</div></div>
-        <div><button class="vmark-btn btn-x" onclick="submitV('X')" ${elim?'disabled':''}>X</button><div class="vmark-lbl">Miss</div></div>
-        <div><button class="vmark-btn btn-p" onclick="submitV('P')" ${elim?'disabled':''}>P</button><div class="vmark-lbl">Pass</div></div>
-      </div>
-    </div>
-
-    <div class="rcard">
-      <h3 style="margin:0 0 12px;font-size:16px;">Attempt History</h3>
-      <div id="attHistory"></div>
-    </div>`;
-
-  renderVHistory(myAtts);
-}
-
-async function submitV(result) {
-  if (!currentAth || !currentEventId) return;
-  if (!flightBar) { alert('Set a bar height first.'); return; }
-
-  const myAtts  = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const markVal = result === 'O' ? flightBar : result;
-  const dbRes   = result === 'O' ? 'make' : result === 'P' ? 'pass' : 'foul';
-
-  const payload = {
-    meet_id: currentMeet.id, event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: myAtts.length + 1,
-    mark: markVal, result: dbRes, height: flightBar
-  };
-
-  let { error } = await sb.from('attempts').insert(payload);
-
-  // If 'height' column doesn't exist yet, retry without it
-  if (error && (error.message.includes('height') || error.message.includes('schema'))) {
-    delete payload.height;
-    const fb = await sb.from('attempts').insert(payload);
-    error = fb.error;
-  }
-
-  if (error) { alert('Save failed: ' + error.message); return; }
-  if (result === 'P') flightBar = '';
-  await refresh();
-}
-
-function renderVHistory(attempts) {
-  const el = document.getElementById('attHistory');
-  if (!el) return;
-  if (!attempts.length) {
-    el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
-    return;
-  }
-  el.innerHTML = [...attempts]
-    .sort((a, b) => a.attempt_number - b.attempt_number)
-    .map(a => {
-      const resLabel = a.result === 'make' ? 'O' : a.result === 'pass' ? 'P' : 'X';
-      const resCls   = a.result === 'make' ? 'res-make' : a.result === 'pass' ? 'res-pass' : 'res-foul';
-      const ht = a.height ? `<span style="font-size:11px;color:#4a7aaa;min-width:44px;">${a.height}</span>` : '';
-      return `<div class="att-row">
-        <span class="att-num">ATT ${a.attempt_number}</span>
-        ${ht}
-        <span class="att-mark">${a.mark || '—'}</span>
-        <span class="att-result ${resCls}">${resLabel}</span>
-        <button class="att-del" onclick="deleteAttempt('${a.id}')">Del</button>
-      </div>`;
-    }).join('');
-}
-
-// ── Bar helpers ───────────────────────────────────────────────
-function parseHeight(str) {
-  const m = str && str.match(/^(\d+)-(\d{2})$/);
-  return m ? +m[1] * 12 + +m[2] : null;
-}
-function toHeightStr(n) {
-  return Math.floor(n / 12) + '-' + String(n % 12).padStart(2, '0');
-}
-function incBar(n) {
-  const v = parseHeight(document.getElementById('barInput').value.trim());
-  if (v === null) { alert('Set a valid height first (e.g. 12-00)'); return; }
-  document.getElementById('barInput').value = flightBar = toHeightStr(v + n);
-}
-function setBar() {
-  const v = document.getElementById('barInput').value.trim();
-  if (!parseHeight(v)) { alert('Format: feet-inches, e.g. 12-06'); return; }
-  flightBar = v;
-  renderRight();
-}
-
-function isEliminated(atts) {
-  let streak = 0;
-  for (let i = atts.length - 1; i >= 0; i--) {
-    if (atts[i].result === 'make') break;
-    if (atts[i].result === 'foul') { if (++streak >= 3) return true; }
-  }
-  return false;
-}
-
-function getClearedHeights(atts) {
-  return [...new Set(
-    atts.filter(a => a.result === 'make').map(a => a.height || a.mark).filter(Boolean)
-  )];
-}
-
-// ── Shared helpers ────────────────────────────────────────────
-async function refresh() {
-  const { data } = await sb.from('attempts').select('*')
-    .eq('event_id', currentEventId)
-    .eq('meet_id',  currentMeet.id)
-    .order('attempt_number');
-  allAttempts = data || [];
-  renderLeft();
-  renderRight();
-}
-
-function parseMark(mark) {
-  if (!mark || mark === 'FOUL' || mark === 'X' || mark === 'P') return null;
-  const m = mark.match(/^(\d+)-(\d{1,2}(?:\.\d+)?)$/);
-  if (!m) return null;
-  return parseInt(m[1]) * 12 + parseFloat(m[2]);
-}
-
-function inchesToMark(total) {
-  const ft  = Math.floor(total / 12);
-  const ins = total % 12;
-  const insStr = ins % 1 === 0
-    ? String(Math.round(ins)).padStart(2, '0')
-    : ins.toFixed(2);
-  return `${ft}-${insStr}`;
-}
-</script>
-</body>
-</html>
+  if (!confirm('Delete this attempt? It cannot be undone.'
