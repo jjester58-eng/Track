@@ -22,18 +22,22 @@
     }
     body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); margin:0; min-height:100vh; }
 
+    /* topbar */
     .topbar { background:var(--bg2); border-bottom:2px solid var(--border); padding:10px 20px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:200; }
     .topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--accent2); letter-spacing:3px; text-transform:uppercase; flex:1; }
     .topbar a { color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; opacity:.75; }
     .topbar a:hover { opacity:1; }
 
-    /* Login Screen */
+    /* Login Screen (replaces old lock) */
     #loginScreen { max-width:380px; margin:100px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:40px 32px; text-align:center; }
     #loginScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 8px; }
+    #loginScreen p { font-size:14px; color:var(--text2); margin-bottom:24px; }
 
+    /* Admin Layout */
     #adminContent { display:none; }
     .admin-layout { display:flex; height:calc(100vh - 54px); }
 
+    /* Sidebar */
     .meet-sidebar { width:280px; flex-shrink:0; border-right:2px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow:hidden; }
     .sidebar-head { padding:14px 16px 10px; border-bottom:1px solid var(--border); font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--text3); display:flex; align-items:center; justify-content:space-between; }
     .sidebar-list { flex:1; overflow-y:auto; padding:8px; }
@@ -51,6 +55,7 @@
     .new-meet-btn { margin:10px 10px 0; padding:10px; background:var(--bg3); color:var(--accent); border:1px dashed var(--border2); border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; text-align:center; }
     .new-meet-btn:hover { background:var(--bg); border-color:var(--accent); }
 
+    /* Edit Panel */
     .edit-panel { flex:1; overflow-y:auto; padding:20px 24px 80px; }
     .no-select-msg { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text3); font-size:16px; }
 
@@ -174,13 +179,13 @@ let activeMeetId = null;
 let activeMeet = null;
 let currentUser = null;
 
-const YOUR_EMAIL = 'jjester58@gmail.com';   // ← CHANGE THIS TO YOUR EMAIL
+const YOUR_EMAIL = 'jjester58@gmail.com';   // Super admin email
 
 function isSuperAdmin() {
   return currentUser && currentUser.email === YOUR_EMAIL;
 }
 
-// Improved Auth
+// Auth handling
 async function initAuth() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
@@ -222,7 +227,7 @@ async function signUp() {
   if (!email || password.length < 6) return flashErr(err, 'Password must be at least 6 characters');
   const { error } = await sb.auth.signUp({ email, password });
   if (error) return flashErr(err, error.message);
-  flashErr(err, '✅ Check your email to confirm account', 'ok');
+  flashErr(err, '✅ Check your email to confirm your account', 'ok');
 }
 
 async function logout() {
@@ -235,15 +240,19 @@ function flashErr(el, msg, type = 'err') {
   el.className = `st show st-${type}`;
 }
 
-// Load meets - Super admin sees everything
+// Load meets - Super admin sees ALL meets
 async function loadMeets() {
   if (!currentUser) return;
+
   let query = sb.from('meets').select('*').order('date', { ascending: false });
+
   if (!isSuperAdmin()) {
     query = query.eq('owner_id', currentUser.id);
   }
+
   const { data, error } = await query;
   if (error) { console.error(error); return; }
+
   allMeets = data || [];
   document.getElementById('meetCount').textContent = allMeets.length;
   renderMeetList();
@@ -275,7 +284,7 @@ async function selectMeet(id) {
   renderEditPanel();
 }
 
-// Full original renderEditPanel + New Meet UX restored
+// Full original renderEditPanel + New Meet card restored
 async function renderEditPanel() {
   const m = activeMeet;
   const ep = document.getElementById('editPanel');
@@ -301,7 +310,7 @@ async function renderEditPanel() {
         <div class="field"><label>Status</label>
           <select id="eActive">
             <option value="active" ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active</option>
-            <option value="inactive" ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive</option>
+            <option value="inactive" ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive (hidden from workers)</option>
             <option value="cancelled" ${m.cancelled ? 'selected' : ''}>Cancelled</option>
           </select>
         </div>
@@ -363,7 +372,7 @@ async function renderEditPanel() {
   loadEventList();
 }
 
-// === All your original functions below ===
+// === Your original functions (unchanged) ===
 
 async function saveDetails() {
   const name = document.getElementById('eName').value.trim();
@@ -384,14 +393,215 @@ async function saveDetails() {
   flash('stDetails', '✅ Meet updated', 'ok');
 }
 
-function previewLogo() { /* your original */ }
-async function uploadLogo() { /* your original */ }
-async function removeLogo() { /* your original */ }
-async function loadEventList() { /* your original */ }
-async function doImport() { /* your original */ }
-async function importMileSplit(csvText, meetId, progBar) { /* your original */ }
-async function clearRoster() { /* your original */ }
-async function deleteMeet() { /* your original */ }
+function previewLogo() {
+  const file = document.getElementById('logoFile').files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const thumb = document.getElementById('logoThumb');
+    thumb.src = e.target.result;
+    thumb.style.display = 'block';
+  };
+  r.readAsDataURL(file);
+}
+
+async function uploadLogo() {
+  const file = document.getElementById('logoFile').files[0];
+  if (!file) return flash('stLogo', '❌ Select an image first', 'err');
+  flash('stLogo', '⏳ Uploading…', 'inf');
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
+
+  try {
+    const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
+    if (upErr) throw upErr;
+    const { data } = sb.storage.from('avatars').getPublicUrl(name);
+    const url = data.publicUrl;
+
+    const { error: dbErr } = await sb.from('meets').update({ logo_url: url }).eq('id', activeMeetId);
+    if (dbErr) throw dbErr;
+
+    activeMeet.logo_url = url;
+    allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: url } : m);
+
+    const thumb = document.getElementById('logoThumb');
+    thumb.src = url; thumb.style.display = 'block';
+
+    const headerLogo = document.querySelector('.header-logo');
+    if (headerLogo) headerLogo.innerHTML = `<img src="${url}" alt="logo">`;
+
+    flash('stLogo', '✅ Logo uploaded', 'ok');
+  } catch(err) { flash('stLogo', '❌ ' + err.message, 'err'); }
+}
+
+async function removeLogo() {
+  if (!confirm('Remove this meet\'s logo? The Ironclad logo will show instead.')) return;
+  const { error } = await sb.from('meets').update({ logo_url: null }).eq('id', activeMeetId);
+  if (error) return flash('stLogo', '❌ ' + error.message, 'err');
+  activeMeet.logo_url = null;
+  allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: null } : m);
+  document.getElementById('logoThumb').style.display = 'none';
+  const headerLogo = document.querySelector('.header-logo');
+  if (headerLogo) headerLogo.innerHTML = '🏟';
+  flash('stLogo', '✅ Logo removed', 'ok');
+}
+
+async function loadEventList() {
+  const { data: events, error } = await sb.from('events').select('*').eq('meet_id', activeMeetId).order('name');
+  document.getElementById('evLoading').textContent = '';
+
+  if (error || !events || !events.length) {
+    document.getElementById('evList').innerHTML = '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
+    return;
+  }
+
+  const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', activeMeetId);
+  const { data: assigns } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
+  const attCount = {}, athCount = {};
+  (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
+  (assigns || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
+
+  document.getElementById('evList').innerHTML = events.map(e => `
+    <div class="ev-item">
+      <div>
+        <div class="ev-name">${e.name}</div>
+        <div class="ev-meta">${e.gender||''} ${e.level ? '· ' + e.level : ''}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <span class="badge">${athCount[e.id]||0} ath</span>
+        <span class="badge">${attCount[e.id]||0} att</span>
+      </div>
+    </div>`).join('');
+}
+
+async function doImport() {
+  const file = document.getElementById('csvFile').files[0];
+  if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
+  const mode = document.getElementById('importMode').value;
+  if (!confirm(mode === 'replace' ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import the new CSV. Continue?` : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
+
+  const btn = document.getElementById('importBtn');
+  const pw = document.getElementById('progWrap');
+  const pb = document.getElementById('progBar');
+  btn.disabled = true; btn.textContent = 'Working…';
+  pw.classList.add('show'); pb.style.width = '5%';
+
+  try {
+    if (mode === 'replace') {
+      flash('stImport', '🗑 Clearing existing roster…', 'inf');
+      const steps = [
+        sb.from('attempts').delete().eq('meet_id', activeMeetId),
+        sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+        sb.from('athletes').delete().eq('meet_id', activeMeetId),
+        sb.from('events').delete().eq('meet_id', activeMeetId)
+      ];
+      for (const s of steps) { const { error } = await s; if (error) throw error; }
+    }
+    pb.style.width = '20%';
+
+    flash('stImport', '⏳ Parsing CSV…', 'inf');
+    const text = await file.text();
+    const n = await importMileSplit(text, activeMeetId, pb);
+
+    flash('stImport', `✅ ${n} athletes imported into "${activeMeet.name}"`, 'ok');
+    loadEventList();
+  } catch(err) {
+    flash('stImport', '❌ ' + err.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Run Import';
+    setTimeout(() => { pw.classList.remove('show'); pb.style.width = '0%'; }, 2000);
+  }
+}
+
+async function importMileSplit(csvText, meetId, progBar) {
+  const rows = parseCSV(csvText);
+  if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  const getCol = names => headers.findIndex(h => names.some(n => h.includes(n)));
+
+  const idx = {
+    ev: getCol(['event']),
+    div: getCol(['division','level','grade']),
+    ln: getCol(['lname','last']),
+    fn: getCol(['fname','first']),
+    gen: getCol(['gender','sex']),
+    tm: getCol(['team','school'])
+  };
+  if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0)
+    throw new Error('CSV missing required columns (first, last, event).');
+
+  const fieldKeywords = ['shot','discus','long jump','triple jump','high jump','pole vault'];
+  const eventsFound = {}, eventRows = [], athleteRows = [], assignRows = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 3) continue;
+    const g = col => (col >= 0 && col < row.length) ? (row[col]||'').toString().trim() : '';
+    if (!g(idx.fn)) continue;
+    const evName = g(idx.ev).toLowerCase();
+    if (!fieldKeywords.some(k => evName.includes(k))) continue;
+
+    const level = normalizeLevel(g(idx.div));
+    const gender = g(idx.gen);
+    const evKey = g(idx.ev) + '|' + gender + '|' + level;
+
+    if (!eventsFound[evKey]) {
+      const eId = crypto.randomUUID().substring(0, 8);
+      eventsFound[evKey] = eId;
+      eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId });
+    }
+    const aId = crypto.randomUUID().substring(0, 8);
+    athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
+    assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+' '+g(idx.ln)).trim() });
+
+    if (progBar) progBar.style.width = (20 + Math.round((i / rows.length) * 70)) + '%';
+  }
+
+  if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
+  if (eventRows.length) { const { error } = await sb.from('events').insert(eventRows); if (error) throw error; }
+  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows); if (error) throw error; }
+  if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows); if (error) throw error; }
+  if (progBar) progBar.style.width = '100%';
+  return athleteRows.length;
+}
+
+async function clearRoster() {
+  if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?\n\nMeet name, date, PIN and logo will be kept.`)) return;
+  const steps = [
+    sb.from('attempts').delete().eq('meet_id', activeMeetId),
+    sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+    sb.from('athletes').delete().eq('meet_id', activeMeetId),
+    sb.from('events').delete().eq('meet_id', activeMeetId)
+  ];
+  for (const s of steps) {
+    const { error } = await s;
+    if (error) { flash('stClear', '❌ ' + error.message, 'err'); return; }
+  }
+  flash('stClear', '✅ Roster & events cleared.', 'ok');
+  loadEventList();
+}
+
+async function deleteMeet() {
+  if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?\n\nThis cannot be undone.`)) return;
+  const steps = [
+    sb.from('attempts').delete().eq('meet_id', activeMeetId),
+    sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+    sb.from('athletes').delete().eq('meet_id', activeMeetId),
+    sb.from('events').delete().eq('meet_id', activeMeetId),
+    sb.from('meets').delete().eq('id', activeMeetId)
+  ];
+  for (const s of steps) {
+    const { error } = await s;
+    if (error) { flash('stDelete', '❌ ' + error.message, 'err'); return; }
+  }
+  allMeets = allMeets.filter(m => m.id !== activeMeetId);
+  activeMeetId = null;
+  activeMeet = null;
+  document.getElementById('meetCount').textContent = allMeets.length;
+  renderMeetList();
+  document.getElementById('editPanel').innerHTML = '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
+}
 
 function startNewMeet() {
   activeMeetId = null;
@@ -433,9 +643,35 @@ async function createMeet() {
 }
 
 // Helpers
-function normalizeLevel(raw) { /* paste your original */ }
-function parseCSV(text) { /* paste your original */ }
-function fmtDate(d) { /* paste your original */ }
+function normalizeLevel(raw) {
+  if (!raw) return '';
+  const t = raw.toString().toLowerCase().trim();
+  if (t.includes('varsity')) return 'Varsity';
+  if (t.includes('jv') || t.includes('junior var')) return 'JV';
+  if (t.includes('8th') || t==='8') return '8th Grade';
+  if (t.includes('7th') || t==='7') return '7th Grade';
+  if (t.includes('frosh') || t.includes('freshman') || t.includes('9th')) return 'Freshman';
+  if (t.includes('soph') || t.includes('10th')) return 'Sophomore';
+  return raw.toString().trim();
+}
+
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const rows=[]; let row=[],field='',inQ=false,i=0;
+  while(i<text.length){
+    const c=text[i];
+    if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;continue;}if(c==='"')inQ=false;else field+=c;}
+    else{if(c==='"')inQ=true;else if(c===','){row.push(field.trim());field='';}else if(c==='\n'){row.push(field.trim());field='';if(row.some(v=>v!=''))rows.push(row);row=[];}else field+=c;}
+    i++;
+  }
+  row.push(field.trim());if(row.some(v=>v!=''))rows.push(row);
+  return rows;
+}
+
+function fmtDate(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+}
+
 function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
 function flash(id, msg, type) {
