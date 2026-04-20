@@ -255,16 +255,27 @@ function flashErr(el, msg, type = 'err') {
 // ====================== MEETS ======================
 async function loadMeets() {
   if (!currentUser) return;
-  const { data, error } = await sb
-    .from('meets')
-    .select('*')
-    .eq('owner_id', currentUser.id)
-    .order('date', { ascending: false });
+
+  let query = sb.from('meets').select('*').order('date', { ascending: false });
+
+  // If you're the super admin, don't filter by owner_id
+  if (!isSuperAdmin()) {
+    query = query.eq('owner_id', currentUser.id);
+  }
+
+  const { data, error } = await query;
 
   if (error) { console.error(error); return; }
   allMeets = data || [];
   document.getElementById('meetCount').textContent = allMeets.length;
   renderMeetList();
+}
+
+// Add this helper at the top level
+function isSuperAdmin() {
+  // Match exactly what you put in the SQL function
+  return currentUser?.email === 'your-email@example.com';
+  // OR: return currentUser?.id === 'your-uuid';
 }
 
 function renderMeetList() {
