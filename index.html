@@ -387,49 +387,64 @@ const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/pub
 let selectedMeet = null;
 
 // ── Load active meets ─────────────────────────────────────────
-window.onload = async () => {
-  const { data: meets, error } = await sb
-    .from('meets')
-    .select('id, name, date, logo_url')
-    .eq('is_active', true)
-    .order('date', { ascending: true });
+const meetsMap = {}; // id → meet object
 
+window.onload = async () => {
   const list = document.getElementById('meetList');
 
-  if (error || !meets || !meets.length) {
-    list.innerHTML = `<div class="empty-msg">
-      No active meets right now.<br>
-      <span style="font-size:12px;margin-top:6px;display:block;color:var(--text3);">
-        A meet director needs to create and activate one first.
-      </span>
-    </div>`;
-    return;
-  }
+  try {
+    const { data: meets, error } = await sb
+      .from('meets')
+      .select('id, name, date, logo_url')
+      .eq('is_active', true)
+      .order('date', { ascending: true });
 
-  list.innerHTML = meets.map(m => {
-    const logo = m.logo_url
-      ? `<img src="${m.logo_url}" class="meet-logo" alt="">`
-      : `<div class="meet-logo-placeholder">🏟</div>`;
-    const dateStr = m.date
-      ? new Date(m.date + 'T12:00:00').toLocaleDateString('en-US',
-          { weekday:'short', month:'short', day:'numeric', year:'numeric' })
-      : 'Date TBD';
-    return `<div class="meet-card" onclick='openMeet(${JSON.stringify(m)})'>
-      ${logo}
-      <div class="meet-info">
-        <div class="meet-name">${m.name}</div>
-        <div class="meet-date">${dateStr}</div>
-      </div>
-      <div class="meet-arrow">›</div>
-    </div>`;
-  }).join('');
+    if (error) throw error;
+
+    if (!meets || !meets.length) {
+      list.innerHTML = `<div class="empty-msg">
+        No active meets right now.<br>
+        <span style="font-size:12px;margin-top:6px;display:block;color:var(--text3);">
+          A meet director needs to create and activate one first.
+        </span>
+      </div>`;
+      return;
+    }
+
+    // Store in map so onclick just passes the ID — no JSON-in-HTML
+    meets.forEach(m => meetsMap[m.id] = m);
+
+    list.innerHTML = meets.map(m => {
+      const logo = m.logo_url
+        ? `<img src="${m.logo_url}" class="meet-logo" alt="">`
+        : `<div class="meet-logo-placeholder">🏟</div>`;
+      const dateStr = m.date
+        ? new Date(m.date + 'T12:00:00').toLocaleDateString('en-US',
+            { weekday:'short', month:'short', day:'numeric', year:'numeric' })
+        : 'Date TBD';
+      return `<div class="meet-card" onclick="openMeet('${m.id}')">
+        ${logo}
+        <div class="meet-info">
+          <div class="meet-name">${m.name}</div>
+          <div class="meet-date">${dateStr}</div>
+        </div>
+        <div class="meet-arrow">›</div>
+      </div>`;
+    }).join('');
+
+  } catch(err) {
+    console.error('Error loading meets:', err);
+    list.innerHTML = `<div class="empty-msg">Error loading meets: ${err.message}</div>`;
+  }
 };
 
 // ── Open modal ────────────────────────────────────────────────
-function openMeet(meet) {
-  selectedMeet = meet;
-  document.getElementById('heroLogo').src   = meet.logo_url || IRONCLAD;
-  document.getElementById('modalLogo').src  = meet.logo_url || IRONCLAD;
+function openMeet(id) {
+  selectedMeet = meetsMap[id];
+  if (!selectedMeet) return;
+  const meet = selectedMeet;
+  document.getElementById('heroLogo').src  = meet.logo_url || IRONCLAD;
+  document.getElementById('modalLogo').src = meet.logo_url || IRONCLAD;
   document.getElementById('modalName').textContent = meet.name;
   document.getElementById('modalDate').textContent = meet.date
     ? new Date(meet.date + 'T12:00:00').toLocaleDateString('en-US',
