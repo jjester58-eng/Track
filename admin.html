@@ -22,22 +22,18 @@
     }
     body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); margin:0; min-height:100vh; }
 
-    /* topbar */
     .topbar { background:var(--bg2); border-bottom:2px solid var(--border); padding:10px 20px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:200; }
     .topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--accent2); letter-spacing:3px; text-transform:uppercase; flex:1; }
     .topbar a { color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; opacity:.75; }
     .topbar a:hover { opacity:1; }
 
-    /* Login Screen (replaces old lock) */
+    /* Login Screen */
     #loginScreen { max-width:380px; margin:100px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:40px 32px; text-align:center; }
     #loginScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 8px; }
-    #loginScreen p { font-size:14px; color:var(--text2); margin-bottom:24px; }
 
-    /* Admin Layout */
     #adminContent { display:none; }
     .admin-layout { display:flex; height:calc(100vh - 54px); }
 
-    /* Sidebar */
     .meet-sidebar { width:280px; flex-shrink:0; border-right:2px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow:hidden; }
     .sidebar-head { padding:14px 16px 10px; border-bottom:1px solid var(--border); font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--text3); display:flex; align-items:center; justify-content:space-between; }
     .sidebar-list { flex:1; overflow-y:auto; padding:8px; }
@@ -55,7 +51,6 @@
     .new-meet-btn { margin:10px 10px 0; padding:10px; background:var(--bg3); color:var(--accent); border:1px dashed var(--border2); border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; text-align:center; }
     .new-meet-btn:hover { background:var(--bg); border-color:var(--accent); }
 
-    /* Edit Panel */
     .edit-panel { flex:1; overflow-y:auto; padding:20px 24px 80px; }
     .no-select-msg { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text3); font-size:16px; }
 
@@ -140,7 +135,7 @@
   <div style="font-size:48px;margin-bottom:16px;">🔑</div>
   <h3>Admin Login</h3>
   <p>Sign in to manage meets</p>
-  <div class="field" style="text-align:left"><label>Email</label><input type="email" id="emailInput" placeholder="your@email.com"></div>
+  <div class="field" style="text-align:left"><label>Email</label><input type="email" id="emailInput" placeholder="jjester58@gmail.com"></div>
   <div class="field" style="text-align:left"><label>Password</label><input type="password" id="pwInput" placeholder="••••••••" onkeypress="if(event.key==='Enter')login()"></div>
   <button class="btn btn-green" onclick="login()">Sign In</button>
   <button class="btn btn-ghost" onclick="signUp()">Create Account</button>
@@ -179,26 +174,25 @@ let activeMeetId = null;
 let activeMeet = null;
 let currentUser = null;
 
-const YOUR_EMAIL = 'jjester58@gmail.com';   // Super admin email
+const YOUR_EMAIL = 'jjester58@gmail.com';
 
 function isSuperAdmin() {
   return currentUser && currentUser.email === YOUR_EMAIL;
 }
 
-// Auth handling
+// Auth
 async function initAuth() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     currentUser = session.user;
     showAdmin();
-  } else {
-    sb.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        currentUser = session.user;
-        showAdmin();
-      }
-    });
   }
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      currentUser = session.user;
+      showAdmin();
+    }
+  });
 }
 
 function showAdmin() {
@@ -240,12 +234,11 @@ function flashErr(el, msg, type = 'err') {
   el.className = `st show st-${type}`;
 }
 
-// Load meets - Super admin sees ALL meets
+// Load meets - super admin sees everything
 async function loadMeets() {
   if (!currentUser) return;
 
   let query = sb.from('meets').select('*').order('date', { ascending: false });
-
   if (!isSuperAdmin()) {
     query = query.eq('owner_id', currentUser.id);
   }
@@ -284,7 +277,7 @@ async function selectMeet(id) {
   renderEditPanel();
 }
 
-// Full original renderEditPanel + New Meet card restored
+// Full original renderEditPanel
 async function renderEditPanel() {
   const m = activeMeet;
   const ep = document.getElementById('editPanel');
@@ -372,7 +365,7 @@ async function renderEditPanel() {
   loadEventList();
 }
 
-// === Your original functions (unchanged) ===
+// All your original functions below (unchanged)
 
 async function saveDetails() {
   const name = document.getElementById('eName').value.trim();
