@@ -21,6 +21,25 @@
     #offlineBanner { display: none; background: #dc3545; color: white; padding: 7px; text-align: center; font-weight: bold; font-size: 13px; flex-shrink: 0; }
     #offlineBanner.show { display: block; }
 
+    /* ── Flight bar strip ── */
+    #flightBarStrip {
+      display: none; background: #1e3a1e; color: white; padding: 8px 12px;
+      flex-shrink: 0; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    #flightBarStrip.show { display: flex; }
+    #flightBarStrip label { font-size: 12px; opacity: .75; white-space: nowrap; }
+    #flightBarInput {
+      width: 90px; padding: 6px 8px; border-radius: 5px; border: none;
+      font-size: 16px; font-weight: bold; text-align: center; background: #fff;
+    }
+    .fbar-inc { padding: 6px 10px; background: rgba(255,255,255,.15);
+                border: 1px solid rgba(255,255,255,.4); color: white;
+                border-radius: 5px; cursor: pointer; font-size: 13px; }
+    #flightBarSet { padding: 6px 14px; background: #28a745; border: none;
+                    color: white; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    #flightBarDisplay { font-size: 14px; font-weight: bold; margin-left: 4px;
+                        background: rgba(255,255,255,.1); padding: 4px 10px; border-radius: 5px; }
+
     .ev-header { background: #1a3a5c; padding: 8px 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex-shrink: 0; }
     .ev-header select { flex: 1; min-width: 160px; padding: 8px 10px; background: #0d2a4a; color: white; border: 1px solid #2a5a8c; border-radius: 6px; font-size: 14px; }
     .phase-btn { padding: 7px 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; white-space: nowrap; }
@@ -30,9 +49,13 @@
     .left-panel  { width: 40%; border-right: 2px solid #ddd; overflow-y: auto; background: white; }
     .right-panel { flex: 1; overflow-y: auto; padding: 14px; background: #fdfdfd; }
 
+    /* ── Athlete list ── */
     .ath-btn { width: 100%; padding: 11px 12px; border: none; border-bottom: 1px solid #eee; background: white; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; }
     .ath-btn:hover  { background: #f4f7ff; }
     .ath-btn.active { background: #e6f0ff; border-left: 5px solid #1a5a8c; }
+    .ath-btn.passing-height { background: #f4f4f4; opacity: 0.7; }
+    .ath-btn.needs-checkin  { background: #fffbf0; }
+    .ath-btn.eliminated     { background: #fff5f5; }
     .ath-info { flex: 1; min-width: 0; }
     .ath-name-txt { font-weight: 700; font-size: 14px; color: #1a2a3a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ath-team-txt { font-size: 11px; color: #888; }
@@ -45,34 +68,49 @@
     .pl-4,.pl-5,.pl-6,.pl-7,.pl-8 { background: #e9ecef; color: #333; }
     .pl-T { background: #6c757d; color: #fff; font-style: italic; }
     .pl-0 { background: transparent; }
+    .pl-elim { background: #dc3545; color: white; font-size: 10px; }
 
+    .entry-badge {
+      display: inline-block; background: #e8f4fd; border: 1px solid #90caf9;
+      color: #1565c0; font-size: 11px; font-weight: bold; padding: 2px 7px;
+      border-radius: 10px; margin-top: 3px; white-space: nowrap;
+    }
+    .entry-badge.not-checked { background: #fff8e1; border-color: #f9a825; color: #795548; }
+
+    /* ── Section headers in athlete list ── */
+    .list-section-header {
+      background: #e8f0fe; color: #1a3a5c; font-size: 11px; font-weight: bold;
+      padding: 4px 12px; letter-spacing: 0.5px; border-top: 2px solid #c5d4f5;
+      border-bottom: 1px solid #c5d4f5;
+    }
+    .list-section-header.elim { background: #fde8e8; color: #c62828; border-color: #f5c5c5; }
+
+    /* ── Cards ── */
     .rcard { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 14px; }
     .rcard h2 { margin: 0 0 2px; font-size: 20px; color: #1a2a3a; }
     .rcard .sub { font-size: 13px; color: #888; margin-bottom: 14px; }
 
-    .phase-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    /* ── Horizontal mark entry ── */
+    .phase-info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
     .phase-label { font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4a7aaa; background: #e8f0ff; padding: 3px 10px; border-radius: 12px; }
     .att-counter { font-size: 13px; color: #555; }
     .limit-warn  { font-size: 13px; font-weight: 700; color: #dc3545; }
-
-    .mark-entry { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
-    .mark-field { display: flex; flex-direction: column; gap: 4px; }
+    .mark-entry  { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 12px; }
+    .mark-field  { display: flex; flex-direction: column; gap: 4px; }
     .mark-field label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
     .mark-field input, .mark-field select { padding: 11px 8px; font-size: 20px; font-weight: 700; width: 72px; text-align: center; border: 2px solid #ccc; border-radius: 8px; background: #f8f9fa; color: #1a2a3a; }
     .mark-field input:focus, .mark-field select:focus { border-color: #1a5a8c; outline: none; background: white; }
     .mark-sep { font-size: 24px; font-weight: 900; color: #aaa; padding-bottom: 6px; }
-
-    .btn-row { display: flex; gap: 8px; margin-top: 4px; }
-    .btn-save  { flex: 2; padding: 14px; background: #1a5a8c; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+    .btn-row  { display: flex; gap: 8px; margin-top: 4px; }
+    .btn-save { flex: 2; padding: 14px; background: #1a5a8c; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
     .btn-save:hover:not(:disabled) { background: #1e6aa0; }
     .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-foul  { flex: 1; padding: 14px; background: #dc3545; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
+    .btn-foul { flex: 1; padding: 14px; background: #dc3545; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; }
     .btn-foul:hover:not(:disabled) { background: #c82333; }
     .btn-foul:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-cancel { width: 100%; padding: 10px; background: #f8f9fa; color: #666; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 8px; }
     .btn-cancel:hover { background: #e9ecef; }
-
-    .att-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 7px; }
+    .att-row  { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 7px; }
     .att-num  { font-size: 11px; font-weight: 700; color: #888; min-width: 40px; }
     .att-mark { flex: 1; font-size: 17px; font-weight: 800; color: #1a2a3a; }
     .att-result { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
@@ -85,18 +123,96 @@
     .att-del:hover { background: #fcc; }
     .editing-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-weight: 700; color: #856404; margin-bottom: 12px; }
 
-    .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    /* ════════════════════════════════════════════
+       VERTICAL — CHECK-IN PANEL
+    ════════════════════════════════════════════ */
+    #checkInPanel {
+      background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+      border: 2px solid #f9a825; border-radius: 12px; padding: 16px; margin-bottom: 14px;
+    }
+    #checkInPanel .ci-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    #checkInPanel .ci-icon   { font-size: 20px; }
+    #checkInPanel .ci-header h4 { margin: 0; color: #5d4037; font-size: 14px; font-weight: bold; }
+    #checkInPanel .ci-bar-label { font-size: 11px; color: #795548; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    #checkInPanel .ci-bar-height { font-size: 28px; font-weight: bold; color: #1a3a5c; margin-bottom: 14px; line-height: 1; }
+
+    .btn-checkin-in {
+      width: 100%; padding: 14px; background: #1a3a5c; color: white;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: bold;
+      cursor: pointer; margin-bottom: 10px;
+    }
+    .btn-checkin-in:hover { background: #0d2644; }
+
+    .pass-expander { border: 1px solid #e0c97a; border-radius: 8px; overflow: hidden; }
+    .pass-expander-header {
+      width: 100%; padding: 11px 14px; background: #fff8e1; border: none; cursor: pointer;
+      font-size: 13px; font-weight: bold; color: #795548; text-align: left;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .pass-expander-header:hover { background: #fff3cd; }
+    .pass-expander-body { display: none; padding: 12px; background: white; border-top: 1px solid #e0c97a; }
+    .pass-expander-body.open { display: block; }
+
+    .pass-height-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .pass-height-row input {
+      width: 110px; padding: 10px; border: 2px solid #1a3a5c; border-radius: 6px;
+      font-size: 20px; font-weight: bold; text-align: center; color: #1a3a5c;
+    }
+    .pass-height-row .ph-inc {
+      padding: 8px 10px; background: #eef4ff; border: 1px solid #1a3a5c;
+      color: #1a3a5c; border-radius: 5px; cursor: pointer; font-size: 12px; white-space: nowrap;
+    }
+    .btn-confirm-pass {
+      width: 100%; padding: 12px; background: #e65100; color: white;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer;
+    }
+    .btn-confirm-pass:hover { background: #bf360c; }
+    .pass-preview { font-size: 12px; color: #795548; margin-bottom: 8px; font-style: italic; }
+
+    /* Check-in done state */
+    #checkInDone {
+      border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;
+      display: none; align-items: center; gap: 10px;
+    }
+    #checkInDone.show-accepted { display: flex; background: #e8f5e9; border: 2px solid #43a047; }
+    #checkInDone.show-passed   { display: flex; background: #e3f2fd; border: 2px solid #1e88e5; }
+    #checkInDone .ci-done-icon  { font-size: 22px; flex-shrink: 0; }
+    #checkInDone .ci-done-text  { flex: 1; }
+    #checkInDone .ci-done-title { font-weight: bold; font-size: 14px; }
+    #checkInDone .ci-done-sub   { font-size: 12px; opacity: 0.8; }
+    .btn-ci-redo {
+      background: none; border: 1px solid currentColor; border-radius: 5px;
+      padding: 4px 10px; font-size: 11px; cursor: pointer; opacity: 0.7; flex-shrink: 0;
+    }
+    .btn-ci-redo:hover { opacity: 1; }
+
+    /* ── Vertical attempt entry ── */
+    .vmark-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0; }
+    .vmark-btn  { height: 70px; border-radius: 10px; font-size: 30px; font-weight: 900; color: white; border: none; cursor: pointer; }
+    .vmark-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .vmark-lbl  { text-align: center; font-size: 11px; color: #888; margin-top: 3px; }
+    .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
+
+    .bar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .bar-input { width: 90px; padding: 10px; font-size: 20px; font-weight: 700; text-align: center; background: #f0f4ff; border: 2px solid #1e5a8c; border-radius: 8px; color: #1a2a3a; }
     .bar-inc { padding: 8px 12px; background: #0d2a4a; color: #7eb8f7; border: 1px solid #1e5a8c; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
     .bar-inc:hover { background: #1a3a5c; }
-    .bar-set { padding: 8px 12px; background: #155724; color: #4dca7a; border: 1px solid #28a745; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .vmark-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 10px 0; }
-    .vmark-btn { height: 70px; border-radius: 10px; font-size: 30px; font-weight: 900; color: white; border: none; cursor: pointer; }
-    .vmark-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .btn-o { background: #28a745; } .btn-x { background: #dc3545; } .btn-p { background: #6c757d; }
-    .vmark-lbl { text-align: center; font-size: 11px; color: #888; margin-top: 3px; }
-    .cleared-row { font-size: 13px; color: #28a745; font-weight: 700; margin-bottom: 10px; }
+
+    .height-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 10px; background: #f8f9fa; border-radius: 6px;
+      margin-bottom: 6px; font-size: 13px; border: 1px solid #eee;
+    }
+    .height-row.current-ht { border-color: #1a3a5c; background: #eef4ff; font-weight: bold; }
+    .height-row.height-cleared { background: #f0fff4; border-color: #a5d6a7; }
+
+    .cleared-banner {
+      display: none; background: #e8f5e9; border: 2px solid #43a047;
+      border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+      font-weight: bold; color: #2e7d32; font-size: 14px;
+    }
     .elim-banner { background: #f8d7da; border: 1px solid #dc3545; color: #721c24; padding: 10px 12px; border-radius: 8px; font-weight: 700; font-size: 14px; margin-bottom: 10px; text-align: center; }
+    .pv-std-box  { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -108,6 +224,17 @@
   <div class="meet-pill" id="topMeetName">Loading…</div>
   <div class="topbar-title">SCORING</div>
   <a href="index.html" class="nav-home">⌂</a>
+</div>
+
+<!-- Flight bar strip (vertical events only) -->
+<div id="flightBarStrip">
+  <label>FLIGHT BAR:</label>
+  <input type="text" id="flightBarInput" placeholder="e.g. 6-00">
+  <button class="fbar-inc" onclick="incFlightBar(2)">+2"</button>
+  <button class="fbar-inc" onclick="incFlightBar(6)">+6"</button>
+  <button class="fbar-inc" onclick="incFlightBar(12)">+1'</button>
+  <button id="flightBarSet" onclick="setFlightBar()">SET BAR ▶</button>
+  <span id="flightBarDisplay"></span>
 </div>
 
 <div class="ev-header">
@@ -143,20 +270,17 @@ let currentAth     = null;
 let athleteList    = [];
 let allAttempts    = [];
 let editingId      = null;
-let verticalState  = {};
 
-const VSTATE_KEY = 'fep_vertical_state_v1';
-
+// Vertical-specific state
+let flightBarHeight = '';                 // the current bar set for the entire flight
+let checkinStatus   = {};                 // { athleteId: { status: 'accepted'|'passed'|null, entryHeight: '8-06'|null } }
 
 // ── Init ──────────────────────────────────────────────────────
 window.onload = async () => {
   const stored = sessionStorage.getItem('fep_meet');
   if (!stored) { window.location.href = 'index.html'; return; }
   currentMeet = JSON.parse(stored);
-
-  loadVerticalState();
-
-  document.getElementById('topLogo').src = currentMeet.logo_url || IRONCLAD;
+  document.getElementById('topLogo').src      = currentMeet.logo_url || IRONCLAD;
   document.getElementById('topMeetName').textContent = currentMeet.name || 'Meet';
   await loadEvents();
   const b = document.getElementById('offlineBanner');
@@ -183,11 +307,18 @@ async function loadEvents() {
 async function loadEvent() {
   currentEventId = document.getElementById('eventSelect').value;
   currentAth = null; editingId = null; allAttempts = [];
+  flightBarHeight = '';
+  checkinStatus   = {};
+  document.getElementById('flightBarInput').value       = '';
+  document.getElementById('flightBarDisplay').textContent = '';
+
   if (!currentEventId) return;
 
   const evName = document.getElementById('eventSelect').selectedOptions[0].text.toLowerCase();
   isVertical = evName.includes('high jump') || evName.includes('pole vault');
+
   document.getElementById('phaseBtns').style.display = isVertical ? 'none' : 'flex';
+  document.getElementById('flightBarStrip').classList.toggle('show', isVertical);
 
   const [{ data: assigns }, { data: attempts }] = await Promise.all([
     sb.from('event_assignments')
@@ -220,9 +351,41 @@ function setPhase(phase) {
   if (currentAth) renderRight();
 }
 
-// ─────────────────────────────────────────────────────────────
-//  LEFT PANEL
-// ─────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════
+// FLIGHT BAR
+// ════════════════════════════════════════════════════════
+function incFlightBar(inches) {
+  let cur = document.getElementById('flightBarInput').value || '0-00';
+  if (!cur.includes('-')) cur = '0-00';
+  let [f, i] = cur.split('-').map(Number);
+  let total = (f * 12) + (i || 0) + inches;
+  document.getElementById('flightBarInput').value =
+    Math.floor(total / 12) + '-' + (total % 12).toString().padStart(2, '0');
+}
+
+function setFlightBar() {
+  const val = document.getElementById('flightBarInput').value.trim();
+  if (!val || !val.includes('-')) { alert('Enter a valid height like 6-00'); return; }
+  flightBarHeight = val;
+  document.getElementById('flightBarDisplay').textContent = '▶ Current: ' + val;
+
+  // Auto-activate athletes who were passing to this height or lower
+  Object.keys(checkinStatus).forEach(id => {
+    const ci = checkinStatus[id];
+    if (ci && ci.status === 'passed' && ci.entryHeight) {
+      if (parseHeight(ci.entryHeight) <= parseHeight(flightBarHeight)) {
+        checkinStatus[id] = { status: null, entryHeight: null };
+      }
+    }
+  });
+
+  renderLeft();
+  if (currentAth && isVertical) renderRight();
+}
+
+// ═════════════════════════════════════════════════════════
+// LEFT PANEL
+// ═════════════════════════════════════════════════════════
 function renderLeft() {
   const left = document.getElementById('leftPanel');
   if (!athleteList.length) {
@@ -230,37 +393,623 @@ function renderLeft() {
     return;
   }
 
+  if (isVertical) {
+    renderLeftVertical(left);
+  } else {
+    renderLeftHorizontal(left);
+  }
+}
+
+function renderLeftVertical(left) {
+  const scoreMap = buildVScoreMap();
+
+  // Sort into 3 groups: active, passing, eliminated
+  const active = [], passing = [], elimed = [];
+  athleteList.forEach(a => {
+    const myAtts = allAttempts.filter(x => x.athlete_id === a.id);
+    if (isEliminated(myAtts)) {
+      elimed.push(a);
+    } else {
+      const ci = checkinStatus[a.id];
+      if (flightBarHeight && ci && ci.status === 'passed' && ci.entryHeight) {
+        passing.push(a);
+      } else {
+        active.push(a);
+      }
+    }
+  });
+  passing.sort((a, b) => {
+    const ha = parseHeight((checkinStatus[a.id] || {}).entryHeight || '0-00') || 0;
+    const hb = parseHeight((checkinStatus[b.id] || {}).entryHeight || '0-00') || 0;
+    return ha - hb;
+  });
+
+  left.innerHTML = '';
+
+  const buildBtn = (ath, extraClass, entryNote) => {
+    const myAtts  = allAttempts.filter(x => x.athlete_id === ath.id);
+    const cleared = getClearedHeights(myAtts);
+    const best    = cleared.length ? cleared[cleared.length - 1] : null;
+    const place   = getVPlace(ath.id, scoreMap);
+    const elim    = isEliminated(myAtts);
+    const isActive = currentAth && currentAth.id === ath.id;
+
+    const btn = document.createElement('button');
+    btn.className = `ath-btn${isActive ? ' active' : ''}${elim ? ' eliminated' : ''}${extraClass ? ' ' + extraClass : ''}`;
+
+    const badgeHtml = elim
+      ? `<div class="place-badge pl-elim">OUT</div>`
+      : placeBadgeHtml(place, ath.id, scoreMap);
+
+    btn.innerHTML = `
+      ${badgeHtml}
+      <div class="ath-info">
+        <div class="ath-name-txt">${ath.name}</div>
+        ${ath.team ? `<div class="ath-team-txt">${ath.team}</div>` : ''}
+        ${best     ? `<div class="ath-best-txt">Best: ${best}</div>` : ''}
+        ${entryNote || ''}
+      </div>`;
+    btn.onclick = () => { currentAth = ath; editingId = null; renderLeft(); renderRight(); };
+    return btn;
+  };
+
+  // Active athletes
+  active.forEach(a => {
+    const ci = checkinStatus[a.id];
+    const hasAttemptAtBar = flightBarHeight && allAttempts.some(x => x.athlete_id === a.id && x.height === flightBarHeight);
+    let entryNote = '';
+    if (flightBarHeight && !hasAttemptAtBar && !(ci && ci.status === 'accepted')) {
+      entryNote = `<span class="entry-badge not-checked">⏳ Not checked in for ${flightBarHeight}</span>`;
+    }
+    left.appendChild(buildBtn(a, '', entryNote));
+  });
+
+  // Passing athletes
+  if (passing.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'list-section-header';
+    hdr.textContent = '↑ PASSING CURRENT HEIGHT — waiting for bar to rise';
+    left.appendChild(hdr);
+    passing.forEach(a => {
+      const ci = checkinStatus[a.id];
+      const note = `<span class="entry-badge">↑ IN @ ${ci.entryHeight}</span>`;
+      left.appendChild(buildBtn(a, 'passing-height', note));
+    });
+  }
+
+  // Eliminated
+  if (elimed.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'list-section-header elim';
+    hdr.textContent = '❌ ELIMINATED';
+    left.appendChild(hdr);
+    elimed.forEach(a => left.appendChild(buildBtn(a, 'eliminated', '')));
+  }
+}
+
+function renderLeftHorizontal(left) {
   const scoreMap = buildScoreMap();
   let displayList = athleteList;
-
   if (currentPhase === 'finals') {
     displayList = [...athleteList]
       .map(a => ({ ...a, best: scoreMap[a.id] ?? -1 }))
       .sort((a, b) => b.best - a.best)
       .slice(0, 8)
-      .reverse(); // 8th at top, 1st at bottom
+      .reverse();
   }
-
   left.innerHTML = '';
   displayList.forEach(ath => {
     const score   = scoreMap[ath.id] ?? -1;
     const place   = getPlace(ath.id, scoreMap);
     const bestStr = score >= 0 ? inchesToMark(score) : null;
-
     const btn = document.createElement('button');
     btn.className = 'ath-btn' + (currentAth && currentAth.id === ath.id ? ' active' : '');
     btn.innerHTML = `
       ${placeBadgeHtml(place, ath.id, scoreMap)}
       <div class="ath-info">
         <div class="ath-name-txt">${ath.name}</div>
-        ${ath.team   ? `<div class="ath-team-txt">${ath.team}</div>` : ''}
-        ${bestStr    ? `<div class="ath-best-txt">${bestStr}</div>`  : ''}
+        ${ath.team ? `<div class="ath-team-txt">${ath.team}</div>` : ''}
+        ${bestStr  ? `<div class="ath-best-txt">${bestStr}</div>`  : ''}
       </div>`;
     btn.onclick = () => { currentAth = ath; editingId = null; renderLeft(); renderRight(); };
     left.appendChild(btn);
   });
 }
 
+// ═════════════════════════════════════════════════════════
+// RIGHT PANEL
+// ═════════════════════════════════════════════════════════
+function renderRight() {
+  if (!currentAth) return;
+  isVertical ? renderVertical() : renderHorizontal();
+}
+
+// ═════════════════════════════════════════════════════════
+// HORIZONTAL EVENTS (unchanged)
+// ═════════════════════════════════════════════════════════
+function renderHorizontal() {
+  const right  = document.getElementById('rightPanel');
+  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  const limit  = PHASE_LIMIT[currentPhase];
+  const canAdd = !editingId && myAtts.length < limit;
+  const done   = !editingId && myAtts.length >= limit;
+  const editingNum = editingId ? (myAtts.find(a => a.id === editingId)?.attempt_number ?? '') : '';
+
+  right.innerHTML = `
+    <div class="rcard">
+      <h2>${currentAth.name}</h2>
+      <div class="sub">${currentAth.team || ''}</div>
+      <div class="phase-info-row">
+        <span class="phase-label">${currentPhase === '3att' ? '3-Attempt Prelims' : currentPhase === '4att' ? '4-Attempt Prelims' : 'Finals'}</span>
+        <span class="att-counter">${myAtts.length} / ${limit} attempts</span>
+        ${done ? '<span class="limit-warn">All attempts complete</span>' : ''}
+      </div>
+      ${editingId ? `<div class="editing-banner">✏️ Editing Attempt ${editingNum} — change values and press UPDATE</div>` : ''}
+      <div class="mark-entry">
+        <div class="mark-field"><label>Feet</label><input type="number" id="hFt" min="0" max="99" placeholder="0"></div>
+        <div class="mark-sep">-</div>
+        <div class="mark-field"><label>Inches</label><input type="number" id="hIn" min="0" max="11" placeholder="0"></div>
+        <div class="mark-field"><label>¼"</label>
+          <select id="hQtr">
+            <option value="0">.00</option><option value="0.25">.25</option>
+            <option value="0.5">.50</option><option value="0.75">.75</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-save" onclick="saveMark()" ${!canAdd && !editingId ? 'disabled' : ''}>${editingId ? 'UPDATE MARK' : 'SAVE MARK'}</button>
+        <button class="btn-foul" onclick="saveFoul()" ${!canAdd ? 'disabled' : ''}>FOUL</button>
+      </div>
+      ${editingId ? `<button class="btn-cancel" onclick="cancelEdit()">Cancel Edit</button>` : ''}
+    </div>
+    <div class="rcard">
+      <h3 style="margin:0 0 12px;font-size:16px;">Attempt History</h3>
+      <div id="attHistory"></div>
+    </div>`;
+  renderHHistory(myAtts);
+}
+
+async function saveMark() {
+  if (!currentAth || !currentEventId) return;
+  const ft  = parseInt(document.getElementById('hFt').value)    || 0;
+  const ins = parseInt(document.getElementById('hIn').value)    || 0;
+  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
+  if (ft === 0 && ins === 0 && qtr === 0) { alert('Enter a distance.'); return; }
+  const totalIns = ins + qtr;
+  const inStr    = totalIns % 1 === 0 ? String(Math.round(totalIns)).padStart(2, '0') : totalIns.toFixed(2);
+  const mark     = `${ft}-${inStr}`;
+  if (editingId) {
+    const { error } = await sb.from('attempts').update({ mark, result: 'make' }).eq('id', editingId);
+    if (error) { alert('Update failed: ' + error.message); return; }
+    editingId = null;
+  } else {
+    const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+    if (myAtts.length >= PHASE_LIMIT[currentPhase]) return;
+    const { error } = await sb.from('attempts').insert({ meet_id: currentMeet.id, event_id: currentEventId, athlete_id: currentAth.id, attempt_number: myAtts.length + 1, mark, result: 'make' });
+    if (error) { alert('Save failed: ' + error.message); return; }
+  }
+  await refresh();
+}
+
+async function saveFoul() {
+  if (!currentAth || !currentEventId) return;
+  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  if (myAtts.length >= PHASE_LIMIT[currentPhase]) return;
+  const { error } = await sb.from('attempts').insert({ meet_id: currentMeet.id, event_id: currentEventId, athlete_id: currentAth.id, attempt_number: myAtts.length + 1, mark: 'FOUL', result: 'foul' });
+  if (error) { alert('Save failed: ' + error.message); return; }
+  await refresh();
+}
+
+function editAttempt(id) {
+  const att = allAttempts.find(a => a.id === id);
+  if (!att) return;
+  editingId = id;
+  if (att.mark && att.mark !== 'FOUL' && att.mark.includes('-')) {
+    const [ftStr, insPart] = att.mark.split('-');
+    const totalIns = parseFloat(insPart) || 0;
+    const wholeIns = Math.floor(totalIns);
+    const qtr      = +(totalIns - wholeIns).toFixed(2);
+    setTimeout(() => {
+      const ftEl = document.getElementById('hFt');
+      const inEl = document.getElementById('hIn');
+      const qEl  = document.getElementById('hQtr');
+      if (ftEl) ftEl.value = ftStr || '';
+      if (inEl) inEl.value = wholeIns || '';
+      if (qEl)  qEl.value  = [0, 0.25, 0.5, 0.75].includes(qtr) ? qtr : 0;
+    }, 30);
+  }
+  renderRight();
+}
+
+function cancelEdit() { editingId = null; renderRight(); }
+
+async function deleteAttempt(id) {
+  if (!confirm('Delete this attempt? This cannot be undone.')) return;
+  const { error } = await sb.from('attempts').delete().eq('id', id);
+  if (error) { alert('Delete failed: ' + error.message); return; }
+  if (editingId === id) editingId = null;
+  await refresh();
+}
+
+function renderHHistory(attempts) {
+  const el = document.getElementById('attHistory');
+  if (!el) return;
+  if (!attempts.length) { el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>'; return; }
+  el.innerHTML = [...attempts].sort((a, b) => a.attempt_number - b.attempt_number).map(a => `
+    <div class="att-row">
+      <span class="att-num">ATT ${a.attempt_number}</span>
+      <span class="att-mark">${a.mark || '—'}</span>
+      <span class="att-result ${a.result === 'make' ? 'res-make' : 'res-foul'}">${a.result === 'make' ? 'MAKE' : 'FOUL'}</span>
+      <button class="att-edit" onclick="editAttempt('${a.id}')">Edit</button>
+      <button class="att-del"  onclick="deleteAttempt('${a.id}')">Del</button>
+    </div>`).join('');
+}
+
+// ═════════════════════════════════════════════════════════
+// VERTICAL EVENTS — main render
+// ═════════════════════════════════════════════════════════
+function renderVertical() {
+  const right  = document.getElementById('rightPanel');
+  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  const elim   = isEliminated(myAtts);
+  const isPV   = isPoleVaultEvent();
+
+  right.innerHTML = `
+    <div class="rcard">
+      <h2>${currentAth.name}</h2>
+      <div class="sub">${currentAth.team || ''}</div>
+
+      <!-- CHECK-IN PANEL -->
+      <div id="checkInPanel" class="hidden"></div>
+      <div id="checkInDone"></div>
+
+      ${elim ? '<div class="elim-banner">❌ Eliminated — 3 misses at one height</div>' : ''}
+
+      ${isPV ? `
+        <div class="pv-std-box" id="pvStdBox">
+          <b>PV Standards:</b>
+          <input type="number" id="pvStds" placeholder="Standard height"
+                 style="width:130px;display:inline-block;margin-left:8px;">
+        </div>` : ''}
+
+      <div id="vActiveUI" ${elim ? 'style="display:none"' : ''}>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin-bottom:6px;">
+          Bar Height (this attempt)
+        </div>
+        <div class="bar-row" style="margin-bottom:14px;">
+          <input class="bar-input" type="text" id="vBarHeight" placeholder="e.g. 6-00"
+                 value="${flightBarHeight || ''}">
+          <button class="bar-inc" onclick="incVBar(2)">+2"</button>
+          <button class="bar-inc" onclick="incVBar(6)">+6"</button>
+          <button class="bar-inc" onclick="incVBar(0)">Clear</button>
+        </div>
+
+        <div class="vmark-grid">
+          <div>
+            <button class="vmark-btn btn-o" onclick="submitV('O')">O</button>
+            <div class="vmark-lbl">Clear</div>
+          </div>
+          <div>
+            <button class="vmark-btn btn-x" onclick="submitV('X')">X</button>
+            <div class="vmark-lbl">Miss</div>
+          </div>
+          <div>
+            <button class="vmark-btn btn-p" onclick="submitV('P')">P</button>
+            <div class="vmark-lbl">Pass</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cleared-banner" id="clearedBanner"></div>
+
+      <h4 style="margin:16px 0 6px;border-bottom:1px solid #eee;padding-bottom:5px;">Height Log</h4>
+      <div id="vHeightLog"></div>
+
+      <h4 style="margin:16px 0 6px;border-bottom:1px solid #eee;padding-bottom:5px;">All Attempts</h4>
+      <div id="attHistory"></div>
+    </div>`;
+
+  renderCheckIn();
+  renderVHeightLog(myAtts);
+  renderVHistory(myAtts);
+}
+
+// ── Check-in panel ─────────────────────────────────────────
+function renderCheckIn() {
+  const ciPanel = document.getElementById('checkInPanel');
+  const ciDone  = document.getElementById('checkInDone');
+  if (!ciPanel || !ciDone) return;
+
+  if (!flightBarHeight || !currentAth) {
+    ciPanel.classList.add('hidden');
+    ciDone.className = '';
+    ciDone.style.display = 'none';
+    return;
+  }
+
+  const myAtts = allAttempts.filter(x => x.athlete_id === currentAth.id);
+  if (isEliminated(myAtts)) {
+    ciPanel.classList.add('hidden');
+    ciDone.className = '';
+    ciDone.style.display = 'none';
+    return;
+  }
+
+  const ci = checkinStatus[currentAth.id];
+  const hasAttemptAtBar = myAtts.some(x => x.height === flightBarHeight);
+
+  if ((ci && ci.status === 'accepted') || hasAttemptAtBar) {
+    ciPanel.classList.add('hidden');
+    ciDone.className = 'show-accepted';
+    ciDone.style.display = '';
+    ciDone.innerHTML = `
+      <span class="ci-done-icon">✅</span>
+      <div class="ci-done-text">
+        <div class="ci-done-title">Competing at ${flightBarHeight}</div>
+        <div class="ci-done-sub">Checked in for current bar</div>
+      </div>
+      <button class="btn-ci-redo" onclick="redoCheckIn()" style="color:#555;">Edit</button>`;
+
+  } else if (ci && ci.status === 'passed' && ci.entryHeight) {
+    ciPanel.classList.add('hidden');
+    ciDone.className = 'show-passed';
+    ciDone.style.display = '';
+    ciDone.innerHTML = `
+      <span class="ci-done-icon">⏭</span>
+      <div class="ci-done-text">
+        <div class="ci-done-title">Passing ${flightBarHeight} — enters at ${ci.entryHeight}</div>
+        <div class="ci-done-sub">Sitting out until bar reaches their height</div>
+      </div>
+      <button class="btn-ci-redo" onclick="redoCheckIn()" style="color:#1e88e5;">Edit</button>`;
+
+  } else {
+    // Show check-in prompt
+    ciPanel.classList.remove('hidden');
+    ciDone.style.display = 'none';
+    ciPanel.innerHTML = `
+      <div class="ci-header">
+        <span class="ci-icon">📋</span>
+        <h4>Check-In — Bar is set</h4>
+      </div>
+      <div class="ci-bar-label">Current bar height</div>
+      <div class="ci-bar-height">${flightBarHeight}</div>
+
+      <button class="btn-checkin-in" onclick="doCheckIn('accept')">
+        ✓ IN — Competing at ${flightBarHeight}
+      </button>
+
+      <div class="pass-expander">
+        <button class="pass-expander-header" onclick="togglePassExpander()">
+          <span>↑ Pass — entering at a higher height</span>
+          <span id="passExpanderCaret">▼</span>
+        </button>
+        <div class="pass-expander-body" id="passExpanderBody">
+          <div class="ci-bar-label" style="margin-bottom:6px;">Athlete's opening height</div>
+          <div class="pass-height-row">
+            <input type="text" id="passHeightInput" placeholder="e.g. 8-06" oninput="updatePassPreview()">
+            <button class="ph-inc" onclick="incPassHeight(2)">+2"</button>
+            <button class="ph-inc" onclick="incPassHeight(6)">+6"</button>
+            <button class="ph-inc" onclick="incPassHeight(12)">+1'</button>
+          </div>
+          <div class="pass-preview" id="passPreview"></div>
+          <button class="btn-confirm-pass" onclick="doCheckIn('pass')">
+            CONFIRM — Pass to <span id="passHeightLabel">—</span>
+          </button>
+        </div>
+      </div>`;
+  }
+}
+
+function togglePassExpander() {
+  const body  = document.getElementById('passExpanderBody');
+  const caret = document.getElementById('passExpanderCaret');
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  caret.textContent = open ? '▲' : '▼';
+  if (open && flightBarHeight) {
+    const [f, i] = flightBarHeight.split('-').map(Number);
+    const total  = (f * 12) + (i || 0) + 6;
+    document.getElementById('passHeightInput').value =
+      Math.floor(total / 12) + '-' + (total % 12).toString().padStart(2, '0');
+    updatePassPreview();
+  }
+}
+
+function incPassHeight(inches) {
+  const el = document.getElementById('passHeightInput');
+  if (!el) return;
+  let cur = el.value || '0-00';
+  if (!cur.includes('-')) cur = '0-00';
+  let [f, i] = cur.split('-').map(Number);
+  let total = (f * 12) + (i || 0) + inches;
+  el.value = Math.floor(total / 12) + '-' + (total % 12).toString().padStart(2, '0');
+  updatePassPreview();
+}
+
+function updatePassPreview() {
+  const val = document.getElementById('passHeightInput')?.value?.trim();
+  const lbl = document.getElementById('passHeightLabel');
+  const pre = document.getElementById('passPreview');
+  if (!lbl || !pre) return;
+  if (val && val.includes('-')) {
+    lbl.textContent = val;
+    if (flightBarHeight) {
+      const cur   = parseHeight(flightBarHeight);
+      const entry = parseHeight(val);
+      if (entry !== null && cur !== null) {
+        if (entry <= cur) {
+          pre.textContent = '⚠ Entry height must be higher than the current bar.';
+          pre.style.color = '#e53935';
+        } else {
+          pre.textContent = `Athlete will sit out until bar reaches ${val}.`;
+          pre.style.color = '#795548';
+        }
+      }
+    }
+  } else {
+    lbl.textContent = '—';
+    pre.textContent = '';
+  }
+}
+
+function doCheckIn(decision) {
+  if (!currentAth) return;
+  if (decision === 'accept') {
+    checkinStatus[currentAth.id] = { status: 'accepted', entryHeight: flightBarHeight };
+    document.getElementById('vBarHeight').value = flightBarHeight;
+  } else {
+    const entryHeight = document.getElementById('passHeightInput')?.value?.trim();
+    if (!entryHeight || !entryHeight.includes('-')) { alert('Enter a valid entry height (e.g. 8-06).'); return; }
+    if (flightBarHeight && parseHeight(entryHeight) <= parseHeight(flightBarHeight)) {
+      alert(`Entry height must be higher than the current bar (${flightBarHeight}).`); return;
+    }
+    checkinStatus[currentAth.id] = { status: 'passed', entryHeight };
+  }
+  renderCheckIn();
+  renderLeft();
+}
+
+function redoCheckIn() {
+  if (!currentAth) return;
+  checkinStatus[currentAth.id] = { status: null, entryHeight: null };
+  renderCheckIn();
+  renderLeft();
+}
+
+// ── Bar increment for athlete bar height field ──────────────
+function incVBar(amt) {
+  const el = document.getElementById('vBarHeight');
+  if (!el) return;
+  if (amt === 0) { el.value = ''; return; }
+  let cur = el.value || '0-00';
+  if (!cur.includes('-')) cur = '0-00';
+  let [f, i] = cur.split('-').map(Number);
+  let total = (f * 12) + (i || 0) + amt;
+  el.value = Math.floor(total / 12) + '-' + (total % 12).toString().padStart(2, '0');
+}
+
+// ── Submit vertical attempt ─────────────────────────────────
+async function submitV(result) {
+  if (!currentAth || !currentEventId) return;
+  const barEl = document.getElementById('vBarHeight');
+  const height = (barEl ? barEl.value : '').trim();
+  if (!height || !height.includes('-')) { alert('Set a bar height first.'); return; }
+
+  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
+  if (isEliminated(myAtts)) { alert('This athlete is eliminated.'); return; }
+
+  const isPV  = isPoleVaultEvent();
+  const stds  = isPV ? (document.getElementById('pvStds')?.value || '') : '';
+  const dbRes = result === 'O' ? 'make' : result === 'P' ? 'pass' : 'foul';
+  const markVal = result === 'O' ? height : result;
+
+  const payload = {
+    meet_id:        currentMeet.id,
+    event_id:       currentEventId,
+    athlete_id:     currentAth.id,
+    attempt_number: myAtts.length + 1,
+    mark:           markVal,
+    result:         dbRes,
+    height:         height
+  };
+  if (isPV && stds) payload.standards = stds;
+
+  let { error } = await sb.from('attempts').insert(payload);
+  if (error && (error.message.includes('height') || error.message.includes('schema'))) {
+    const p2 = { ...payload }; delete p2.height;
+    const fb = await sb.from('attempts').insert(p2);
+    error = fb.error;
+  }
+  if (error) { alert('Save failed: ' + error.message); return; }
+
+  // Auto-mark as accepted if attempting at flight bar
+  if (flightBarHeight && height === flightBarHeight) {
+    const ci = checkinStatus[currentAth.id];
+    if (!ci || ci.status !== 'accepted') {
+      checkinStatus[currentAth.id] = { status: 'accepted', entryHeight: flightBarHeight };
+    }
+  }
+
+  await refresh();
+}
+
+// ── Height log display ──────────────────────────────────────
+function renderVHeightLog(myAtts) {
+  const el = document.getElementById('vHeightLog');
+  if (!el) return;
+
+  const curBar = document.getElementById('vBarHeight')?.value || '';
+  const heightMap = {};
+  myAtts.forEach(a => {
+    if (!a.height) return;
+    if (!heightMap[a.height]) heightMap[a.height] = [];
+    heightMap[a.height].push(a);
+  });
+
+  const clearedCurrent = curBar && heightMap[curBar] && heightMap[curBar].some(a => a.result === 'make');
+
+  // Cleared banner
+  const banner = document.getElementById('clearedBanner');
+  if (banner) {
+    if (clearedCurrent) {
+      banner.style.display = 'block';
+      banner.textContent   = '✅ Cleared ' + curBar + ' — done until bar rises';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  if (!Object.keys(heightMap).length) {
+    el.innerHTML = '<div style="color:#999;font-size:13px;">No attempts yet.</div>';
+    return;
+  }
+
+  el.innerHTML = Object.entries(heightMap).map(([ht, atts]) => {
+    const made   = atts.some(a => a.result === 'make');
+    const misses = atts.filter(a => a.result === 'foul').length;
+    const dots   = atts.map(a =>
+      a.result === 'make' ? '<span style="color:#28a745;font-weight:bold;">O</span>' :
+      a.result === 'pass' ? '<span style="color:#6c757d;">P</span>' :
+                            '<span style="color:#dc3545;font-weight:bold;">X</span>'
+    ).join(' ');
+    let statusHtml;
+    if (made)         statusHtml = '<span style="color:#28a745;font-weight:bold;">✅ Cleared</span>';
+    else if (misses >= 3) statusHtml = '<span style="color:#dc3545;font-weight:bold;">❌ Out</span>';
+    else              statusHtml = '<span style="color:#999;">…</span>';
+    return `<div class="height-row${ht === curBar ? ' current-ht' : ''}${made ? ' height-cleared' : ''}">
+      <span><b>${ht}</b> &nbsp; ${dots}</span>
+      <span>${statusHtml}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderVHistory(attempts) {
+  const el = document.getElementById('attHistory');
+  if (!el) return;
+  const isPV = isPoleVaultEvent();
+  if (!attempts.length) {
+    el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
+    return;
+  }
+  el.innerHTML = [...attempts].sort((a, b) => a.attempt_number - b.attempt_number).map(a => {
+    const resLabel = a.result === 'make' ? 'O' : a.result === 'pass' ? 'P' : 'X';
+    const resCls   = a.result === 'make' ? 'res-make' : a.result === 'pass' ? 'res-pass' : 'res-foul';
+    const ht       = a.height ? `<span style="font-size:11px;color:#4a7aaa;min-width:52px;">${a.height}</span>` : '';
+    const std      = isPV && a.standards ? `<span style="font-size:11px;color:#666;min-width:58px;">Std ${a.standards}</span>` : '';
+    return `
+      <div class="att-row">
+        <span class="att-num">ATT ${a.attempt_number}</span>
+        ${ht}${std}
+        <span class="att-mark">${a.mark || '—'}</span>
+        <span class="att-result ${resCls}">${resLabel}</span>
+        <button class="att-del" onclick="deleteAttempt('${a.id}')">Del</button>
+      </div>`;
+  }).join('');
+}
+
+// ═════════════════════════════════════════════════════════
+// PLACEMENT HELPERS
+// ═════════════════════════════════════════════════════════
 function buildScoreMap() {
   const map = {};
   athleteList.forEach(a => { map[a.id] = -1; });
@@ -272,15 +1021,26 @@ function buildScoreMap() {
   return map;
 }
 
+function buildVScoreMap() {
+  const map = {};
+  athleteList.forEach(a => { map[a.id] = -1; });
+  allAttempts.forEach(a => {
+    if (a.result !== 'make') return;
+    const v = parseHeight(a.height || a.mark);
+    if (v !== null && v > (map[a.athlete_id] ?? -1)) map[a.athlete_id] = v;
+  });
+  return map;
+}
+
 function getPlace(athId, scoreMap) {
   const myBest = scoreMap[athId] ?? -1;
   if (myBest < 0) return null;
   let place = 1;
-  for (const [id, best] of Object.entries(scoreMap)) {
-    if (id !== athId && best > myBest) place++;
-  }
+  for (const [id, best] of Object.entries(scoreMap)) { if (id !== athId && best > myBest) place++; }
   return place;
 }
+
+function getVPlace(athId, scoreMap) { return getPlace(athId, scoreMap); }
 
 function isTied(athId, scoreMap) {
   const myBest = scoreMap[athId] ?? -1;
@@ -296,471 +1056,31 @@ function placeBadgeHtml(place, athId, scoreMap) {
   return `<div class="place-badge ${cls}">${place}</div>`;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  RIGHT PANEL
-// ─────────────────────────────────────────────────────────────
-function renderRight() {
-  if (!currentAth) return;
-  isVertical ? renderVertical() : renderHorizontal();
-}
-
-// ─────────────────────────────────────────────────────────────
-//  HORIZONTAL EVENTS
-// ─────────────────────────────────────────────────────────────
-function renderHorizontal() {
-  const right  = document.getElementById('rightPanel');
-  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const limit  = PHASE_LIMIT[currentPhase];
-  const canAdd = !editingId && myAtts.length < limit;
-  const done   = !editingId && myAtts.length >= limit;
-  const editingNum = editingId ? (myAtts.find(a => a.id === editingId)?.attempt_number ?? '') : '';
-
-  right.innerHTML = `
-    <div class="rcard">
-      <h2>${currentAth.name}</h2>
-      <div class="sub">${currentAth.team || ''}</div>
-
-      <div class="phase-info">
-        <span class="phase-label">${currentPhase === '3att' ? '3-Attempt Prelims' : currentPhase === '4att' ? '4-Attempt Prelims' : 'Finals'}</span>
-        <span class="att-counter">${myAtts.length} / ${limit} attempts</span>
-        ${done ? '<span class="limit-warn">All attempts complete</span>' : ''}
-      </div>
-
-      ${editingId ? `<div class="editing-banner">✏️ Editing Attempt ${editingNum} — change values and press UPDATE</div>` : ''}
-
-      <div class="mark-entry">
-        <div class="mark-field">
-          <label>Feet</label>
-          <input type="number" id="hFt" min="0" max="99" placeholder="0">
-        </div>
-        <div class="mark-sep">-</div>
-        <div class="mark-field">
-          <label>Inches</label>
-          <input type="number" id="hIn" min="0" max="11" placeholder="0">
-        </div>
-        <div class="mark-field">
-          <label>¼"</label>
-          <select id="hQtr">
-            <option value="0">.00</option>
-            <option value="0.25">.25</option>
-            <option value="0.5">.50</option>
-            <option value="0.75">.75</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-save" onclick="saveMark()" ${!canAdd && !editingId ? 'disabled' : ''}>
-          ${editingId ? 'UPDATE MARK' : 'SAVE MARK'}
-        </button>
-        <button class="btn-foul" onclick="saveFoul()" ${!canAdd ? 'disabled' : ''}>FOUL</button>
-      </div>
-      ${editingId ? `<button class="btn-cancel" onclick="cancelEdit()">Cancel Edit</button>` : ''}
-    </div>
-
-    <div class="rcard">
-      <h3 style="margin:0 0 12px;font-size:16px;">Attempt History</h3>
-      <div id="attHistory"></div>
-    </div>`;
-
-  renderHHistory(myAtts);
-}
-
-async function saveMark() {
-  if (!currentAth || !currentEventId) return;
-  const ft  = parseInt(document.getElementById('hFt').value)    || 0;
-  const ins = parseInt(document.getElementById('hIn').value)    || 0;
-  const qtr = parseFloat(document.getElementById('hQtr').value) || 0;
-  if (ft === 0 && ins === 0 && qtr === 0) { alert('Enter a distance.'); return; }
-
-  const totalIns = ins + qtr;
-  const inStr    = totalIns % 1 === 0
-    ? String(Math.round(totalIns)).padStart(2, '0')
-    : totalIns.toFixed(2);
-  const mark = `${ft}-${inStr}`;
-
-  if (editingId) {
-    const { error } = await sb.from('attempts').update({ mark, result: 'make' }).eq('id', editingId);
-    if (error) { alert('Update failed: ' + error.message); return; }
-    editingId = null;
-  } else {
-    const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
-    if (myAtts.length >= PHASE_LIMIT[currentPhase]) return;
-    const { error } = await sb.from('attempts').insert({
-      meet_id: currentMeet.id, event_id: currentEventId,
-      athlete_id: currentAth.id,
-      attempt_number: myAtts.length + 1,
-      mark, result: 'make'
-    });
-    if (error) { alert('Save failed: ' + error.message); return; }
-  }
-  await refresh();
-}
-
-async function saveFoul() {
-  if (!currentAth || !currentEventId) return;
-  const myAtts = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  if (myAtts.length >= PHASE_LIMIT[currentPhase]) return;
-  const { error } = await sb.from('attempts').insert({
-    meet_id: currentMeet.id, event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: myAtts.length + 1,
-    mark: 'FOUL', result: 'foul'
-  });
-  if (error) { alert('Save failed: ' + error.message); return; }
-  await refresh();
-}
-
-function editAttempt(id) {
-  const att = allAttempts.find(a => a.id === id);
-  if (!att) return;
-  editingId = id;
-
-  if (att.mark && att.mark !== 'FOUL' && att.mark.includes('-')) {
-    const [ftStr, insPart] = att.mark.split('-');
-    const totalIns = parseFloat(insPart) || 0;
-    const wholeIns = Math.floor(totalIns);
-    const qtr      = +(totalIns - wholeIns).toFixed(2);
-    setTimeout(() => {
-      const ftEl  = document.getElementById('hFt');
-      const inEl  = document.getElementById('hIn');
-      const qEl   = document.getElementById('hQtr');
-      if (ftEl) ftEl.value = ftStr || '';
-      if (inEl) inEl.value = wholeIns || '';
-      if (qEl)  qEl.value  = [0, 0.25, 0.5, 0.75].includes(qtr) ? qtr : 0;
-    }, 30);
-  }
-  renderRight();
-}
-
-function cancelEdit() {
-  editingId = null;
-  renderRight();
-}
-
-async function deleteAttempt(id) {
-  if (!confirm('Delete this attempt? This cannot be undone.')) return;
-  const { error } = await sb.from('attempts').delete().eq('id', id);
-  if (error) { alert('Delete failed: ' + error.message); return; }
-  if (editingId === id) editingId = null;
-  await refresh();
-}
-
-function renderHHistory(attempts) {
-  const el = document.getElementById('attHistory');
-  if (!el) return;
-  if (!attempts.length) {
-    el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
-    return;
-  }
-  el.innerHTML = [...attempts]
-    .sort((a, b) => a.attempt_number - b.attempt_number)
-    .map(a => `
-      <div class="att-row">
-        <span class="att-num">ATT ${a.attempt_number}</span>
-        <span class="att-mark">${a.mark || '—'}</span>
-        <span class="att-result ${a.result === 'make' ? 'res-make' : 'res-foul'}">
-          ${a.result === 'make' ? 'MAKE' : 'FOUL'}
-        </span>
-        <button class="att-edit" onclick="editAttempt('${a.id}')">Edit</button>
-        <button class="att-del"  onclick="deleteAttempt('${a.id}')">Del</button>
-      </div>`).join('');
-}
-
-// ─────────────────────────────────────────────────────────────
-//  VERTICAL EVENTS (high jump, pole vault)
-// ─────────────────────────────────────────────────────────────
-function loadVerticalState() {
-  try {
-    verticalState = JSON.parse(localStorage.getItem(VSTATE_KEY) || '{}');
-  } catch {
-    verticalState = {};
-  }
-}
-
-function saveVerticalState() {
-  localStorage.setItem(VSTATE_KEY, JSON.stringify(verticalState));
-}
-
-function ensureEventState() {
-  if (!currentEventId) return null;
-
-  if (!verticalState[currentEventId]) {
-    verticalState[currentEventId] = {
-      blanketBar: '',
-      athleteHeights: {},
-      standards: '24'
-    };
-  }
-
-  if (!verticalState[currentEventId].athleteHeights) {
-    verticalState[currentEventId].athleteHeights = {};
-  }
-
-  if (!verticalState[currentEventId].standards) {
-    verticalState[currentEventId].standards = '24';
-  }
-
-  return verticalState[currentEventId];
-}
-
+// ═════════════════════════════════════════════════════════
+// VERTICAL HELPERS
+// ═════════════════════════════════════════════════════════
 function isPoleVaultEvent() {
-  const txt = (document.getElementById('eventSelect').selectedOptions[0]?.textContent || '').toLowerCase();
-  return txt.includes('pole vault');
-}
-
-function getBlanketBar() {
-  const st = ensureEventState();
-  return st?.blanketBar || '';
-}
-
-function getAthleteBar(athleteId) {
-  const st = ensureEventState();
-  if (!st) return '';
-  return st.athleteHeights[String(athleteId)] || st.blanketBar || '';
-}
-
-function setAthleteBar(athleteId, bar) {
-  const st = ensureEventState();
-  if (!st) return;
-  st.athleteHeights[String(athleteId)] = bar;
-  saveVerticalState();
-}
-
-function getStandards() {
-  const st = ensureEventState();
-  return st?.standards || '24';
-}
-
-function setStandards(val) {
-  const st = ensureEventState();
-  if (!st) return;
-  st.standards = String(val);
-  saveVerticalState();
-}
-
-function buildStandardsOptions(selected) {
-  let html = '';
-  for (let i = 18; i <= 32; i++) {
-    html += `<option value="${i}" ${String(selected) === String(i) ? 'selected' : ''}>${i}</option>`;
-  }
-  return html;
-}
-
-function applyBlanketBar() {
-  const input = document.getElementById('blanketInput');
-  const bar = input.value.trim();
-
-  if (parseHeight(bar) === null) {
-    alert('Format must be feet-inches, like 6-00 or 12-06');
-    return;
-  }
-
-  const st = ensureEventState();
-  const oldBar = st.blanketBar || '';
-
-  st.blanketBar = bar;
-
-  athleteList.forEach(a => {
-    const key = String(a.id);
-    const cur = st.athleteHeights[key];
-
-    // Apply new blanket only to kids who were still at the old blanket
-    if (!cur || cur === oldBar) {
-      st.athleteHeights[key] = bar;
-    }
-  });
-
-  saveVerticalState();
-  renderLeft();
-  renderRight();
-}
-
-function saveAthleteBar() {
-  if (!currentAth) return;
-
-  const input = document.getElementById('athleteBarInput');
-  const bar = input.value.trim();
-
-  if (parseHeight(bar) === null) {
-    alert('Format must be feet-inches, like 6-00 or 12-06');
-    return;
-  }
-
-  setAthleteBar(currentAth.id, bar);
-  renderRight();
-}
-
-function incBar(inputId, n) {
-  const el = document.getElementById(inputId);
-  if (!el) return;
-
-  const v = parseHeight(el.value.trim());
-  if (v === null) {
-    alert('Set a valid height first (example: 6-00)');
-    return;
-  }
-
-  el.value = toHeightStr(v + n);
-}
-
-function renderVertical() {
-  const right   = document.getElementById('rightPanel');
-  const myAtts  = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const elim    = isEliminated(myAtts);
-  const cleared = getClearedHeights(myAtts);
-  const blanketBar = getBlanketBar();
-  const myBar      = getAthleteBar(currentAth.id);
-  const isPV       = isPoleVaultEvent();
-  const standards  = getStandards();
-
-  right.innerHTML = `
-    <div class="rcard">
-      <h2>${currentAth.name}</h2>
-      <div class="sub">${currentAth.team || ''}</div>
-      ${elim ? '<div class="elim-banner">❌ Eliminated — 3 consecutive misses</div>' : ''}
-      ${cleared.length ? `<div class="cleared-row">✅ Cleared: ${cleared.join(', ')}</div>` : ''}
-
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin-bottom:6px;">Blanket Bar Height</div>
-      <div class="bar-row">
-        <input class="bar-input" id="blanketInput" value="${blanketBar}" placeholder="6-00">
-        <button class="bar-inc" onclick="incBar('blanketInput', 2)">+2"</button>
-        <button class="bar-inc" onclick="incBar('blanketInput', 6)">+6"</button>
-        <button class="bar-inc" onclick="incBar('blanketInput', 12)">+1'</button>
-        <button class="bar-set" onclick="applyBlanketBar()">APPLY ALL</button>
-      </div>
-
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin:14px 0 6px;">Athlete Height</div>
-      <div class="bar-row">
-        <input class="bar-input" id="athleteBarInput" value="${myBar}" placeholder="6-00">
-        <button class="bar-inc" onclick="incBar('athleteBarInput', 2)">+2"</button>
-        <button class="bar-inc" onclick="incBar('athleteBarInput', 6)">+6"</button>
-        <button class="bar-inc" onclick="incBar('athleteBarInput', 12)">+1'</button>
-        <button class="bar-set" onclick="saveAthleteBar()">SET ATHLETE</button>
-      </div>
-
-      ${myBar ? `<div style="font-size:20px;font-weight:900;color:#1a5a8c;margin-bottom:10px;">Current Height: ${myBar}</div>` : ''}
-
-      ${isPV ? `
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.5px;margin:14px 0 6px;">Standards</div>
-        <div class="bar-row">
-          <select id="pvStandards" class="bar-input" style="width:110px;font-size:18px;" onchange="setStandards(this.value)">
-            ${buildStandardsOptions(standards)}
-          </select>
-          <div style="font-size:13px;color:#666;">Saved for this event</div>
-        </div>
-      ` : ''}
-
-      <div class="vmark-grid">
-        <div><button class="vmark-btn btn-o" onclick="submitV('O')" ${elim ? 'disabled' : ''}>O</button><div class="vmark-lbl">Clear</div></div>
-        <div><button class="vmark-btn btn-x" onclick="submitV('X')" ${elim ? 'disabled' : ''}>X</button><div class="vmark-lbl">Miss</div></div>
-        <div><button class="vmark-btn btn-p" onclick="submitV('P')" ${elim ? 'disabled' : ''}>P</button><div class="vmark-lbl">Pass</div></div>
-      </div>
-    </div>
-
-    <div class="rcard">
-      <h3 style="margin:0 0 12px;font-size:16px;">Attempt History</h3>
-      <div id="attHistory"></div>
-    </div>`;
-
-  renderVHistory(myAtts);
-}
-
-
-async function submitV(result) {
-  if (!currentAth || !currentEventId) return;
-  if (!flightBar) { alert('Set a bar height first.'); return; }
-
-  const myAtts  = allAttempts.filter(a => a.athlete_id === currentAth.id);
-  const markVal = result === 'O' ? flightBar : result;
-  const dbRes   = result === 'O' ? 'make' : result === 'P' ? 'pass' : 'foul';
-
-  const payload = {
-    meet_id: currentMeet.id, event_id: currentEventId,
-    athlete_id: currentAth.id,
-    attempt_number: myAtts.length + 1,
-    mark: markVal, result: dbRes, height: flightBar
-  };
-
-  let { error } = await sb.from('attempts').insert(payload);
-
-  // If 'height' column doesn't exist yet, retry without it
-  if (error && (error.message.includes('height') || error.message.includes('schema'))) {
-    delete payload.height;
-    const fb = await sb.from('attempts').insert(payload);
-    error = fb.error;
-  }
-
-  if (error) { alert('Save failed: ' + error.message); return; }
-  if (result === 'P') flightBar = '';
-  await refresh();
-}
-
-function renderVHistory(attempts) {
-  const el = document.getElementById('attHistory');
-  if (!el) return;
-
-  const isPV = isPoleVaultEvent();
-
-  if (!attempts.length) {
-    el.innerHTML = '<p style="text-align:center;color:#bbb;font-size:13px;">No attempts yet</p>';
-    return;
-  }
-
-  el.innerHTML = [...attempts]
-    .sort((a, b) => a.attempt_number - b.attempt_number)
-    .map(a => {
-      const resLabel = a.result === 'make' ? 'O' : a.result === 'pass' ? 'P' : 'X';
-      const resCls   = a.result === 'make' ? 'res-make' : a.result === 'pass' ? 'res-pass' : 'res-foul';
-      const ht       = a.height ? `<span style="font-size:11px;color:#4a7aaa;min-width:52px;">${a.height}</span>` : '';
-      const std      = isPV && a.standards ? `<span style="font-size:11px;color:#666;min-width:58px;">Std ${a.standards}</span>` : '';
-
-      return `
-        <div class="att-row">
-          <span class="att-num">ATT ${a.attempt_number}</span>
-          ${ht}
-          ${std}
-          <span class="att-mark">${a.mark || '—'}</span>
-          <span class="att-result ${resCls}">${resLabel}</span>
-          <button class="att-del" onclick="deleteAttempt('${a.id}')">Del</button>
-        </div>
-      `;
-    }).join('');
-}
-
-
-// ── Bar helpers ───────────────────────────────────────────────
-function parseHeight(str) {
-  const m = str && str.trim().match(/^(\d+)-(\d{1,2})$/);
-  if (!m) return null;
-
-  const ft = parseInt(m[1], 10);
-  const ins = parseInt(m[2], 10);
-  if (ins < 0 || ins > 11) return null;
-
-  return ft * 12 + ins;
-}
-
-function toHeightStr(n) {
-  return Math.floor(n / 12) + '-' + String(n % 12).padStart(2, '0');
+  return (document.getElementById('eventSelect').selectedOptions[0]?.textContent || '').toLowerCase().includes('pole vault');
 }
 
 function isEliminated(atts) {
-  let streak = 0;
-  for (let i = atts.length - 1; i >= 0; i--) {
-    if (atts[i].result === 'make') break;
-    if (atts[i].result === 'foul') { if (++streak >= 3) return true; }
-  }
-  return false;
+  // 3 misses at a single height
+  const missMap = {};
+  atts.forEach(a => {
+    if (a.result === 'foul' && a.height) {
+      missMap[a.height] = (missMap[a.height] || 0) + 1;
+    }
+  });
+  return Object.values(missMap).some(v => v >= 3);
 }
 
 function getClearedHeights(atts) {
-  return [...new Set(
-    atts.filter(a => a.result === 'make').map(a => a.height || a.mark).filter(Boolean)
-  )];
+  return [...new Set(atts.filter(a => a.result === 'make').map(a => a.height || a.mark).filter(Boolean))];
 }
 
-// ── Shared helpers ────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════
+// SHARED HELPERS
+// ═════════════════════════════════════════════════════════
 async function refresh() {
   const { data } = await sb.from('attempts').select('*')
     .eq('event_id', currentEventId)
@@ -778,12 +1098,17 @@ function parseMark(mark) {
   return parseInt(m[1]) * 12 + parseFloat(m[2]);
 }
 
+function parseHeight(str) {
+  if (!str) return null;
+  const m = String(str).trim().match(/^(\d+)-(\d{1,2})$/);
+  if (!m) return null;
+  return parseInt(m[1]) * 12 + parseInt(m[2]);
+}
+
 function inchesToMark(total) {
-  const ft  = Math.floor(total / 12);
-  const ins = total % 12;
-  const insStr = ins % 1 === 0
-    ? String(Math.round(ins)).padStart(2, '0')
-    : ins.toFixed(2);
+  const ft    = Math.floor(total / 12);
+  const ins   = total % 12;
+  const insStr = ins % 1 === 0 ? String(Math.round(ins)).padStart(2, '0') : ins.toFixed(2);
   return `${ft}-${insStr}`;
 }
 </script>
