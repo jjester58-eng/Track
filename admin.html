@@ -28,17 +28,16 @@
     .topbar a { color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; opacity:.75; }
     .topbar a:hover { opacity:1; }
 
-    /* lock */
-    #lockScreen { max-width:360px; margin:80px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:36px 28px; text-align:center; }
-    .lock-icon { font-size:44px; margin-bottom:10px; }
-    #lockScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 4px; }
-    #lockScreen p { font-size:13px; color:var(--text2); margin:0 0 20px; }
+    /* login screen */
+    #loginScreen { max-width:380px; margin:100px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:40px 32px; text-align:center; }
+    #loginScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 8px; }
+    #loginScreen p { font-size:14px; color:var(--text2); margin-bottom:24px; }
 
-    /* two-panel layout */
+    /* admin layout */
     #adminContent { display:none; }
     .admin-layout { display:flex; height:calc(100vh - 54px); }
 
-    /* LEFT: meet list sidebar */
+    /* sidebar */
     .meet-sidebar {
       width:280px; flex-shrink:0; border-right:2px solid var(--border);
       background:var(--bg2); display:flex; flex-direction:column; overflow:hidden;
@@ -72,11 +71,10 @@
     }
     .new-meet-btn:hover { background:var(--bg); border-color:var(--accent); }
 
-    /* RIGHT: edit panel */
+    /* edit panel */
     .edit-panel { flex:1; overflow-y:auto; padding:20px 24px 80px; }
     .no-select-msg { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text3); font-size:16px; }
 
-    /* meet header in edit panel */
     .meet-header {
       background:var(--bg2); border:1px solid var(--border); border-radius:14px;
       padding:18px 20px; display:flex; align-items:center; gap:16px; margin-bottom:20px;
@@ -88,7 +86,6 @@
     .header-sub  { font-size:12px; color:var(--text2); margin-top:3px; }
     .header-pin  { font-family:'Barlow Condensed',sans-serif; font-size:13px; color:var(--accent2); background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:4px 12px; white-space:nowrap; }
 
-    /* section divider */
     .divider { display:flex; align-items:center; gap:10px; margin:24px 0 12px; }
     .divider span { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800; letter-spacing:4px; text-transform:uppercase; color:var(--text3); white-space:nowrap; }
     .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
@@ -97,7 +94,6 @@
     .span2 { grid-column:1/-1; }
     @media(max-width:640px){.grid2{grid-template-columns:1fr;}.span2{grid-column:1;}}
 
-    /* cards */
     .card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px; transition:border-color .2s; }
     .card:hover { border-color:var(--border2); }
     .card-title { font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin:0 0 14px; }
@@ -105,13 +101,10 @@
     .card-danger { border-color:#2a1212; background:#0a0d10; }
     .card-danger:hover { border-color:#5a2020; }
     .card-danger .card-title { color:var(--red); }
-    .card-amber { border-color:#2a1a08; background:#0a0d10; }
-    .card-amber .card-title { color:var(--amber); }
 
-    /* fields */
     .field { margin-bottom:12px; }
     label { display:block; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); margin-bottom:5px; }
-    input[type=text],input[type=date],input[type=password],input[type=tel] {
+    input[type=text],input[type=date],input[type=password],input[type=tel],input[type=email] {
       width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border);
       border-radius:7px; color:#e0ecff; font-size:14px; font-family:'Barlow',sans-serif; outline:none;
       transition:border-color .2s;
@@ -122,7 +115,6 @@
     select { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:#e0ecff; font-size:14px; font-family:'Barlow',sans-serif; outline:none; }
     select:focus { border-color:var(--accent); }
 
-    /* buttons */
     .btn { display:block; width:100%; padding:11px 14px; border-radius:8px; border:none; font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all .18s; margin-top:10px; }
     .btn+.btn { margin-top:7px; }
     .btn:disabled { opacity:.4; cursor:not-allowed; }
@@ -132,32 +124,25 @@
     .btn-ghost:hover { background:var(--bg3); }
     .btn-green   { background:linear-gradient(135deg,#165a38,#0c3a22); color:#80e0a8; }
     .btn-green:hover:not(:disabled) { background:linear-gradient(135deg,#1e7248,#14502e); }
-    .btn-amber   { background:transparent; color:var(--amber); border:1px solid #3a2008; }
-    .btn-amber:hover { background:var(--amber-bg); }
     .btn-danger  { background:transparent; color:var(--red); border:1px solid #3a1010; }
     .btn-danger:hover { background:var(--red-bg); }
 
-    /* status */
     .st { padding:9px 12px; border-radius:7px; font-size:12px; margin-top:10px; display:none; line-height:1.5; }
     .st.show { display:block; }
     .st-ok   { background:var(--green-bg); border:1px solid #1a4a28; color:var(--green); }
     .st-err  { background:var(--red-bg);   border:1px solid #4a1a1a; color:var(--red); }
     .st-inf  { background:var(--bg3);      border:1px solid var(--border); color:var(--accent2); }
-    .st-warn { background:var(--amber-bg); border:1px solid #3a2008; color:var(--amber); }
 
-    /* progress */
     .prog-wrap { width:100%; background:var(--bg); border-radius:4px; height:5px; margin-top:10px; display:none; }
     .prog-wrap.show { display:block; }
     .prog-bar  { height:5px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:4px; transition:width .25s; width:0%; }
 
-    /* event badges */
     .ev-item { display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; margin-bottom:6px; font-size:13px; }
     .ev-name { color:#d0eaff; font-weight:600; }
     .ev-meta { font-size:11px; color:var(--text3); }
     .badge   { background:var(--bg3); color:var(--accent2); font-size:11px; padding:2px 8px; border-radius:10px; font-weight:700; }
     #evList  { margin-top:10px; max-height:220px; overflow-y:auto; }
 
-    /* logo thumb */
     .logo-thumb { width:60px; height:60px; border-radius:8px; object-fit:contain; background:var(--bg); border:1px solid var(--border); padding:4px; margin-bottom:10px; display:none; }
   </style>
 </head>
@@ -169,35 +154,36 @@
   <a href="index.html">⌂ Home</a>
 </div>
 
-<!-- LOCK -->
-<div id="lockScreen">
-  <div class="lock-icon">🔐</div>
-  <h3>Admin Access</h3>
-  <p>Enter the admin password to manage meets</p>
-  <div class="field" style="text-align:left">
-    <label>Password</label>
-    <input type="password" id="pwInput" placeholder="••••" onkeypress="if(event.key==='Enter')checkPw()">
-  </div>
-  <button class="btn btn-green" onclick="checkPw()">Unlock Admin</button>
-  <div id="lockErr" class="st st-err"></div>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div style="font-size:48px;margin-bottom:16px;">🔑</div>
+  <h3>Admin Login</h3>
+  <p>Sign in to manage your meets</p>
+  <div class="field" style="text-align:left"><label>Email</label><input type="email" id="emailInput" placeholder="your@email.com"></div>
+  <div class="field" style="text-align:left"><label>Password</label><input type="password" id="pwInput" placeholder="••••••••" onkeypress="if(event.key==='Enter')login()"></div>
+  <button class="btn btn-green" onclick="login()">Sign In</button>
+  <button class="btn btn-ghost" onclick="signUp()">Create New Account</button>
+  <div id="loginErr" class="st st-err"></div>
 </div>
 
-<!-- ADMIN -->
+<!-- ADMIN CONTENT -->
 <div id="adminContent">
   <div class="admin-layout">
 
-    <!-- LEFT: meet list -->
+    <!-- LEFT SIDEBAR -->
     <div class="meet-sidebar">
       <div class="sidebar-head">
-        <span>Meets</span>
+        <span>Your Meets</span>
         <span id="meetCount" style="color:var(--accent2);">—</span>
       </div>
       <div class="sidebar-list" id="meetList"></div>
       <button class="new-meet-btn" onclick="startNewMeet()">+ New Meet</button>
-      <div style="height:12px;"></div>
+      <div style="padding:10px;">
+        <button class="btn btn-ghost" onclick="logout()">Logout</button>
+      </div>
     </div>
 
-    <!-- RIGHT: edit panel -->
+    <!-- RIGHT PANEL -->
     <div class="edit-panel" id="editPanel">
       <div class="no-select-msg">← Select a meet to edit, or create a new one</div>
     </div>
@@ -210,28 +196,71 @@ const sb = supabase.createClient(
   'https://qjomrnguhbqfluzwuntz.supabase.co',
   'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
 );
-const ADMIN_PW   = '1111';
-const IRONCLAD   = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
 
-let allMeets     = [];
+let allMeets = [];
 let activeMeetId = null;
-let activeMeet   = null;
+let activeMeet = null;
+let currentUser = null;
 
-// ── Lock ──────────────────────────────────────────────────
-function checkPw() {
-  if (document.getElementById('pwInput').value === ADMIN_PW) {
-    document.getElementById('lockScreen').style.display  = 'none';
+// ====================== AUTH ======================
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
     loadMeets();
-  } else {
-    flash('lockErr', '❌ Incorrect password', 'err');
-    document.getElementById('pwInput').value = '';
   }
 }
 
-// ── Load meet list ────────────────────────────────────────
+async function login() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('pwInput').value;
+  const err = document.getElementById('loginErr');
+
+  if (!email || !password) return flashErr(err, 'Email and password required');
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) return flashErr(err, error.message);
+
+  currentUser = data.user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminContent').style.display = 'block';
+  loadMeets();
+}
+
+async function signUp() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('pwInput').value;
+  const err = document.getElementById('loginErr');
+
+  if (!email || password.length < 6) return flashErr(err, 'Password must be at least 6 characters');
+
+  const { error } = await sb.auth.signUp({ email, password });
+  if (error) return flashErr(err, error.message);
+
+  flashErr(err, '✅ Check your email to confirm your account', 'ok');
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+function flashErr(el, msg, type = 'err') {
+  el.innerHTML = msg;
+  el.className = `st show st-${type}`;
+}
+
+// ====================== MEETS ======================
 async function loadMeets() {
-  const { data, error } = await sb.from('meets').select('*').order('date', { ascending: false });
+  if (!currentUser) return;
+  const { data, error } = await sb
+    .from('meets')
+    .select('*')
+    .eq('owner_id', currentUser.id)
+    .order('date', { ascending: false });
+
   if (error) { console.error(error); return; }
   allMeets = data || [];
   document.getElementById('meetCount').textContent = allMeets.length;
@@ -247,7 +276,7 @@ function renderMeetList() {
   el.innerHTML = allMeets.map(m => {
     const isActive = m.id === activeMeetId;
     const statusCls = m.cancelled ? 's-cancelled' : m.is_active === false ? 's-inactive' : 's-active';
-    const statusTxt = m.cancelled ? 'Cancelled'  : m.is_active === false ? 'Inactive'   : 'Active';
+    const statusTxt = m.cancelled ? 'Cancelled' : m.is_active === false ? 'Inactive' : 'Active';
     return `<div class="meet-item ${isActive ? 'active' : ''}" onclick="selectMeet('${m.id}')">
       <div class="mi-name">${m.name || 'Untitled'}</div>
       <div class="mi-date">${m.date ? fmtDate(m.date) : 'No date'}</div>
@@ -257,24 +286,20 @@ function renderMeetList() {
   }).join('');
 }
 
-// ── Select meet ───────────────────────────────────────────
 async function selectMeet(id) {
   activeMeetId = id;
-  activeMeet   = allMeets.find(m => m.id === id);
+  activeMeet = allMeets.find(m => m.id === id);
   renderMeetList();
   renderEditPanel();
 }
 
-// ── Edit panel ────────────────────────────────────────────
+// ====================== EDIT PANEL ======================
 async function renderEditPanel() {
-  const m   = activeMeet;
-  const ep  = document.getElementById('editPanel');
-  const logoHtml = m.logo_url
-    ? `<div class="header-logo"><img src="${m.logo_url}" alt="logo"></div>`
-    : `<div class="header-logo">🏟</div>`;
+  const m = activeMeet;
+  const ep = document.getElementById('editPanel');
+  const logoHtml = m.logo_url ? `<div class="header-logo"><img src="${m.logo_url}" alt="logo"></div>` : `<div class="header-logo">🏟</div>`;
 
   ep.innerHTML = `
-    <!-- Header -->
     <div class="meet-header">
       ${logoHtml}
       <div class="header-info">
@@ -284,24 +309,17 @@ async function renderEditPanel() {
       <div class="header-pin">PIN: ${m.pin || '—'}</div>
     </div>
 
-    <!-- Details -->
     <div class="divider"><span>Meet Details</span></div>
     <div class="grid2">
       <div class="card">
         <div class="card-title">📋 Title &amp; Date</div>
-        <div class="field"><label>Meet Name</label>
-          <input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025">
-        </div>
-        <div class="field"><label>Date</label>
-          <input type="date" id="eDate" value="${m.date || ''}">
-        </div>
-        <div class="field"><label>Worker PIN (4–6 digits)</label>
-          <input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric">
-        </div>
+        <div class="field"><label>Meet Name</label><input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025"></div>
+        <div class="field"><label>Date</label><input type="date" id="eDate" value="${m.date || ''}"></div>
+        <div class="field"><label>Worker PIN (4–6 digits)</label><input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric"></div>
         <div class="field"><label>Status</label>
           <select id="eActive">
-            <option value="active"    ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active</option>
-            <option value="inactive"  ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive (hidden from workers)</option>
+            <option value="active" ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active</option>
+            <option value="inactive" ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive</option>
             <option value="cancelled" ${m.cancelled ? 'selected' : ''}>Cancelled</option>
           </select>
         </div>
@@ -313,16 +331,13 @@ async function renderEditPanel() {
         <div class="card-title">🖼 Meet Logo</div>
         <div class="card-desc">Replaces the Ironclad logo on scoring &amp; leaderboard for workers in this meet.</div>
         <img id="logoThumb" class="logo-thumb" src="${m.logo_url || ''}" style="${m.logo_url ? 'display:block' : 'display:none'}">
-        <div class="field"><label>Upload New Logo</label>
-          <input type="file" id="logoFile" accept="image/*" onchange="previewLogo()">
-        </div>
+        <div class="field"><label>Upload New Logo</label><input type="file" id="logoFile" accept="image/*" onchange="previewLogo()"></div>
         <button class="btn btn-primary" onclick="uploadLogo()">Upload Logo</button>
-        <button class="btn btn-ghost"   onclick="removeLogo()">Remove Logo</button>
+        <button class="btn btn-ghost" onclick="removeLogo()">Remove Logo</button>
         <div class="st" id="stLogo"></div>
       </div>
     </div>
 
-    <!-- Roster -->
     <div class="divider"><span>Roster &amp; Events</span></div>
     <div class="card span2">
       <div class="card-title">📋 Events in This Meet</div>
@@ -333,10 +348,8 @@ async function renderEditPanel() {
     <div class="divider"><span>Import</span></div>
     <div class="card span2">
       <div class="card-title">📥 Import / Replace Roster</div>
-      <div class="card-desc">Upload a MileSplit CSV. Choose whether to <strong style="color:var(--accent2)">add to</strong> the existing roster or <strong style="color:var(--red)">replace it entirely</strong>.</div>
-      <div class="field"><label>CSV File</label>
-        <input type="file" id="csvFile" accept=".csv">
-      </div>
+      <div class="card-desc">Upload a MileSplit CSV. Choose whether to add or replace.</div>
+      <div class="field"><label>CSV File</label><input type="file" id="csvFile" accept=".csv"></div>
       <div class="field"><label>Import Mode</label>
         <select id="importMode">
           <option value="add">Add to existing roster</option>
@@ -348,18 +361,17 @@ async function renderEditPanel() {
       <div class="st" id="stImport"></div>
     </div>
 
-    <!-- Danger -->
     <div class="divider"><span>Danger Zone</span></div>
     <div class="grid2">
       <div class="card card-danger">
         <div class="card-title">🗑 Clear Roster &amp; Events</div>
-        <div class="card-desc">Deletes all athletes, events, attempts, and assignments for this meet. Meet shell (name, date, PIN, logo) is kept.</div>
+        <div class="card-desc">Deletes all athletes, events, attempts, and assignments. Meet shell remains.</div>
         <button class="btn btn-danger" onclick="clearRoster()">Clear Roster &amp; Events</button>
         <div class="st" id="stClear"></div>
       </div>
       <div class="card card-danger">
         <div class="card-title">💣 Delete This Meet</div>
-        <div class="card-desc">Permanently removes this meet and all its data from the database.</div>
+        <div class="card-desc">Permanently removes this meet and all its data.</div>
         <button class="btn btn-danger" onclick="deleteMeet()">Delete Meet Entirely</button>
         <div class="st" id="stDelete"></div>
       </div>
@@ -369,19 +381,20 @@ async function renderEditPanel() {
   loadEventList();
 }
 
-// ── Save details ──────────────────────────────────────────
+// ====================== CORE FUNCTIONS ======================
 async function saveDetails() {
-  const name   = document.getElementById('eName').value.trim();
-  const date   = document.getElementById('eDate').value || null;
-  const pin    = document.getElementById('ePin').value.trim();
+  const name = document.getElementById('eName').value.trim();
+  const date = document.getElementById('eDate').value || null;
+  const pin = document.getElementById('ePin').value.trim();
   const status = document.getElementById('eActive').value;
-  if (!name)           return flash('stDetails', '❌ Meet name is required', 'err');
+
+  if (!name) return flash('stDetails', '❌ Meet name is required', 'err');
   if (pin && pin.length < 4) return flash('stDetails', '❌ PIN must be at least 4 digits', 'err');
 
   const updates = {
     name,
     date,
-    pin:       pin || activeMeet.pin,
+    pin: pin || activeMeet.pin,
     is_active: status !== 'inactive',
     cancelled: status === 'cancelled'
   };
@@ -396,7 +409,7 @@ async function saveDetails() {
   flash('stDetails', '✅ Meet updated', 'ok');
 }
 
-// ── Logo ──────────────────────────────────────────────────
+// Logo functions
 function previewLogo() {
   const file = document.getElementById('logoFile').files[0];
   if (!file) return;
@@ -414,7 +427,7 @@ async function uploadLogo() {
   if (!file) return flash('stLogo', '❌ Select an image first', 'err');
   flash('stLogo', '⏳ Uploading…', 'inf');
 
-  const ext  = file.name.split('.').pop().toLowerCase();
+  const ext = file.name.split('.').pop().toLowerCase();
   const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
 
   try {
@@ -432,7 +445,6 @@ async function uploadLogo() {
     const thumb = document.getElementById('logoThumb');
     thumb.src = url; thumb.style.display = 'block';
 
-    // Update header logo immediately
     const headerLogo = document.querySelector('.header-logo');
     if (headerLogo) headerLogo.innerHTML = `<img src="${url}" alt="logo">`;
 
@@ -441,7 +453,7 @@ async function uploadLogo() {
 }
 
 async function removeLogo() {
-  if (!confirm('Remove this meet\'s logo? The Ironclad logo will show instead.')) return;
+  if (!confirm('Remove this meet\'s logo?')) return;
   const { error } = await sb.from('meets').update({ logo_url: null }).eq('id', activeMeetId);
   if (error) return flash('stLogo', '❌ ' + error.message, 'err');
   activeMeet.logo_url = null;
@@ -452,23 +464,22 @@ async function removeLogo() {
   flash('stLogo', '✅ Logo removed', 'ok');
 }
 
-// ── Event list ────────────────────────────────────────────
+// Event list
 async function loadEventList() {
   const { data: events, error } = await sb.from('events').select('*')
     .eq('meet_id', activeMeetId).order('name');
   document.getElementById('evLoading').textContent = '';
 
   if (error || !events || !events.length) {
-    document.getElementById('evList').innerHTML =
-      '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
+    document.getElementById('evList').innerHTML = '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
     return;
   }
 
   const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', activeMeetId);
-  const { data: assigns  } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
+  const { data: assigns } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
   const attCount = {}, athCount = {};
   (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
-  (assigns  || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
+  (assigns || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
 
   document.getElementById('evList').innerHTML = events.map(e => `
     <div class="ev-item">
@@ -483,18 +494,16 @@ async function loadEventList() {
     </div>`).join('');
 }
 
-// ── Import CSV ────────────────────────────────────────────
+// Import
 async function doImport() {
   const file = document.getElementById('csvFile').files[0];
   if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
   const mode = document.getElementById('importMode').value;
-  if (!confirm(mode === 'replace'
-    ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import the new CSV. Continue?`
-    : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
+  if (!confirm(mode === 'replace' ? `This will DELETE all existing data for "${activeMeet.name}". Continue?` : `Add athletes to "${activeMeet.name}"?`)) return;
 
   const btn = document.getElementById('importBtn');
-  const pw  = document.getElementById('progWrap');
-  const pb  = document.getElementById('progBar');
+  const pw = document.getElementById('progWrap');
+  const pb = document.getElementById('progBar');
   btn.disabled = true; btn.textContent = 'Working…';
   pw.classList.add('show'); pb.style.width = '5%';
 
@@ -513,9 +522,9 @@ async function doImport() {
 
     flash('stImport', '⏳ Parsing CSV…', 'inf');
     const text = await file.text();
-    const n    = await importMileSplit(text, activeMeetId, pb);
+    const n = await importMileSplit(text, activeMeetId, pb);
 
-    flash('stImport', `✅ ${n} athletes imported into "${activeMeet.name}"`, 'ok');
+    flash('stImport', `✅ ${n} athletes imported`, 'ok');
     loadEventList();
   } catch(err) {
     flash('stImport', '❌ ' + err.message, 'err');
@@ -526,18 +535,18 @@ async function doImport() {
 }
 
 async function importMileSplit(csvText, meetId, progBar) {
-  const rows    = parseCSV(csvText);
+  const rows = parseCSV(csvText);
   if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
   const headers = rows[0].map(h => h.trim().toLowerCase());
-  const getCol  = names => headers.findIndex(h => names.some(n => h.includes(n)));
+  const getCol = names => headers.findIndex(h => names.some(n => h.includes(n)));
 
   const idx = {
-    ev:  getCol(['event']),
+    ev: getCol(['event']),
     div: getCol(['division','level','grade']),
-    ln:  getCol(['lname','last']),
-    fn:  getCol(['fname','first']),
+    ln: getCol(['lname','last']),
+    fn: getCol(['fname','first']),
     gen: getCol(['gender','sex']),
-    tm:  getCol(['team','school'])
+    tm: getCol(['team','school'])
   };
   if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0)
     throw new Error('CSV missing required columns (first, last, event).');
@@ -553,9 +562,9 @@ async function importMileSplit(csvText, meetId, progBar) {
     const evName = g(idx.ev).toLowerCase();
     if (!fieldKeywords.some(k => evName.includes(k))) continue;
 
-    const level  = normalizeLevel(g(idx.div));
+    const level = normalizeLevel(g(idx.div));
     const gender = g(idx.gen);
-    const evKey  = g(idx.ev) + '|' + gender + '|' + level;
+    const evKey = g(idx.ev) + '|' + gender + '|' + level;
 
     if (!eventsFound[evKey]) {
       const eId = crypto.randomUUID().substring(0, 8);
@@ -570,18 +579,16 @@ async function importMileSplit(csvText, meetId, progBar) {
   }
 
   if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
-  if (eventRows.length)   { const { error } = await sb.from('events').insert(eventRows);            if (error) throw error; }
-  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows);         if (error) throw error; }
+  if (eventRows.length)   { const { error } = await sb.from('events').insert(eventRows); if (error) throw error; }
+  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows); if (error) throw error; }
   if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows); if (error) throw error; }
   if (progBar) progBar.style.width = '100%';
   return athleteRows.length;
 }
 
-// ── Clear roster (keep meet shell) ────────────────────────
+// Clear & Delete
 async function clearRoster() {
-  if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?\n\nMeet name, date, PIN and logo will be kept.`)) return;
-  if (prompt('Re-enter admin password:') !== ADMIN_PW) { flash('stClear', 'Cancelled', 'inf'); return; }
-
+  if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?`)) return;
   const steps = [
     sb.from('attempts').delete().eq('meet_id', activeMeetId),
     sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
@@ -596,12 +603,9 @@ async function clearRoster() {
   loadEventList();
 }
 
-// ── Delete meet entirely ──────────────────────────────────
 async function deleteMeet() {
-  if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?\n\nThis cannot be undone.`)) return;
-  if (prompt('Re-enter admin password:') !== ADMIN_PW) { flash('stDelete', 'Cancelled', 'inf'); return; }
+  if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?`)) return;
 
-  // Delete child records first, then the meet itself
   const steps = [
     sb.from('attempts').delete().eq('meet_id', activeMeetId),
     sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
@@ -614,34 +618,27 @@ async function deleteMeet() {
     if (error) { flash('stDelete', '❌ ' + error.message, 'err'); return; }
   }
 
-  allMeets     = allMeets.filter(m => m.id !== activeMeetId);
+  allMeets = allMeets.filter(m => m.id !== activeMeetId);
   activeMeetId = null;
-  activeMeet   = null;
+  activeMeet = null;
   document.getElementById('meetCount').textContent = allMeets.length;
   renderMeetList();
-  document.getElementById('editPanel').innerHTML =
-    '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
+  document.getElementById('editPanel').innerHTML = '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
 }
 
-// ── Create new meet ───────────────────────────────────────
+// New Meet
 function startNewMeet() {
   activeMeetId = null;
-  activeMeet   = null;
+  activeMeet = null;
   renderMeetList();
 
   document.getElementById('editPanel').innerHTML = `
     <div class="divider"><span>New Meet</span></div>
     <div class="card" style="max-width:480px;">
       <div class="card-title">🏟 Create New Meet</div>
-      <div class="field"><label>Meet Name</label>
-        <input type="text" id="newName" placeholder="e.g. Weatherford Invite 2025">
-      </div>
-      <div class="field"><label>Date</label>
-        <input type="date" id="newDate">
-      </div>
-      <div class="field"><label>Worker PIN (4–6 digits)</label>
-        <input type="tel" id="newPin" maxlength="6" placeholder="e.g. 2025" inputmode="numeric">
-      </div>
+      <div class="field"><label>Meet Name</label><input type="text" id="newName" placeholder="e.g. Weatherford Invite 2025"></div>
+      <div class="field"><label>Date</label><input type="date" id="newDate"></div>
+      <div class="field"><label>Worker PIN (4–6 digits)</label><input type="tel" id="newPin" maxlength="6" placeholder="e.g. 2025" inputmode="numeric"></div>
       <button class="btn btn-green" onclick="createMeet()">Create Meet</button>
       <div class="st" id="stCreate"></div>
     </div>`;
@@ -650,25 +647,30 @@ function startNewMeet() {
 async function createMeet() {
   const name = document.getElementById('newName').value.trim();
   const date = document.getElementById('newDate').value || null;
-  const pin  = document.getElementById('newPin').value.trim();
-  if (!name)          return flash('stCreate', '❌ Meet name is required', 'err');
+  const pin = document.getElementById('newPin').value.trim();
+
+  if (!name) return flash('stCreate', '❌ Meet name is required', 'err');
   if (pin.length < 4) return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
+  if (!currentUser) return flash('stCreate', '❌ Not logged in', 'err');
 
   flash('stCreate', '⏳ Creating…', 'inf');
+
   const { data, error } = await sb.from('meets')
-    .insert({ name, date, pin, is_active: true })
+    .insert({ name, date, pin, is_active: true, owner_id: currentUser.id })
     .select().single();
+
   if (error) return flash('stCreate', '❌ ' + error.message, 'err');
 
   allMeets.unshift(data);
   document.getElementById('meetCount').textContent = allMeets.length;
   activeMeetId = data.id;
-  activeMeet   = data;
+  activeMeet = data;
   renderMeetList();
   renderEditPanel();
+  flash('stCreate', '✅ Meet created', 'ok');
 }
 
-// ── Helpers ───────────────────────────────────────────────
+// ====================== HELPERS ======================
 function normalizeLevel(raw) {
   if (!raw) return '';
   const t = raw.toString().toLowerCase().trim();
@@ -700,13 +702,16 @@ function fmtDate(d) {
 
 function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-function flash(id, msg, type) {
+function flash(id, msg, type = 'inf') {
   const el = document.getElementById(id);
   if (!el) return;
   el.innerHTML = msg;
   el.className = `st show st-${type}`;
   if (type !== 'err') setTimeout(() => el.classList.remove('show'), 5000);
 }
+
+// ====================== INIT ======================
+window.onload = checkSession;
 </script>
 </body>
 </html>
