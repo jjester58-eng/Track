@@ -34,6 +34,7 @@
       min-height: 100vh;
     }
 
+    /* ── TOPBAR ── */
     .topbar {
       position: sticky; top: 0; z-index: 100;
       background: rgba(7,16,28,0.96);
@@ -57,6 +58,7 @@
     }
     .topbar-admin:hover { color: var(--accent2); border-color: var(--border2); background: var(--bg3); }
 
+    /* ── PAGE CENTER WRAPPER ── */
     .page-wrap {
       max-width: 540px;
       margin: 0 auto;
@@ -64,6 +66,7 @@
       width: 100%;
     }
 
+    /* ── HERO ── */
     .hero {
       text-align: center;
       padding: 40px 0 28px;
@@ -104,6 +107,7 @@
       margin: 20px auto 0; border-radius: 2px;
     }
 
+    /* ── SECTION LABEL ── */
     .section-label {
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 10px; font-weight: 800;
@@ -112,6 +116,7 @@
       margin: 28px 0 10px;
     }
 
+    /* ── MEET LIST ── */
     .meet-list {
       display: flex; flex-direction: column; gap: 10px;
     }
@@ -150,6 +155,7 @@
     .meet-arrow { color: var(--text3); font-size: 22px; flex-shrink: 0; transition: color .15s; }
     .meet-card:hover .meet-arrow { color: var(--accent2); }
 
+    /* ── INLINE ROLE PICKER (expands below selected card) ── */
     .role-picker {
       display: none;
       background: var(--bg3);
@@ -188,6 +194,7 @@
     .role-results { background: rgba(61,214,140,0.10); border-color: rgba(61,214,140,0.25); color: var(--green); }
     .role-results:hover { background: rgba(61,214,140,0.20); border-color: var(--green); }
 
+    /* ── PIN STEP (inside role picker) ── */
     .pin-step { display: none; }
     .pin-step.open { display: block; }
     .pin-step p { color: var(--text2); font-size: 13px; margin-bottom: 12px; text-align: center; }
@@ -207,8 +214,7 @@
       font-size: 14px; font-weight: 800; letter-spacing: 2px;
       text-transform: uppercase; cursor: pointer; transition: opacity .15s;
     }
-    .pin-btn:hover:not(:disabled) { opacity: .88; }
-    .pin-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .pin-btn:hover { opacity: .88; }
     .pin-error { color: var(--red); font-size: 12px; margin-top: 8px; min-height: 16px; text-align: center; }
     .pin-back {
       background: none; border: none; color: var(--text3);
@@ -217,6 +223,7 @@
     }
     .pin-back:hover { color: var(--accent2); }
 
+    /* ── STATES ── */
     .loading-msg { text-align: center; padding: 24px; color: var(--text3); font-size: 14px; }
     .empty-msg {
       text-align: center; padding: 32px 24px;
@@ -224,6 +231,7 @@
       border-radius: 14px; color: var(--text3); font-size: 14px;
     }
 
+    /* ── FOOTER ── */
     .footer {
       text-align: center; padding: 32px 20px 48px;
       font-size: 11px; color: var(--text3); margin-top: 20px;
@@ -233,211 +241,190 @@
 </head>
 <body>
 
-<div class="topbar">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" height="30" alt="">
-  <div class="topbar-brand">Field Events Pro</div>
-  <a href="admin.html" class="topbar-admin">🔐 Admin</a>
-</div>
-
-<div class="page-wrap">
-  <section class="hero">
-    <img id="heroLogo"
-         src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-         alt="Field Events Pro" class="hero-logo">
-    <div class="hero-badge">Track &amp; Field · Live Scoring</div>
-    <h1>Field<br><em>Events</em><br>Pro</h1>
-    <p class="hero-sub">Real-time scoring and live leaderboards for every field event.</p>
-    <div class="hero-divider"></div>
-  </section>
-
-  <div class="section-label">Select Your Meet</div>
-  <div class="meet-list" id="meetList">
-    <div class="loading-msg">Loading meets…</div>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" height="30" alt="">
+    <div class="topbar-brand">Field Events Pro</div>
+    <a href="admin.html" class="topbar-admin">🔐 Admin</a>
   </div>
-</div>
 
-<footer class="footer">
-  <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="">
-  &copy; 2025 Ironclad · Field Events Pro
-</footer>
+  <div class="page-wrap">
 
-<script type="module">
-  import { sb, formatDate, getLogoUrl, getDefaultLogo, saveMeetSession, isValidPin, checkPinAttempts, recordPinAttempt, clearPinAttempts } from './config.js';
+    <!-- HERO -->
+    <section class="hero">
+      <img id="heroLogo"
+           src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
+           alt="Field Events Pro" class="hero-logo">
+      <div class="hero-badge">Track &amp; Field · Live Scoring</div>
+      <h1>Field<br><em>Events</em><br>Pro</h1>
+      <p class="hero-sub">Real-time scoring and live leaderboards for every field event.</p>
+      <div class="hero-divider"></div>
+    </section>
 
-  const meetsMap = {};
-  let selectedId = null;
+    <!-- MEET LIST -->
+    <div class="section-label">Select Your Meet</div>
+    <div class="meet-list" id="meetList">
+      <div class="loading-msg">Loading meets…</div>
+    </div>
 
-  window.onload = async () => {
-    const list = document.getElementById('meetList');
-    try {
-      const { data: meets, error } = await sb
-        .from('meets')
-        .select('id, name, date, logo_url, is_active, cancelled')
-        .eq('is_active', true)
-        .eq('cancelled', false)
-        .order('date', { ascending: true });
+  </div><!-- /page-wrap -->
 
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
-      }
+  <!-- FOOTER -->
+  <footer class="footer">
+    <img src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png" alt="">
+    &copy; 2025 Ironclad · Field Events Pro
+  </footer>
 
-      if (!meets || !meets.length) {
-        list.innerHTML = `<div class="empty-msg">No active meets right now.<br>
-          <span style="font-size:12px;margin-top:6px;display:block;">A meet director needs to create one first.</span></div>`;
-        return;
-      }
+<script>
+const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-      meets.forEach(m => meetsMap[m.id] = m);
+const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
+const meetsMap = {};
+let selectedId = null;
 
-      list.innerHTML = meets.map(m => {
-        const logoUrl = getLogoUrl(m.logo_url);
-        const logo = logoUrl
-          ? `<img src="${logoUrl}" class="meet-logo" alt="${m.name} logo">`
-          : `<div class="meet-logo-ph">🏟</div>`;
-        
-        const dateStr = formatDate(m.date);
-        
-        return `
-          <div>
-            <div class="meet-card" id="card-${m.id}" onclick="window.toggleMeet('${m.id}')">
-              ${logo}
-              <div class="meet-info">
-                <div class="meet-name">${m.name}</div>
-                <div class="meet-date">${dateStr}</div>
-              </div>
-              <div class="meet-arrow">›</div>
-            </div>
-            <div class="role-picker" id="picker-${m.id}">
-              <div class="role-grid" id="roles-${m.id}">
-                <button class="role-btn role-results" onclick="window.goLeaderboard('${m.id}')">
-                  <span class="icon">📊</span>
-                  Leaderboard
-                  <span class="role-sub">No login</span>
-                </button>
-                <button class="role-btn role-scoring" onclick="window.showPin('${m.id}')">
-                  <span class="icon">📋</span>
-                  Scoring
-                  <span class="role-sub">PIN required</span>
-                </button>
-              </div>
-              <div class="pin-step" id="pin-${m.id}">
-                <p>Enter the scoring PIN for this meet.</p>
-                <input type="tel" id="pinInput-${m.id}" class="pin-input"
-                       maxlength="6" inputmode="numeric" placeholder="· · · ·"
-                       onkeydown="if(event.key==='Enter') window.submitPin('${m.id}')">
-                <button class="pin-btn" id="pinBtn-${m.id}" onclick="window.submitPin('${m.id}')">Enter Scoring</button>
-                <div class="pin-error" id="pinErr-${m.id}"></div>
-                <button class="pin-back" onclick="window.backToRoles('${m.id}')">← Back</button>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
+// ── Load meets ────────────────────────────────────────
+window.onload = async () => {
+  const list = document.getElementById('meetList');
+  try {
+    const { data: meets, error } = await sb
+      .from('meets')
+      .select('id, name, date, logo_url')
+      .eq('is_active', true)
+      .order('date', { ascending: true });
 
-    } catch(err) {
-      list.innerHTML = `<div class="empty-msg">⚠️ Error loading meets<br><span style="font-size:11px;margin-top:6px;display:block;">${err.message}</span></div>`;
+    if (error) throw error;
+
+    if (!meets || !meets.length) {
+      list.innerHTML = `<div class="empty-msg">No active meets right now.<br>
+        <span style="font-size:12px;margin-top:6px;display:block;">A meet director needs to create one first.</span></div>`;
+      return;
     }
-  };
 
-  window.toggleMeet = function(id) {
-    const picker = document.getElementById(`picker-${id}`);
-    const card   = document.getElementById(`card-${id}`);
-    const isOpen = picker.classList.contains('open');
+    meets.forEach(m => meetsMap[m.id] = m);
 
-    document.querySelectorAll('.role-picker').forEach(p => p.classList.remove('open'));
-    document.querySelectorAll('.meet-card').forEach(c => c.classList.remove('selected'));
-    document.querySelectorAll('.pin-step').forEach(p => p.classList.remove('open'));
-    document.querySelectorAll('.role-grid').forEach(r => r.style.display = '');
+    list.innerHTML = meets.map(m => {
+      const logo = m.logo_url
+        ? `<img src="${m.logo_url}" class="meet-logo" alt="">`
+        : `<div class="meet-logo-ph">🏟</div>`;
+      const dateStr = m.date
+        ? new Date(m.date + 'T12:00:00').toLocaleDateString('en-US',
+            { weekday:'short', month:'short', day:'numeric', year:'numeric' })
+        : 'Date TBD';
+      return `
+        <div>
+          <div class="meet-card" id="card-${m.id}" onclick="toggleMeet('${m.id}')">
+            ${logo}
+            <div class="meet-info">
+              <div class="meet-name">${m.name}</div>
+              <div class="meet-date">${dateStr}</div>
+            </div>
+            <div class="meet-arrow">›</div>
+          </div>
+          <div class="role-picker" id="picker-${m.id}">
+            <div class="role-grid" id="roles-${m.id}">
+              <button class="role-btn role-results" onclick="goLeaderboard('${m.id}')">
+                <span class="icon">📊</span>
+                Leaderboard
+                <span class="role-sub">No login</span>
+              </button>
+              <button class="role-btn role-scoring" onclick="showPin('${m.id}')">
+                <span class="icon">📋</span>
+                Scoring
+                <span class="role-sub">PIN required</span>
+              </button>
+            </div>
+            <div class="pin-step" id="pin-${m.id}">
+              <p>Enter the scoring PIN for this meet.</p>
+              <input type="tel" id="pinInput-${m.id}" class="pin-input"
+                     maxlength="6" inputmode="numeric" placeholder="· · · ·"
+                     onkeydown="if(event.key==='Enter') submitPin('${m.id}')">
+              <button class="pin-btn" onclick="submitPin('${m.id}')">Enter Scoring</button>
+              <div class="pin-error" id="pinErr-${m.id}"></div>
+              <button class="pin-back" onclick="backToRoles('${m.id}')">← Back</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
 
-    if (!isOpen) {
-      picker.classList.add('open');
-      card.classList.add('selected');
-      selectedId = id;
-      
-      const meet = meetsMap[id];
-      const logoUrl = getLogoUrl(meet.logo_url);
-      document.getElementById('heroLogo').src = logoUrl || getDefaultLogo();
-    } else {
-      selectedId = null;
-      document.getElementById('heroLogo').src = getDefaultLogo();
-    }
-  };
+  } catch(err) {
+    console.error(err);
+    list.innerHTML = `<div class="empty-msg">Error: ${err.message}</div>`;
+  }
+};
 
-  window.goLeaderboard = function(id) {
+// ── Toggle meet card open/closed ──────────────────────
+function toggleMeet(id) {
+  const picker = document.getElementById(`picker-${id}`);
+  const card   = document.getElementById(`card-${id}`);
+  const isOpen = picker.classList.contains('open');
+
+  // Close all others first
+  document.querySelectorAll('.role-picker').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.meet-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.pin-step').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.role-grid').forEach(r => r.style.display = '');
+
+  if (!isOpen) {
+    picker.classList.add('open');
+    card.classList.add('selected');
+    selectedId = id;
+    // Update hero logo
     const meet = meetsMap[id];
-    saveMeetSession(meet);
-    window.location.href = 'results.html';
-  };
+    document.getElementById('heroLogo').src = meet.logo_url || IRONCLAD;
+  } else {
+    selectedId = null;
+    document.getElementById('heroLogo').src = IRONCLAD;
+  }
+}
 
-  window.showPin = function(id) {
-    document.getElementById(`roles-${id}`).style.display = 'none';
-    document.getElementById(`pin-${id}`).classList.add('open');
-    setTimeout(() => document.getElementById(`pinInput-${id}`).focus(), 80);
-  };
+// ── Role actions ──────────────────────────────────────
+function goLeaderboard(id) {
+  saveMeetSession(id);
+  window.location.href = 'results.html';
+}
 
-  window.backToRoles = function(id) {
-    document.getElementById(`pin-${id}`).classList.remove('open');
-    document.getElementById(`roles-${id}`).style.display = '';
-    document.getElementById(`pinErr-${id}`).textContent = '';
+function showPin(id) {
+  document.getElementById(`roles-${id}`).style.display = 'none';
+  document.getElementById(`pin-${id}`).classList.add('open');
+  setTimeout(() => document.getElementById(`pinInput-${id}`).focus(), 80);
+}
+
+function backToRoles(id) {
+  document.getElementById(`pin-${id}`).classList.remove('open');
+  document.getElementById(`roles-${id}`).style.display = '';
+  document.getElementById(`pinErr-${id}`).textContent = '';
+  document.getElementById(`pinInput-${id}`).value = '';
+}
+
+// ── PIN verify ────────────────────────────────────────
+async function submitPin(id) {
+  const entered = document.getElementById(`pinInput-${id}`).value.trim();
+  if (!entered) return;
+
+  const { data, error } = await sb.from('meets').select('pin').eq('id', id).single();
+  if (error || !data) {
+    document.getElementById(`pinErr-${id}`).textContent = '❌ Could not verify PIN.';
+    return;
+  }
+  if (entered === data.pin) {
+    saveMeetSession(id);
+    window.location.href = 'scoring.html';
+  } else {
+    document.getElementById(`pinErr-${id}`).textContent = '❌ Incorrect PIN. Try again.';
     document.getElementById(`pinInput-${id}`).value = '';
-  };
+    document.getElementById(`pinInput-${id}`).focus();
+  }
+}
 
-  window.submitPin = async function(id) {
-    const entered = document.getElementById(`pinInput-${id}`).value.trim();
-    const errEl = document.getElementById(`pinErr-${id}`);
-    const btnEl = document.getElementById(`pinBtn-${id}`);
-    
-    if (!isValidPin(entered)) {
-      errEl.textContent = '❌ PIN must be 4–6 digits.';
-      return;
-    }
-    
-    const { allowed, remaining } = checkPinAttempts(id, 5);
-    if (!allowed) {
-      errEl.textContent = `❌ Too many attempts. Try again in a few minutes.`;
-      return;
-    }
-
-    btnEl.disabled = true;
-    btnEl.textContent = 'Verifying…';
-
-    try {
-      const { data, error } = await sb.from('meets')
-        .select('pin')
-        .eq('id', id)
-        .single();
-
-      if (error || !data) {
-        errEl.textContent = '❌ Could not verify PIN.';
-        recordPinAttempt(id);
-        return;
-      }
-
-      if (entered === data.pin) {
-        clearPinAttempts(id);
-        const meet = meetsMap[id];
-        saveMeetSession(meet);
-        window.location.href = 'scoring.html';
-      } else {
-        recordPinAttempt(id);
-        const { allowed, remaining } = checkPinAttempts(id, 5);
-        
-        if (remaining <= 0) {
-          errEl.textContent = `❌ Too many attempts. Try again in a few minutes.`;
-        } else {
-          errEl.textContent = `❌ Incorrect PIN (${remaining} attempt${remaining === 1 ? '' : 's'} remaining).`;
-        }
-        
-        document.getElementById(`pinInput-${id}`).value = '';
-        document.getElementById(`pinInput-${id}`).focus();
-      }
-    } catch(err) {
-      errEl.textContent = `❌ Error: ${err.message}`;
-    } finally {
-      btnEl.disabled = false;
-      btnEl.textContent = 'Enter Scoring';
-    }
-  };
+// ── Save session ──────────────────────────────────────
+function saveMeetSession(id) {
+  const m = meetsMap[id];
+  sessionStorage.setItem('fep_meet', JSON.stringify({
+    id: m.id, name: m.name, date: m.date, logo_url: m.logo_url || null
+  }));
+}
 </script>
-
 </body>
 </html>

@@ -23,18 +23,22 @@
     }
     body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); margin:0; min-height:100vh; }
 
+    /* topbar */
     .topbar { background:var(--bg2); border-bottom:2px solid var(--border); padding:10px 20px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:200; }
     .topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--accent2); letter-spacing:3px; text-transform:uppercase; flex:1; }
     .topbar a { color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; opacity:.75; }
     .topbar a:hover { opacity:1; }
 
+    /* Login Screen */
     #loginScreen { max-width:380px; margin:100px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:40px 32px; text-align:center; }
     #loginScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 8px; }
     #loginScreen p { font-size:14px; color:var(--text2); margin-bottom:24px; }
 
+    /* Admin Layout */
     #adminContent { display:none; }
     .admin-layout { display:flex; height:calc(100vh - 54px); }
 
+    /* Sidebar */
     .meet-sidebar { width:280px; flex-shrink:0; border-right:2px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow:hidden; }
     .sidebar-head { padding:14px 16px 10px; border-bottom:1px solid var(--border); font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--text3); display:flex; align-items:center; justify-content:space-between; }
     .sidebar-list { flex:1; overflow-y:auto; padding:8px; }
@@ -52,6 +56,7 @@
     .new-meet-btn { margin:10px 10px 0; padding:10px; background:var(--bg3); color:var(--accent); border:1px dashed var(--border2); border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; text-align:center; }
     .new-meet-btn:hover { background:var(--bg); border-color:var(--accent); }
 
+    /* Edit Panel */
     .edit-panel { flex:1; overflow-y:auto; padding:20px 24px 80px; }
     .no-select-msg { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text3); font-size:16px; }
 
@@ -122,10 +127,12 @@
 
     .logo-thumb { width:60px; height:60px; border-radius:8px; object-fit:contain; background:var(--bg); border:1px solid var(--border); padding:4px; margin-bottom:10px; display:none; }
 
+    /* PIN display card */
     .pin-display { background:linear-gradient(135deg,rgba(77,157,224,.15),rgba(126,200,247,.08)); border:2px solid var(--accent); border-radius:10px; padding:16px; margin-bottom:14px; text-align:center; }
     .pin-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-bottom:8px; }
     .pin-value { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:900; color:var(--accent2); letter-spacing:4px; font-variant-numeric:tabular-nums; }
 
+    /* Roster stats grid */
     .stat-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
     .stat-row:last-child { border-bottom:none; }
     .stat-label { font-size:12px; color:var(--text2); }
@@ -140,6 +147,7 @@
   <a href="index.html">⌂ Home</a>
 </div>
 
+<!-- LOGIN SCREEN -->
 <div id="loginScreen">
   <div style="font-size:48px;margin-bottom:16px;">🔑</div>
   <h3>Admin Login</h3>
@@ -151,6 +159,7 @@
   <div id="loginErr" class="st st-err"></div>
 </div>
 
+<!-- ADMIN CONTENT -->
 <div id="adminContent">
   <div class="admin-layout">
     <div class="meet-sidebar">
@@ -171,556 +180,601 @@
   </div>
 </div>
 
-<script type="module">
-  import { sb, formatDate } from './config.js';
+<script>
+const sb = supabase.createClient(
+  'https://qjomrnguhbqfluzwuntz.supabase.co',
+  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
+);
 
-  let allMeets = [];
-  let activeMeetId = null;
-  let activeMeet = null;
-  let currentUser = null;
+let allMeets = [];
+let activeMeetId = null;
+let activeMeet = null;
+let currentUser = null;
 
-  async function isSuperAdmin() {
-    if (!currentUser) return false;
-    try {
-      const { data, error } = await sb.from('admin_profiles')
-        .select('role')
-        .eq('user_id', currentUser.id)
-        .single();
-      if (error || !data) return false;
-      return data.role === 'super' || data.role === 'super_admin';
-    } catch (e) {
-      console.error('Admin check error:', e);
-      return false;
+const YOUR_EMAIL = 'jjester58@gmail.com';
+
+function isSuperAdmin() {
+  return currentUser && currentUser.email === YOUR_EMAIL;
+}
+
+// Auth
+async function initAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (session?.user) {
+    currentUser = session.user;
+    showAdmin();
+  } else {
+    // Force refresh session (THIS is the missing piece)
+    const { data: refreshed } = await sb.auth.refreshSession();
+    
+    if (refreshed?.session?.user) {
+      currentUser = refreshed.session.user;
+      showAdmin();
     }
   }
 
-  async function initAuth() {
-    const { data: { session } } = await sb.auth.getSession();
+  sb.auth.onAuthStateChange((event, session) => {
     if (session?.user) {
       currentUser = session.user;
       showAdmin();
-    } else {
-      const { data: refreshed } = await sb.auth.refreshSession();
-      if (refreshed?.session?.user) {
-        currentUser = refreshed.session.user;
-        showAdmin();
-      }
     }
-    sb.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        currentUser = session.user;
-        showAdmin();
-      }
-    });
+  });
+}
+
+function showAdmin() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminContent').style.display = 'block';
+  loadMeets();
+}
+
+async function login() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('pwInput').value;
+  const err = document.getElementById('loginErr');
+  if (!email || !password) return flashErr(err, 'Email and password required');
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) return flashErr(err, error.message);
+
+  currentUser = data.user;
+  showAdmin();
+}
+
+async function signUp() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('pwInput').value;
+  const err = document.getElementById('loginErr');
+  if (!email || password.length < 6) return flashErr(err, 'Password must be at least 6 characters');
+  const { error } = await sb.auth.signUp({ email, password });
+  if (error) return flashErr(err, error.message);
+  flashErr(err, '✅ Check your email to confirm your account', 'ok');
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+function flashErr(el, msg, type = 'err') {
+  el.innerHTML = msg;
+  el.className = `st show st-${type}`;
+}
+
+// Load meets
+async function loadMeets() {
+  if (!currentUser) return;
+
+  let query = sb.from('meets').select('*').order('date', { ascending: false });
+
+  if (!isSuperAdmin()) {
+    query = query.eq('owner_id', currentUser.id);
   }
 
-  function showAdmin() {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminContent').style.display = 'block';
-    loadMeets();
+  const { data, error } = await query;
+  if (error) {
+  console.error("LOAD MEETS ERROR:", error);
+  alert(error.message);
+  return;
+}
+
+  allMeets = data || [];
+  document.getElementById('meetCount').textContent = allMeets.length;
+  renderMeetList();
+}
+
+function renderMeetList() {
+  const el = document.getElementById('meetList');
+  if (!allMeets.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No meets yet</div>';
+    return;
   }
+  el.innerHTML = allMeets.map(m => {
+    const isActive = m.id === activeMeetId;
+    const statusCls = m.cancelled ? 's-cancelled' : m.is_active === false ? 's-inactive' : 's-active';
+    const statusTxt = m.cancelled ? 'Cancelled' : m.is_active === false ? 'Inactive' : 'Active';
+    return `<div class="meet-item ${isActive ? 'active' : ''}" onclick="selectMeet('${m.id}')">
+      <div class="mi-name">${m.name || 'Untitled'}</div>
+      <div class="mi-date">${m.date ? fmtDate(m.date) : 'No date'}</div>
+      <div class="mi-pin">PIN: ${m.pin || '—'}</div>
+      <span class="mi-status ${statusCls}">${statusTxt}</span>
+    </div>`;
+  }).join('');
+}
 
-  window.login = async function() {
-    const email = document.getElementById('emailInput').value.trim();
-    const password = document.getElementById('pwInput').value;
-    const err = document.getElementById('loginErr');
-    if (!email || !password) return flashErr(err, 'Email and password required');
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) return flashErr(err, error.message);
-    currentUser = data.user;
-    showAdmin();
-  };
+async function selectMeet(id) {
+  activeMeetId = id;
+  activeMeet = allMeets.find(m => m.id === id);
+  renderMeetList();
+  renderEditPanel();
+}
 
-  window.signUp = async function() {
-    const email = document.getElementById('emailInput').value.trim();
-    const password = document.getElementById('pwInput').value;
-    const err = document.getElementById('loginErr');
-    if (!email || password.length < 6) return flashErr(err, 'Password must be at least 6 characters');
-    const { error } = await sb.auth.signUp({ email, password });
-    if (error) return flashErr(err, error.message);
-    flashErr(err, '✅ Check your email to confirm your account', 'ok');
-  };
+async function renderEditPanel() {
+  const m = activeMeet;
+  const ep = document.getElementById('editPanel');
+  const logoHtml = m.logo_url ? `<div class="header-logo"><img src="${m.logo_url}" alt="logo"></div>` : `<div class="header-logo">🏟</div>`;
 
-  window.logout = async function() {
-    await sb.auth.signOut();
-    location.reload();
-  };
-
-  function flashErr(el, msg, type = 'err') {
-    el.innerHTML = msg;
-    el.className = `st show st-${type}`;
-  }
-
-  async function loadMeets() {
-    if (!currentUser) return;
-    let query = sb.from('meets').select('*').order('date', { ascending: false });
-    if (!(await isSuperAdmin())) {
-      query = query.eq('owner_id', currentUser.id);
-    }
-    const { data, error } = await query;
-    if (error) {
-      console.error('LOAD MEETS ERROR:', error);
-      alert(error.message);
-      return;
-    }
-    allMeets = data || [];
-    document.getElementById('meetCount').textContent = allMeets.length;
-    renderMeetList();
-  }
-
-  function renderMeetList() {
-    const el = document.getElementById('meetList');
-    if (!allMeets.length) {
-      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No meets yet</div>';
-      return;
-    }
-    el.innerHTML = allMeets.map(m => {
-      const isActive = m.id === activeMeetId;
-      const statusCls = m.cancelled ? 's-cancelled' : m.is_active === false ? 's-inactive' : 's-active';
-      const statusTxt = m.cancelled ? 'Cancelled' : m.is_active === false ? 'Inactive' : 'Active';
-      return `<div class="meet-item ${isActive ? 'active' : ''}" onclick="window.selectMeet('${m.id}')">
-        <div class="mi-name">${m.name || 'Untitled'}</div>
-        <div class="mi-date">${formatDate(m.date)}</div>
-        <div class="mi-pin">PIN: ${m.pin || '—'}</div>
-        <span class="mi-status ${statusCls}">${statusTxt}</span>
-      </div>`;
-    }).join('');
-  }
-
-  window.selectMeet = function(id) {
-    activeMeetId = id;
-    activeMeet = allMeets.find(m => m.id === id);
-    renderMeetList();
-    renderEditPanel();
-  };
-
-  async function renderEditPanel() {
-    const m = activeMeet;
-    const ep = document.getElementById('editPanel');
-    const logoHtml = m.logo_url ? `<div class="header-logo"><img src="${m.logo_url}" alt="logo"></div>` : `<div class="header-logo">🏟</div>`;
-
-    ep.innerHTML = `
-      <div class="meet-header">
-        ${logoHtml}
-        <div class="header-info">
-          <div class="header-name">${m.name || 'Untitled Meet'}</div>
-          <div class="header-sub">${formatDate(m.date)}</div>
-        </div>
-        <div class="header-pin">PIN: ${m.pin || '—'}</div>
+  ep.innerHTML = `
+    <div class="meet-header">
+      ${logoHtml}
+      <div class="header-info">
+        <div class="header-name">${m.name || 'Untitled Meet'}</div>
+        <div class="header-sub">${m.date ? fmtDate(m.date) : 'No date set'}</div>
       </div>
+      <div class="header-pin">PIN: ${m.pin || '—'}</div>
+    </div>
 
-      <div class="divider"><span>Worker Access</span></div>
+    <!-- WORKER PIN SECTION -->
+    <div class="divider"><span>Worker Access</span></div>
+    <div class="card">
+      <div class="card-title">🔐 Worker PIN</div>
+      <div class="card-desc">Workers use this PIN to enter data during the meet. No PIN required to view results.</div>
+      <div class="pin-display">
+        <div class="pin-label">Current PIN</div>
+        <div class="pin-value">${m.pin || '—'}</div>
+      </div>
+      <div class="field"><label>Set or Change PIN (4–6 digits)</label><input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric"></div>
+      <button class="btn btn-primary" onclick="updatePin()">Update PIN</button>
+      <div class="st" id="stPin"></div>
+    </div>
+
+    <!-- MEET DETAILS SECTION -->
+    <div class="divider"><span>Meet Details</span></div>
+    <div class="grid2">
       <div class="card">
-        <div class="card-title">🔐 Worker PIN</div>
-        <div class="card-desc">Workers use this PIN to enter data during the meet. No PIN required to view results.</div>
-        <div class="pin-display">
-          <div class="pin-label">Current PIN</div>
-          <div class="pin-value">${m.pin || '—'}</div>
-        </div>
-        <div class="field"><label>Set or Change PIN (4–6 digits)</label><input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric"></div>
-        <button class="btn btn-primary" onclick="window.updatePin()">Update PIN</button>
-        <div class="st" id="stPin"></div>
-      </div>
-
-      <div class="divider"><span>Meet Details</span></div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">📋 Basic Info</div>
-          <div class="field"><label>Meet Name</label><input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025"></div>
-          <div class="field"><label>Date</label><input type="date" id="eDate" value="${m.date || ''}"></div>
-          <div class="field"><label>Status</label>
-            <select id="eActive">
-              <option value="active" ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active (visible to workers)</option>
-              <option value="inactive" ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive (hidden from workers)</option>
-              <option value="cancelled" ${m.cancelled ? 'selected' : ''}>Cancelled</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" onclick="window.saveDetails()">Save Changes</button>
-          <div class="st" id="stDetails"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">🖼 Meet Logo</div>
-          <div class="card-desc">Custom logo shown on worker screens instead of Ironclad.</div>
-          <img id="logoThumb" class="logo-thumb" src="${m.logo_url || ''}" style="${m.logo_url ? 'display:block' : 'display:none'}">
-          <div class="field"><label>Upload New Logo</label><input type="file" id="logoFile" accept="image/*" onchange="window.previewLogo()"></div>
-          <button class="btn btn-primary" onclick="window.uploadLogo()">Upload Logo</button>
-          <button class="btn btn-ghost" onclick="window.removeLogo()">Remove Logo</button>
-          <div class="st" id="stLogo"></div>
-        </div>
-      </div>
-
-      <div class="divider"><span>Roster &amp; Events</span></div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">📋 Events</div>
-          <div class="card-desc">Field events imported for this meet.</div>
-          <div id="evLoading" style="color:var(--text3);font-size:13px;">Loading…</div>
-          <div id="evList"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">👥 Roster Overview</div>
-          <div class="card-desc">Quick stats on athletes &amp; data entry.</div>
-          <div id="rosterStats" style="color:var(--text2);font-size:13px;line-height:1.8;">Loading…</div>
-        </div>
-      </div>
-
-      <div class="divider"><span>CSV Management</span></div>
-      <div class="card span2">
-        <div class="card-title">📥 Upload Roster from CSV</div>
-        <div class="card-desc">Import athletes from MileSplit format. Choose to <strong style="color:var(--accent2)">add to existing</strong> roster or <strong style="color:var(--red)">replace everything</strong> for a fresh start.</div>
-        <div class="field"><label>CSV File (MileSplit format)</label><input type="file" id="csvFile" accept=".csv"></div>
-        <div class="field"><label>Import Mode</label>
-          <select id="importMode">
-            <option value="add">Add to existing roster</option>
-            <option value="replace">Replace entire roster (delete all, then import)</option>
+        <div class="card-title">📋 Basic Info</div>
+        <div class="field"><label>Meet Name</label><input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025"></div>
+        <div class="field"><label>Date</label><input type="date" id="eDate" value="${m.date || ''}"></div>
+        <div class="field"><label>Status</label>
+          <select id="eActive">
+            <option value="active" ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active (visible to workers)</option>
+            <option value="inactive" ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive (hidden from workers)</option>
+            <option value="cancelled" ${m.cancelled ? 'selected' : ''}>Cancelled</option>
           </select>
         </div>
-        <button class="btn btn-primary" id="importBtn" onclick="window.doImport()">Run Import</button>
-        <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
-        <div class="st" id="stImport"></div>
+        <button class="btn btn-primary" onclick="saveDetails()">Save Changes</button>
+        <div class="st" id="stDetails"></div>
       </div>
 
-      <div class="divider"><span>Danger Zone</span></div>
-      <div class="grid2">
-        <div class="card card-danger">
-          <div class="card-title">🗑 Clear Roster</div>
-          <div class="card-desc">Delete all athletes, events, & attempts. Meet info (name, date, PIN, logo) stays.</div>
-          <button class="btn btn-danger" onclick="window.clearRoster()">Clear Roster &amp; Events</button>
-          <div class="st" id="stClear"></div>
-        </div>
-        <div class="card card-danger">
-          <div class="card-title">💣 Delete Meet</div>
-          <div class="card-desc">Permanently remove this meet &amp; all associated data.</div>
-          <button class="btn btn-danger" onclick="window.deleteMeet()">Delete Meet Entirely</button>
-          <div class="st" id="stDelete"></div>
-        </div>
+      <div class="card">
+        <div class="card-title">🖼 Meet Logo</div>
+        <div class="card-desc">Custom logo shown on worker screens instead of Ironclad.</div>
+        <img id="logoThumb" class="logo-thumb" src="${m.logo_url || ''}" style="${m.logo_url ? 'display:block' : 'display:none'}">
+        <div class="field"><label>Upload New Logo</label><input type="file" id="logoFile" accept="image/*" onchange="previewLogo()"></div>
+        <button class="btn btn-primary" onclick="uploadLogo()">Upload Logo</button>
+        <button class="btn btn-ghost" onclick="removeLogo()">Remove Logo</button>
+        <div class="st" id="stLogo"></div>
       </div>
-    `;
+    </div>
 
-    loadEventList();
-    loadRosterStats();
-  }
+    <!-- ROSTER & EVENTS SECTION -->
+    <div class="divider"><span>Roster &amp; Events</span></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">📋 Events</div>
+        <div class="card-desc">Field events imported for this meet.</div>
+        <div id="evLoading" style="color:var(--text3);font-size:13px;">Loading…</div>
+        <div id="evList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Roster Overview</div>
+        <div class="card-desc">Quick stats on athletes &amp; data entry.</div>
+        <div id="rosterStats" style="color:var(--text2);font-size:13px;line-height:1.8;">Loading…</div>
+      </div>
+    </div>
 
-  window.updatePin = async function() {
-    const pin = document.getElementById('ePin').value.trim();
-    if (!pin) return flash('stPin', '❌ PIN cannot be empty', 'err');
-    if (pin.length < 4) return flash('stPin', '❌ PIN must be at least 4 digits', 'err');
-    if (!/^\d+$/.test(pin)) return flash('stPin', '❌ PIN must contain only numbers', 'err');
-    const { error } = await sb.from('meets').update({ pin }).eq('id', activeMeetId);
-    if (error) return flash('stPin', '❌ ' + error.message, 'err');
-    activeMeet.pin = pin;
-    allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, pin } : m);
-    renderMeetList();
-    flash('stPin', '✅ PIN updated', 'ok');
+    <!-- CSV IMPORT SECTION -->
+    <div class="divider"><span>CSV Management</span></div>
+    <div class="card span2">
+      <div class="card-title">📥 Upload Roster from CSV</div>
+      <div class="card-desc">Import athletes from MileSplit format. Choose to <strong style="color:var(--accent2)">add to existing</strong> roster or <strong style="color:var(--red)">replace everything</strong> for a fresh start.</div>
+      <div class="field"><label>CSV File (MileSplit format)</label><input type="file" id="csvFile" accept=".csv"></div>
+      <div class="field"><label>Import Mode</label>
+        <select id="importMode">
+          <option value="add">Add to existing roster</option>
+          <option value="replace">Replace entire roster (delete all, then import)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="importBtn" onclick="doImport()">Run Import</button>
+      <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+      <div class="st" id="stImport"></div>
+    </div>
+
+    <!-- DANGER ZONE -->
+    <div class="divider"><span>Danger Zone</span></div>
+    <div class="grid2">
+      <div class="card card-danger">
+        <div class="card-title">🗑 Clear Roster</div>
+        <div class="card-desc">Delete all athletes, events, & attempts. Meet info (name, date, PIN, logo) stays.</div>
+        <button class="btn btn-danger" onclick="clearRoster()">Clear Roster &amp; Events</button>
+        <div class="st" id="stClear"></div>
+      </div>
+      <div class="card card-danger">
+        <div class="card-title">💣 Delete Meet</div>
+        <div class="card-desc">Permanently remove this meet &amp; all associated data.</div>
+        <button class="btn btn-danger" onclick="deleteMeet()">Delete Meet Entirely</button>
+        <div class="st" id="stDelete"></div>
+      </div>
+    </div>
+  `;
+
+  loadEventList();
+  loadRosterStats();
+}
+
+async function updatePin() {
+  const pin = document.getElementById('ePin').value.trim();
+  if (!pin) return flash('stPin', '❌ PIN cannot be empty', 'err');
+  if (pin.length < 4) return flash('stPin', '❌ PIN must be at least 4 digits', 'err');
+  if (!/^\d+$/.test(pin)) return flash('stPin', '❌ PIN must contain only numbers', 'err');
+
+  const { error } = await sb.from('meets').update({ pin }).eq('id', activeMeetId);
+  if (error) return flash('stPin', '❌ ' + error.message, 'err');
+
+  activeMeet.pin = pin;
+  allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, pin } : m);
+  renderMeetList();
+  flash('stPin', '✅ PIN updated', 'ok');
+}
+
+async function saveDetails() {
+  const name = document.getElementById('eName').value.trim();
+  const date = document.getElementById('eDate').value || null;
+  const status = document.getElementById('eActive').value;
+  if (!name) return flash('stDetails', '❌ Meet name is required', 'err');
+
+  const updates = { name, date, is_active: status !== 'inactive', cancelled: status === 'cancelled' };
+  const { error } = await sb.from('meets').update(updates).eq('id', activeMeetId);
+  if (error) return flash('stDetails', '❌ ' + error.message, 'err');
+
+  Object.assign(activeMeet, updates);
+  allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, ...updates } : m);
+  renderMeetList();
+  renderEditPanel();
+  flash('stDetails', '✅ Meet updated', 'ok');
+}
+
+function previewLogo() {
+  const file = document.getElementById('logoFile').files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    const thumb = document.getElementById('logoThumb');
+    thumb.src = e.target.result;
+    thumb.style.display = 'block';
   };
+  r.readAsDataURL(file);
+}
 
-  window.saveDetails = async function() {
-    const name = document.getElementById('eName').value.trim();
-    const date = document.getElementById('eDate').value || null;
-    const status = document.getElementById('eActive').value;
-    if (!name) return flash('stDetails', '❌ Meet name is required', 'err');
-    const updates = { name, date, is_active: status !== 'inactive', cancelled: status === 'cancelled' };
-    const { error } = await sb.from('meets').update(updates).eq('id', activeMeetId);
-    if (error) return flash('stDetails', '❌ ' + error.message, 'err');
-    Object.assign(activeMeet, updates);
-    allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, ...updates } : m);
-    renderMeetList();
-    renderEditPanel();
-    flash('stDetails', '✅ Meet updated', 'ok');
-  };
+async function uploadLogo() {
+  const file = document.getElementById('logoFile').files[0];
+  if (!file) return flash('stLogo', '❌ Select an image first', 'err');
+  flash('stLogo', '⏳ Uploading…', 'inf');
 
-  window.previewLogo = function() {
-    const file = document.getElementById('logoFile').files[0];
-    if (!file) return;
-    const r = new FileReader();
-    r.onload = e => {
-      const thumb = document.getElementById('logoThumb');
-      thumb.src = e.target.result;
-      thumb.style.display = 'block';
-    };
-    r.readAsDataURL(file);
-  };
+  const ext = file.name.split('.').pop().toLowerCase();
+  const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
 
-  window.uploadLogo = async function() {
-    const file = document.getElementById('logoFile').files[0];
-    if (!file) return flash('stLogo', '❌ Select an image first', 'err');
-    flash('stLogo', '⏳ Uploading…', 'inf');
-    const ext = file.name.split('.').pop().toLowerCase();
-    const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
-    try {
-      const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
-      if (upErr) throw upErr;
-      const { data } = sb.storage.from('avatars').getPublicUrl(name);
-      const url = data.publicUrl;
-      const { error: dbErr } = await sb.from('meets').update({ logo_url: url }).eq('id', activeMeetId);
-      if (dbErr) throw dbErr;
-      activeMeet.logo_url = url;
-      allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: url } : m);
-      const thumb = document.getElementById('logoThumb');
-      thumb.src = url; thumb.style.display = 'block';
-      const headerLogo = document.querySelector('.header-logo');
-      if (headerLogo) headerLogo.innerHTML = `<img src="${url}" alt="logo">`;
-      flash('stLogo', '✅ Logo uploaded', 'ok');
-    } catch(err) { flash('stLogo', '❌ ' + err.message, 'err'); }
-  };
+  try {
+    const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
+    if (upErr) throw upErr;
+    const { data } = sb.storage.from('avatars').getPublicUrl(name);
+    const url = data.publicUrl;
 
-  window.removeLogo = async function() {
-    if (!confirm('Remove this meet\'s logo? The Ironclad logo will show instead.')) return;
-    const { error } = await sb.from('meets').update({ logo_url: null }).eq('id', activeMeetId);
-    if (error) return flash('stLogo', '❌ ' + error.message, 'err');
-    activeMeet.logo_url = null;
-    allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: null } : m);
-    document.getElementById('logoThumb').style.display = 'none';
+    const { error: dbErr } = await sb.from('meets').update({ logo_url: url }).eq('id', activeMeetId);
+    if (dbErr) throw dbErr;
+
+    activeMeet.logo_url = url;
+    allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: url } : m);
+
+    const thumb = document.getElementById('logoThumb');
+    thumb.src = url; thumb.style.display = 'block';
+
     const headerLogo = document.querySelector('.header-logo');
-    if (headerLogo) headerLogo.innerHTML = '🏟';
-    flash('stLogo', '✅ Logo removed', 'ok');
-  };
+    if (headerLogo) headerLogo.innerHTML = `<img src="${url}" alt="logo">`;
 
-  async function loadEventList() {
-    const { data: events, error } = await sb.from('events').select('*').eq('meet_id', activeMeetId).order('name');
-    document.getElementById('evLoading').textContent = '';
-    if (error || !events || !events.length) {
-      document.getElementById('evList').innerHTML = '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
-      return;
-    }
-    const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', activeMeetId);
-    const { data: assigns } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
-    const attCount = {}, athCount = {};
-    (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
-    (assigns || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
-    document.getElementById('evList').innerHTML = events.map(e => `
-      <div class="ev-item">
-        <div>
-          <div class="ev-name">${e.name}</div>
-          <div class="ev-meta">${e.gender||''} ${e.level ? '· ' + e.level : ''}</div>
-        </div>
-        <div style="display:flex;gap:6px;">
-          <span class="badge">${athCount[e.id]||0} ath</span>
-          <span class="badge">${attCount[e.id]||0} att</span>
-        </div>
-      </div>`).join('');
+    flash('stLogo', '✅ Logo uploaded', 'ok');
+  } catch(err) { flash('stLogo', '❌ ' + err.message, 'err'); }
+}
+
+async function removeLogo() {
+  if (!confirm('Remove this meet\'s logo? The Ironclad logo will show instead.')) return;
+  const { error } = await sb.from('meets').update({ logo_url: null }).eq('id', activeMeetId);
+  if (error) return flash('stLogo', '❌ ' + error.message, 'err');
+  activeMeet.logo_url = null;
+  allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: null } : m);
+  document.getElementById('logoThumb').style.display = 'none';
+  const headerLogo = document.querySelector('.header-logo');
+  if (headerLogo) headerLogo.innerHTML = '🏟';
+  flash('stLogo', '✅ Logo removed', 'ok');
+}
+
+async function loadEventList() {
+  const { data: events, error } = await sb.from('events').select('*').eq('meet_id', activeMeetId).order('name');
+  document.getElementById('evLoading').textContent = '';
+
+  if (error || !events || !events.length) {
+    document.getElementById('evList').innerHTML = '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
+    return;
   }
 
-  async function loadRosterStats() {
-    const { data: athletes } = await sb.from('athletes').select('*').eq('meet_id', activeMeetId);
-    const { data: events } = await sb.from('events').select('*').eq('meet_id', activeMeetId);
-    const { data: attempts } = await sb.from('attempts').select('*').eq('meet_id', activeMeetId);
-    const athleteCount = athletes?.length || 0;
-    const eventCount = events?.length || 0;
-    const attemptCount = attempts?.length || 0;
-    document.getElementById('rosterStats').innerHTML = `
-      <div class="stat-row">
-        <div class="stat-label">Total Athletes</div>
-        <div class="stat-value">${athleteCount}</div>
-      </div>
-      <div class="stat-row">
-        <div class="stat-label">Total Events</div>
-        <div class="stat-value">${eventCount}</div>
-      </div>
-      <div class="stat-row">
-        <div class="stat-label">Attempts Entered</div>
-        <div class="stat-value">${attemptCount}</div>
-      </div>
-      <div class="stat-row">
-        <div class="stat-label">Progress</div>
-        <div class="stat-value">${eventCount > 0 ? Math.round((attemptCount / (athleteCount * eventCount)) * 100) : 0}%</div>
-      </div>
-    `;
-  }
+  const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', activeMeetId);
+  const { data: assigns } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
+  const attCount = {}, athCount = {};
+  (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
+  (assigns || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
 
-  window.doImport = async function() {
-    const file = document.getElementById('csvFile').files[0];
-    if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
-    const mode = document.getElementById('importMode').value;
-    if (!confirm(mode === 'replace' ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import the new CSV. Continue?` : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
-    const btn = document.getElementById('importBtn');
-    const pw = document.getElementById('progWrap');
-    const pb = document.getElementById('progBar');
-    btn.disabled = true; btn.textContent = 'Working…';
-    pw.classList.add('show'); pb.style.width = '5%';
-    try {
-      if (mode === 'replace') {
-        flash('stImport', '🗑 Clearing existing roster…', 'inf');
-        const steps = [
-          sb.from('attempts').delete().eq('meet_id', activeMeetId),
-          sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
-          sb.from('athletes').delete().eq('meet_id', activeMeetId),
-          sb.from('events').delete().eq('meet_id', activeMeetId)
-        ];
-        for (const s of steps) { const { error } = await s; if (error) throw error; }
-      }
-      pb.style.width = '20%';
-      flash('stImport', '⏳ Parsing CSV…', 'inf');
-      const text = await file.text();
-      const n = await importMileSplit(text, activeMeetId, pb);
-      flash('stImport', `✅ ${n} athletes imported`, 'ok');
-      loadEventList();
-      loadRosterStats();
-    } catch(err) {
-      flash('stImport', '❌ ' + err.message, 'err');
-    } finally {
-      btn.disabled = false; btn.textContent = 'Run Import';
-      setTimeout(() => { pw.classList.remove('show'); pb.style.width = '0%'; }, 2000);
-    }
-  };
+  document.getElementById('evList').innerHTML = events.map(e => `
+    <div class="ev-item">
+      <div>
+        <div class="ev-name">${e.name}</div>
+        <div class="ev-meta">${e.gender||''} ${e.level ? '· ' + e.level : ''}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <span class="badge">${athCount[e.id]||0} ath</span>
+        <span class="badge">${attCount[e.id]||0} att</span>
+      </div>
+    </div>`).join('');
+}
 
-  async function importMileSplit(csvText, meetId, progBar) {
-    const rows = parseCSV(csvText);
-    if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
-    const headers = rows[0].map(h => h.trim().toLowerCase());
-    const getCol = names => headers.findIndex(h => names.some(n => h.includes(n)));
-    const idx = {
-      ev: getCol(['event']),
-      div: getCol(['division','level','grade']),
-      ln: getCol(['lname','last']),
-      fn: getCol(['fname','first']),
-      gen: getCol(['gender','sex']),
-      tm: getCol(['team','school'])
-    };
-    if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0)
-      throw new Error('CSV missing required columns (first, last, event).');
-    const fieldKeywords = ['shot','discus','long jump','triple jump','high jump','pole vault'];
-    const eventsFound = {}, eventRows = [], athleteRows = [], assignRows = [];
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      if (!row || row.length < 3) continue;
-      const g = col => (col >= 0 && col < row.length) ? (row[col]||'').toString().trim() : '';
-      if (!g(idx.fn)) continue;
-      const evName = g(idx.ev).toLowerCase();
-      if (!fieldKeywords.some(k => evName.includes(k))) continue;
-      const level = normalizeLevel(g(idx.div));
-      const gender = g(idx.gen);
-      const evKey = g(idx.ev) + '|' + gender + '|' + level;
-      if (!eventsFound[evKey]) {
-        const eId = crypto.randomUUID().substring(0, 8);
-        eventsFound[evKey] = eId;
-        eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId });
-      }
-      const aId = crypto.randomUUID().substring(0, 8);
-      athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
-      assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+' '+g(idx.ln)).trim() });
-      if (progBar) progBar.style.width = (20 + Math.round((i / rows.length) * 70)) + '%';
-    }
-    if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
-    if (eventRows.length) { const { error } = await sb.from('events').insert(eventRows); if (error) throw error; }
-    if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows); if (error) throw error; }
-    if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows); if (error) throw error; }
-    if (progBar) progBar.style.width = '100%';
-    return athleteRows.length;
-  }
+async function loadRosterStats() {
+  const { data: athletes } = await sb.from('athletes').select('*').eq('meet_id', activeMeetId);
+  const { data: events } = await sb.from('events').select('*').eq('meet_id', activeMeetId);
+  const { data: attempts } = await sb.from('attempts').select('*').eq('meet_id', activeMeetId);
 
-  window.clearRoster = async function() {
-    if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?\n\nMeet name, date, PIN and logo will be kept.`)) return;
-    const steps = [
-      sb.from('attempts').delete().eq('meet_id', activeMeetId),
-      sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
-      sb.from('athletes').delete().eq('meet_id', activeMeetId),
-      sb.from('events').delete().eq('meet_id', activeMeetId)
-    ];
-    for (const s of steps) {
-      const { error } = await s;
-      if (error) { flash('stClear', '❌ ' + error.message, 'err'); return; }
+  const athleteCount = athletes?.length || 0;
+  const eventCount = events?.length || 0;
+  const attemptCount = attempts?.length || 0;
+
+  document.getElementById('rosterStats').innerHTML = `
+    <div class="stat-row">
+      <div class="stat-label">Total Athletes</div>
+      <div class="stat-value">${athleteCount}</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Total Events</div>
+      <div class="stat-value">${eventCount}</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Attempts Entered</div>
+      <div class="stat-value">${attemptCount}</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Progress</div>
+      <div class="stat-value">${eventCount > 0 ? Math.round((attemptCount / (athleteCount * eventCount)) * 100) : 0}%</div>
+    </div>
+  `;
+}
+
+async function doImport() {
+  const file = document.getElementById('csvFile').files[0];
+  if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
+  const mode = document.getElementById('importMode').value;
+  if (!confirm(mode === 'replace' ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import the new CSV. Continue?` : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
+
+  const btn = document.getElementById('importBtn');
+  const pw = document.getElementById('progWrap');
+  const pb = document.getElementById('progBar');
+  btn.disabled = true; btn.textContent = 'Working…';
+  pw.classList.add('show'); pb.style.width = '5%';
+
+  try {
+    if (mode === 'replace') {
+      flash('stImport', '🗑 Clearing existing roster…', 'inf');
+      const steps = [
+        sb.from('attempts').delete().eq('meet_id', activeMeetId),
+        sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+        sb.from('athletes').delete().eq('meet_id', activeMeetId),
+        sb.from('events').delete().eq('meet_id', activeMeetId)
+      ];
+      for (const s of steps) { const { error } = await s; if (error) throw error; }
     }
-    flash('stClear', '✅ Roster & events cleared.', 'ok');
+    pb.style.width = '20%';
+
+    flash('stImport', '⏳ Parsing CSV…', 'inf');
+    const text = await file.text();
+    const n = await importMileSplit(text, activeMeetId, pb);
+
+    flash('stImport', `✅ ${n} athletes imported`, 'ok');
     loadEventList();
     loadRosterStats();
-  };
+  } catch(err) {
+    flash('stImport', '❌ ' + err.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Run Import';
+    setTimeout(() => { pw.classList.remove('show'); pb.style.width = '0%'; }, 2000);
+  }
+}
 
-  window.deleteMeet = async function() {
-    if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?\n\nThis cannot be undone.`)) return;
-    const steps = [
-      sb.from('attempts').delete().eq('meet_id', activeMeetId),
-      sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
-      sb.from('athletes').delete().eq('meet_id', activeMeetId),
-      sb.from('events').delete().eq('meet_id', activeMeetId),
-      sb.from('meets').delete().eq('id', activeMeetId)
-    ];
-    for (const s of steps) {
-      const { error } = await s;
-      if (error) { flash('stDelete', '❌ ' + error.message, 'err'); return; }
+async function importMileSplit(csvText, meetId, progBar) {
+  const rows = parseCSV(csvText);
+  if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  const getCol = names => headers.findIndex(h => names.some(n => h.includes(n)));
+
+  const idx = {
+    ev: getCol(['event']),
+    div: getCol(['division','level','grade']),
+    ln: getCol(['lname','last']),
+    fn: getCol(['fname','first']),
+    gen: getCol(['gender','sex']),
+    tm: getCol(['team','school'])
+  };
+  if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0)
+    throw new Error('CSV missing required columns (first, last, event).');
+
+  const fieldKeywords = ['shot','discus','long jump','triple jump','high jump','pole vault'];
+  const eventsFound = {}, eventRows = [], athleteRows = [], assignRows = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.length < 3) continue;
+    const g = col => (col >= 0 && col < row.length) ? (row[col]||'').toString().trim() : '';
+    if (!g(idx.fn)) continue;
+    const evName = g(idx.ev).toLowerCase();
+    if (!fieldKeywords.some(k => evName.includes(k))) continue;
+
+    const level = normalizeLevel(g(idx.div));
+    const gender = g(idx.gen);
+    const evKey = g(idx.ev) + '|' + gender + '|' + level;
+
+    if (!eventsFound[evKey]) {
+      const eId = crypto.randomUUID().substring(0, 8);
+      eventsFound[evKey] = eId;
+      eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId });
     }
-    allMeets = allMeets.filter(m => m.id !== activeMeetId);
-    activeMeetId = null;
-    activeMeet = null;
-    document.getElementById('meetCount').textContent = allMeets.length;
-    renderMeetList();
-    document.getElementById('editPanel').innerHTML = '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
-  };
+    const aId = crypto.randomUUID().substring(0, 8);
+    athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
+    assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+' '+g(idx.ln)).trim() });
 
-  window.startNewMeet = function() {
-    activeMeetId = null;
-    activeMeet = null;
-    renderMeetList();
-    document.getElementById('editPanel').innerHTML = `
-      <div class="divider"><span>New Meet</span></div>
-      <div class="card" style="max-width:480px;">
-        <div class="card-title">🏟 Create New Meet</div>
-        <div class="field"><label>Meet Name</label><input type="text" id="newName" placeholder="e.g. Weatherford Invite 2025"></div>
-        <div class="field"><label>Date</label><input type="date" id="newDate"></div>
-        <div class="field"><label>Worker PIN (4–6 digits)</label><input type="tel" id="newPin" maxlength="6" placeholder="e.g. 2025" inputmode="numeric"></div>
-        <button class="btn btn-green" onclick="window.createMeet()">Create Meet</button>
-        <div class="st" id="stCreate"></div>
-      </div>`;
-  };
-
-  window.createMeet = async function() {
-    const name = document.getElementById('newName').value.trim();
-    const date = document.getElementById('newDate').value || null;
-    const pin = document.getElementById('newPin').value.trim();
-    if (!name) return flash('stCreate', '❌ Meet name is required', 'err');
-    if (pin.length < 4) return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
-    if (!currentUser) return flash('stCreate', '❌ Not logged in', 'err');
-    flash('stCreate', '⏳ Creating…', 'inf');
-    const { data, error } = await sb.from('meets')
-      .insert({ name, date, pin, is_active: true, owner_id: currentUser.id })
-      .select().single();
-    if (error) return flash('stCreate', '❌ ' + error.message, 'err');
-    allMeets.unshift(data);
-    document.getElementById('meetCount').textContent = allMeets.length;
-    activeMeetId = data.id;
-    activeMeet = data;
-    renderMeetList();
-    renderEditPanel();
-    flash('stCreate', '✅ Meet created', 'ok');
-  };
-
-  function normalizeLevel(raw) {
-    if (!raw) return '';
-    const t = raw.toString().toLowerCase().trim();
-    if (t.includes('varsity')) return 'Varsity';
-    if (t.includes('jv') || t.includes('junior var')) return 'JV';
-    if (t.includes('8th') || t==='8') return '8th Grade';
-    if (t.includes('7th') || t==='7') return '7th Grade';
-    if (t.includes('frosh') || t.includes('freshman') || t.includes('9th')) return 'Freshman';
-    if (t.includes('soph') || t.includes('10th')) return 'Sophomore';
-    return raw.toString().trim();
+    if (progBar) progBar.style.width = (20 + Math.round((i / rows.length) * 70)) + '%';
   }
 
-  function parseCSV(text) {
-    text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-    const rows=[]; let row=[],field='',inQ=false,i=0;
-    while(i<text.length){
-      const c=text[i];
-      if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;continue;}if(c==='"')inQ=false;else field+=c;}
-      else{if(c==='"')inQ=true;else if(c===','){row.push(field.trim());field='';}else if(c==='\n'){row.push(field.trim());field='';if(row.some(v=>v!=''))rows.push(row);row=[];}else field+=c;}
-      i++;
-    }
-    row.push(field.trim());if(row.some(v=>v!=''))rows.push(row);
-    return rows;
+  if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
+  if (eventRows.length) { const { error } = await sb.from('events').insert(eventRows); if (error) throw error; }
+  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows); if (error) throw error; }
+  if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows); if (error) throw error; }
+  if (progBar) progBar.style.width = '100%';
+  return athleteRows.length;
+}
+
+async function clearRoster() {
+  if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?\n\nMeet name, date, PIN and logo will be kept.`)) return;
+  const steps = [
+    sb.from('attempts').delete().eq('meet_id', activeMeetId),
+    sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+    sb.from('athletes').delete().eq('meet_id', activeMeetId),
+    sb.from('events').delete().eq('meet_id', activeMeetId)
+  ];
+  for (const s of steps) {
+    const { error } = await s;
+    if (error) { flash('stClear', '❌ ' + error.message, 'err'); return; }
   }
+  flash('stClear', '✅ Roster & events cleared.', 'ok');
+  loadEventList();
+  loadRosterStats();
+}
 
-  function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-  function flash(id, msg, type) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = msg;
-    el.className = `st show st-${type}`;
-    if (type !== 'err') setTimeout(() => el.classList.remove('show'), 5000);
+async function deleteMeet() {
+  if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?\n\nThis cannot be undone.`)) return;
+  const steps = [
+    sb.from('attempts').delete().eq('meet_id', activeMeetId),
+    sb.from('event_assignments').delete().eq('meet_id', activeMeetId),
+    sb.from('athletes').delete().eq('meet_id', activeMeetId),
+    sb.from('events').delete().eq('meet_id', activeMeetId),
+    sb.from('meets').delete().eq('id', activeMeetId)
+  ];
+  for (const s of steps) {
+    const { error } = await s;
+    if (error) { flash('stDelete', '❌ ' + error.message, 'err'); return; }
   }
+  allMeets = allMeets.filter(m => m.id !== activeMeetId);
+  activeMeetId = null;
+  activeMeet = null;
+  document.getElementById('meetCount').textContent = allMeets.length;
+  renderMeetList();
+  document.getElementById('editPanel').innerHTML = '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
+}
 
-  initAuth();
+function startNewMeet() {
+  activeMeetId = null;
+  activeMeet = null;
+  renderMeetList();
+  document.getElementById('editPanel').innerHTML = `
+    <div class="divider"><span>New Meet</span></div>
+    <div class="card" style="max-width:480px;">
+      <div class="card-title">🏟 Create New Meet</div>
+      <div class="field"><label>Meet Name</label><input type="text" id="newName" placeholder="e.g. Weatherford Invite 2025"></div>
+      <div class="field"><label>Date</label><input type="date" id="newDate"></div>
+      <div class="field"><label>Worker PIN (4–6 digits)</label><input type="tel" id="newPin" maxlength="6" placeholder="e.g. 2025" inputmode="numeric"></div>
+      <button class="btn btn-green" onclick="createMeet()">Create Meet</button>
+      <div class="st" id="stCreate"></div>
+    </div>`;
+}
+
+async function createMeet() {
+  const name = document.getElementById('newName').value.trim();
+  const date = document.getElementById('newDate').value || null;
+  const pin = document.getElementById('newPin').value.trim();
+  if (!name) return flash('stCreate', '❌ Meet name is required', 'err');
+  if (pin.length < 4) return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
+  if (!currentUser) return flash('stCreate', '❌ Not logged in', 'err');
+
+  flash('stCreate', '⏳ Creating…', 'inf');
+  const { data, error } = await sb.from('meets')
+    .insert({ name, date, pin, is_active: true, owner_id: currentUser.id })
+    .select().single();
+  if (error) return flash('stCreate', '❌ ' + error.message, 'err');
+
+  allMeets.unshift(data);
+  document.getElementById('meetCount').textContent = allMeets.length;
+  activeMeetId = data.id;
+  activeMeet = data;
+  renderMeetList();
+  renderEditPanel();
+  flash('stCreate', '✅ Meet created', 'ok');
+}
+
+// Helpers
+function normalizeLevel(raw) {
+  if (!raw) return '';
+  const t = raw.toString().toLowerCase().trim();
+  if (t.includes('varsity')) return 'Varsity';
+  if (t.includes('jv') || t.includes('junior var')) return 'JV';
+  if (t.includes('8th') || t==='8') return '8th Grade';
+  if (t.includes('7th') || t==='7') return '7th Grade';
+  if (t.includes('frosh') || t.includes('freshman') || t.includes('9th')) return 'Freshman';
+  if (t.includes('soph') || t.includes('10th')) return 'Sophomore';
+  return raw.toString().trim();
+}
+
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const rows=[]; let row=[],field='',inQ=false,i=0;
+  while(i<text.length){
+    const c=text[i];
+    if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;continue;}if(c==='"')inQ=false;else field+=c;}
+    else{if(c==='"')inQ=true;else if(c===','){row.push(field.trim());field='';}else if(c==='\n'){row.push(field.trim());field='';if(row.some(v=>v!=''))rows.push(row);row=[];}else field+=c;}
+    i++;
+  }
+  row.push(field.trim());if(row.some(v=>v!=''))rows.push(row);
+  return rows;
+}
+
+function fmtDate(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+}
+
+function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function flash(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = msg;
+  el.className = `st show st-${type}`;
+  if (type !== 'err') setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+window.onload = initAuth;
 </script>
 </body>
 </html>
