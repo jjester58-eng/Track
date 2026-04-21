@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta http-equiv="Cache-Control" content="no-store" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="apple-touch-icon" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
   <link rel="icon" type="image/png" href="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png">
@@ -199,17 +200,26 @@ function isSuperAdmin() {
 // Auth
 async function initAuth() {
   const { data: { session } } = await sb.auth.getSession();
-  if (session) {
+
+  if (session?.user) {
     currentUser = session.user;
     showAdmin();
   } else {
-    sb.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        currentUser = session.user;
-        showAdmin();
-      }
-    });
+    // Force refresh session (THIS is the missing piece)
+    const { data: refreshed } = await sb.auth.refreshSession();
+    
+    if (refreshed?.session?.user) {
+      currentUser = refreshed.session.user;
+      showAdmin();
+    }
   }
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
+      currentUser = session.user;
+      showAdmin();
+    }
+  });
 }
 
 function showAdmin() {
@@ -262,7 +272,11 @@ async function loadMeets() {
   }
 
   const { data, error } = await query;
-  if (error) { console.error(error); return; }
+  if (error) {
+  console.error("LOAD MEETS ERROR:", error);
+  alert(error.message);
+  return;
+}
 
   allMeets = data || [];
   document.getElementById('meetCount').textContent = allMeets.length;
