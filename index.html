@@ -276,15 +276,36 @@
   </footer>
 
 <script>
+// ── Shared constants (must match supabase.js) ─────────────────────────────
 const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const FEP_SESSION_KEY = 'fep_meet';
+const IRONCLAD_LOGO  = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
+
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
-const meetsMap = {};
-let selectedId = null;
+const meetsMap  = {};
+let   selectedId = null;
 
-// ── Load meets ────────────────────────────────────────
+// ── Shared helpers ────────────────────────────────────────────────────────
+
+/** HTML-escape a value before inserting into a template string. */
+function esc(s) {
+  return (s || '').toString()
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/** Format a YYYY-MM-DD date string for display. */
+function fmtDate(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  });
+}
+
+// ── Load meets ────────────────────────────────────────────────────────────
 window.onload = async () => {
   const list = document.getElementById('meetList');
   try {
@@ -306,43 +327,40 @@ window.onload = async () => {
 
     list.innerHTML = meets.map(m => {
       const logo = m.logo_url
-        ? `<img src="${m.logo_url}" class="meet-logo" alt="">`
+        ? `<img src="${esc(m.logo_url)}" class="meet-logo" alt="">`
         : `<div class="meet-logo-ph">🏟</div>`;
-      const dateStr = m.date
-        ? new Date(m.date + 'T12:00:00').toLocaleDateString('en-US',
-            { weekday:'short', month:'short', day:'numeric', year:'numeric' })
-        : 'Date TBD';
+      const dateStr = m.date ? fmtDate(m.date) : 'Date TBD';
       return `
         <div>
-          <div class="meet-card" id="card-${m.id}" onclick="toggleMeet('${m.id}')">
+          <div class="meet-card" id="card-${esc(m.id)}" onclick="toggleMeet('${esc(m.id)}')">
             ${logo}
             <div class="meet-info">
-              <div class="meet-name">${m.name}</div>
+              <div class="meet-name">${esc(m.name)}</div>
               <div class="meet-date">${dateStr}</div>
             </div>
             <div class="meet-arrow">›</div>
           </div>
-          <div class="role-picker" id="picker-${m.id}">
-            <div class="role-grid" id="roles-${m.id}">
-              <button class="role-btn role-results" onclick="goLeaderboard('${m.id}')">
+          <div class="role-picker" id="picker-${esc(m.id)}">
+            <div class="role-grid" id="roles-${esc(m.id)}">
+              <button class="role-btn role-results" onclick="goLeaderboard('${esc(m.id)}')">
                 <span class="icon">📊</span>
                 Leaderboard
                 <span class="role-sub">No login</span>
               </button>
-              <button class="role-btn role-scoring" onclick="showPin('${m.id}')">
+              <button class="role-btn role-scoring" onclick="showPin('${esc(m.id)}')">
                 <span class="icon">📋</span>
                 Scoring
                 <span class="role-sub">PIN required</span>
               </button>
             </div>
-            <div class="pin-step" id="pin-${m.id}">
+            <div class="pin-step" id="pin-${esc(m.id)}">
               <p>Enter the scoring PIN for this meet.</p>
-              <input type="tel" id="pinInput-${m.id}" class="pin-input"
+              <input type="tel" id="pinInput-${esc(m.id)}" class="pin-input"
                      maxlength="6" inputmode="numeric" placeholder="· · · ·"
-                     onkeydown="if(event.key==='Enter') submitPin('${m.id}')">
-              <button class="pin-btn" onclick="submitPin('${m.id}')">Enter Scoring</button>
-              <div class="pin-error" id="pinErr-${m.id}"></div>
-              <button class="pin-back" onclick="backToRoles('${m.id}')">← Back</button>
+                     onkeydown="if(event.key==='Enter') submitPin('${esc(m.id)}')">
+              <button class="pin-btn" onclick="submitPin('${esc(m.id)}')">Enter Scoring</button>
+              <div class="pin-error" id="pinErr-${esc(m.id)}"></div>
+              <button class="pin-back" onclick="backToRoles('${esc(m.id)}')">← Back</button>
             </div>
           </div>
         </div>`;
@@ -350,11 +368,11 @@ window.onload = async () => {
 
   } catch(err) {
     console.error(err);
-    list.innerHTML = `<div class="empty-msg">Error: ${err.message}</div>`;
+    list.innerHTML = `<div class="empty-msg">Error: ${esc(err.message)}</div>`;
   }
 };
 
-// ── Toggle meet card open/closed ──────────────────────
+// ── Toggle meet card open/closed ──────────────────────────────────────────
 function toggleMeet(id) {
   const picker = document.getElementById(`picker-${id}`);
   const card   = document.getElementById(`card-${id}`);
@@ -372,14 +390,14 @@ function toggleMeet(id) {
     selectedId = id;
     // Update hero logo
     const meet = meetsMap[id];
-    document.getElementById('heroLogo').src = meet.logo_url || IRONCLAD;
+    document.getElementById('heroLogo').src = meet.logo_url || IRONCLAD_LOGO;
   } else {
     selectedId = null;
-    document.getElementById('heroLogo').src = IRONCLAD;
+    document.getElementById('heroLogo').src = IRONCLAD_LOGO;
   }
 }
 
-// ── Role actions ──────────────────────────────────────
+// ── Role actions ──────────────────────────────────────────────────────────
 function goLeaderboard(id) {
   saveMeetSession(id);
   window.location.href = 'results.html';
@@ -398,30 +416,39 @@ function backToRoles(id) {
   document.getElementById(`pinInput-${id}`).value = '';
 }
 
-// ── PIN verify ────────────────────────────────────────
+// ── PIN verify ────────────────────────────────────────────────────────────
 async function submitPin(id) {
   const entered = document.getElementById(`pinInput-${id}`).value.trim();
   if (!entered) return;
 
+  const errEl = document.getElementById(`pinErr-${id}`);
+
   const { data, error } = await sb.from('meets').select('pin').eq('id', id).single();
   if (error || !data) {
-    document.getElementById(`pinErr-${id}`).textContent = '❌ Could not verify PIN.';
+    errEl.textContent = '❌ Could not verify PIN.';
     return;
   }
+
+  // Guard: PIN not set on this meet
+  if (!data.pin) {
+    errEl.textContent = '❌ No PIN has been set for this meet. Contact your meet director.';
+    return;
+  }
+
   if (entered === data.pin) {
     saveMeetSession(id);
     window.location.href = 'scoring.html';
   } else {
-    document.getElementById(`pinErr-${id}`).textContent = '❌ Incorrect PIN. Try again.';
+    errEl.textContent = '❌ Incorrect PIN. Try again.';
     document.getElementById(`pinInput-${id}`).value = '';
     document.getElementById(`pinInput-${id}`).focus();
   }
 }
 
-// ── Save session ──────────────────────────────────────
+// ── Save session (key matches supabase.js FEP_SESSION_KEY) ────────────────
 function saveMeetSession(id) {
   const m = meetsMap[id];
-  sessionStorage.setItem('fep_meet', JSON.stringify({
+  sessionStorage.setItem(FEP_SESSION_KEY, JSON.stringify({
     id: m.id, name: m.name, date: m.date, logo_url: m.logo_url || null
   }));
 }

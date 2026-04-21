@@ -181,41 +181,72 @@
 </div>
 
 <script>
-const sb = supabase.createClient(
-  'https://qjomrnguhbqfluzwuntz.supabase.co',
-  'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_'
-);
+// ── Shared constants (must match supabase.js and index.html) ──────────────
+const SUPABASE_URL    = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const SUPABASE_KEY    = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const SUPER_ADMIN_EMAIL = 'jjester58@gmail.com'; // centralised; update here only
+const FEP_SESSION_KEY = 'fep_meet';              // must match supabase.js / index.html
 
-let allMeets = [];
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allMeets    = [];
 let activeMeetId = null;
-let activeMeet = null;
+let activeMeet  = null;
 let currentUser = null;
 
-const YOUR_EMAIL = 'jjester58@gmail.com';
+// ── Shared helpers ────────────────────────────────────────────────────────
 
-function isSuperAdmin() {
-  return currentUser && currentUser.email === YOUR_EMAIL;
+/** HTML-escape a value before inserting into a template string. */
+function esc(s) {
+  return (s || '').toString()
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
-// Auth
-async function initAuth() {
-  const { data: { session } } = await sb.auth.getSession();
+/** Format a YYYY-MM-DD date string for display. */
+function fmtDate(d) {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  });
+}
 
+/** Generate a collision-safe random ID (full hex, no UUID truncation). */
+function genId() {
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function isSuperAdmin() {
+  return currentUser && currentUser.email === SUPER_ADMIN_EMAIL;
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+async function initAuth() {
+  // Try existing session first
+  const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
     showAdmin();
-  } else {
-    // Force refresh session (THIS is the missing piece)
-    const { data: refreshed } = await sb.auth.refreshSession();
-    
-    if (refreshed?.session?.user) {
-      currentUser = refreshed.session.user;
-      showAdmin();
-    }
+    return;
   }
 
+  // Attempt a silent refresh
+  const { data: refreshed } = await sb.auth.refreshSession();
+  if (refreshed?.session?.user) {
+    currentUser = refreshed.session.user;
+    showAdmin();
+    return;
+  }
+
+  // Listen for future auth events (e.g. after login() below)
+  // Use a one-time flag so subsequent token refreshes don't re-run showAdmin.
+  let adminShown = false;
   sb.auth.onAuthStateChange((event, session) => {
-    if (session?.user) {
+    if (session?.user && !adminShown) {
+      adminShown = true;
       currentUser = session.user;
       showAdmin();
     }
@@ -237,8 +268,8 @@ async function login() {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) return flashErr(err, error.message);
 
+  // onAuthStateChange will fire and call showAdmin()
   currentUser = data.user;
-  showAdmin();
 }
 
 async function signUp() {
@@ -261,22 +292,21 @@ function flashErr(el, msg, type = 'err') {
   el.className = `st show st-${type}`;
 }
 
-// Load meets
+// ── Load meets ────────────────────────────────────────────────────────────
 async function loadMeets() {
   if (!currentUser) return;
 
   let query = sb.from('meets').select('*').order('date', { ascending: false });
-
   if (!isSuperAdmin()) {
     query = query.eq('owner_id', currentUser.id);
   }
 
   const { data, error } = await query;
   if (error) {
-  console.error("LOAD MEETS ERROR:", error);
-  alert(error.message);
-  return;
-}
+    console.error('LOAD MEETS ERROR:', error);
+    alert(error.message);
+    return;
+  }
 
   allMeets = data || [];
   document.getElementById('meetCount').textContent = allMeets.length;
@@ -293,10 +323,10 @@ function renderMeetList() {
     const isActive = m.id === activeMeetId;
     const statusCls = m.cancelled ? 's-cancelled' : m.is_active === false ? 's-inactive' : 's-active';
     const statusTxt = m.cancelled ? 'Cancelled' : m.is_active === false ? 'Inactive' : 'Active';
-    return `<div class="meet-item ${isActive ? 'active' : ''}" onclick="selectMeet('${m.id}')">
-      <div class="mi-name">${m.name || 'Untitled'}</div>
+    return `<div class="meet-item ${isActive ? 'active' : ''}" onclick="selectMeet('${esc(m.id)}')">
+      <div class="mi-name">${esc(m.name || 'Untitled')}</div>
       <div class="mi-date">${m.date ? fmtDate(m.date) : 'No date'}</div>
-      <div class="mi-pin">PIN: ${m.pin || '—'}</div>
+      <div class="mi-pin">PIN: ${esc(m.pin || '—')}</div>
       <span class="mi-status ${statusCls}">${statusTxt}</span>
     </div>`;
   }).join('');
@@ -304,24 +334,26 @@ function renderMeetList() {
 
 async function selectMeet(id) {
   activeMeetId = id;
-  activeMeet = allMeets.find(m => m.id === id);
+  activeMeet   = allMeets.find(m => m.id === id);
   renderMeetList();
   renderEditPanel();
 }
 
 async function renderEditPanel() {
-  const m = activeMeet;
+  const m  = activeMeet;
   const ep = document.getElementById('editPanel');
-  const logoHtml = m.logo_url ? `<div class="header-logo"><img src="${m.logo_url}" alt="logo"></div>` : `<div class="header-logo">🏟</div>`;
+  const logoHtml = m.logo_url
+    ? `<div class="header-logo"><img src="${esc(m.logo_url)}" alt="logo"></div>`
+    : `<div class="header-logo">🏟</div>`;
 
   ep.innerHTML = `
     <div class="meet-header">
       ${logoHtml}
       <div class="header-info">
-        <div class="header-name">${m.name || 'Untitled Meet'}</div>
+        <div class="header-name">${esc(m.name || 'Untitled Meet')}</div>
         <div class="header-sub">${m.date ? fmtDate(m.date) : 'No date set'}</div>
       </div>
-      <div class="header-pin">PIN: ${m.pin || '—'}</div>
+      <div class="header-pin">PIN: ${esc(m.pin || '—')}</div>
     </div>
 
     <!-- WORKER PIN SECTION -->
@@ -331,7 +363,7 @@ async function renderEditPanel() {
       <div class="card-desc">Workers use this PIN to enter data during the meet. No PIN required to view results.</div>
       <div class="pin-display">
         <div class="pin-label">Current PIN</div>
-        <div class="pin-value">${m.pin || '—'}</div>
+        <div class="pin-value">${esc(m.pin || '—')}</div>
       </div>
       <div class="field"><label>Set or Change PIN (4–6 digits)</label><input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric"></div>
       <button class="btn btn-primary" onclick="updatePin()">Update PIN</button>
@@ -344,7 +376,7 @@ async function renderEditPanel() {
       <div class="card">
         <div class="card-title">📋 Basic Info</div>
         <div class="field"><label>Meet Name</label><input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025"></div>
-        <div class="field"><label>Date</label><input type="date" id="eDate" value="${m.date || ''}"></div>
+        <div class="field"><label>Date</label><input type="date" id="eDate" value="${esc(m.date || '')}"></div>
         <div class="field"><label>Status</label>
           <select id="eActive">
             <option value="active" ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active (visible to workers)</option>
@@ -359,7 +391,7 @@ async function renderEditPanel() {
       <div class="card">
         <div class="card-title">🖼 Meet Logo</div>
         <div class="card-desc">Custom logo shown on worker screens instead of Ironclad.</div>
-        <img id="logoThumb" class="logo-thumb" src="${m.logo_url || ''}" style="${m.logo_url ? 'display:block' : 'display:none'}">
+        <img id="logoThumb" class="logo-thumb" src="${esc(m.logo_url || '')}" style="${m.logo_url ? 'display:block' : 'display:none'}">
         <div class="field"><label>Upload New Logo</label><input type="file" id="logoFile" accept="image/*" onchange="previewLogo()"></div>
         <button class="btn btn-primary" onclick="uploadLogo()">Upload Logo</button>
         <button class="btn btn-ghost" onclick="removeLogo()">Remove Logo</button>
@@ -438,8 +470,8 @@ async function updatePin() {
 }
 
 async function saveDetails() {
-  const name = document.getElementById('eName').value.trim();
-  const date = document.getElementById('eDate').value || null;
+  const name   = document.getElementById('eName').value.trim();
+  const date   = document.getElementById('eDate').value || null;
   const status = document.getElementById('eActive').value;
   if (!name) return flash('stDetails', '❌ Meet name is required', 'err');
 
@@ -471,7 +503,7 @@ async function uploadLogo() {
   if (!file) return flash('stLogo', '❌ Select an image first', 'err');
   flash('stLogo', '⏳ Uploading…', 'inf');
 
-  const ext = file.name.split('.').pop().toLowerCase();
+  const ext  = file.name.split('.').pop().toLowerCase();
   const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
 
   try {
@@ -490,7 +522,7 @@ async function uploadLogo() {
     thumb.src = url; thumb.style.display = 'block';
 
     const headerLogo = document.querySelector('.header-logo');
-    if (headerLogo) headerLogo.innerHTML = `<img src="${url}" alt="logo">`;
+    if (headerLogo) headerLogo.innerHTML = `<img src="${esc(url)}" alt="logo">`;
 
     flash('stLogo', '✅ Logo uploaded', 'ok');
   } catch(err) { flash('stLogo', '❌ ' + err.message, 'err'); }
@@ -518,32 +550,34 @@ async function loadEventList() {
   }
 
   const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', activeMeetId);
-  const { data: assigns } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
+  const { data: assigns  } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
   const attCount = {}, athCount = {};
-  (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
-  (assigns || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
+  (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id] || 0) + 1);
+  (assigns  || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id] || 0) + 1);
 
   document.getElementById('evList').innerHTML = events.map(e => `
     <div class="ev-item">
       <div>
-        <div class="ev-name">${e.name}</div>
-        <div class="ev-meta">${e.gender||''} ${e.level ? '· ' + e.level : ''}</div>
+        <div class="ev-name">${esc(e.name)}</div>
+        <div class="ev-meta">${esc(e.gender || '')} ${e.level ? '· ' + esc(e.level) : ''}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <span class="badge">${athCount[e.id]||0} ath</span>
-        <span class="badge">${attCount[e.id]||0} att</span>
+        <span class="badge">${athCount[e.id] || 0} ath</span>
+        <span class="badge">${attCount[e.id] || 0} att</span>
       </div>
     </div>`).join('');
 }
 
 async function loadRosterStats() {
   const { data: athletes } = await sb.from('athletes').select('*').eq('meet_id', activeMeetId);
-  const { data: events } = await sb.from('events').select('*').eq('meet_id', activeMeetId);
+  const { data: events   } = await sb.from('events').select('*').eq('meet_id', activeMeetId);
   const { data: attempts } = await sb.from('attempts').select('*').eq('meet_id', activeMeetId);
 
   const athleteCount = athletes?.length || 0;
-  const eventCount = events?.length || 0;
+  const eventCount   = events?.length   || 0;
   const attemptCount = attempts?.length || 0;
+  const totalSlots   = athleteCount * eventCount;
+  const progress     = totalSlots > 0 ? Math.round((attemptCount / totalSlots) * 100) : 0;
 
   document.getElementById('rosterStats').innerHTML = `
     <div class="stat-row">
@@ -560,7 +594,7 @@ async function loadRosterStats() {
     </div>
     <div class="stat-row">
       <div class="stat-label">Progress</div>
-      <div class="stat-value">${eventCount > 0 ? Math.round((attemptCount / (athleteCount * eventCount)) * 100) : 0}%</div>
+      <div class="stat-value">${progress}%</div>
     </div>
   `;
 }
@@ -569,11 +603,13 @@ async function doImport() {
   const file = document.getElementById('csvFile').files[0];
   if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
   const mode = document.getElementById('importMode').value;
-  if (!confirm(mode === 'replace' ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import the new CSV. Continue?` : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
+  if (!confirm(mode === 'replace'
+    ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import the new CSV. Continue?`
+    : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
 
   const btn = document.getElementById('importBtn');
-  const pw = document.getElementById('progWrap');
-  const pb = document.getElementById('progBar');
+  const pw  = document.getElementById('progWrap');
+  const pb  = document.getElementById('progBar');
   btn.disabled = true; btn.textContent = 'Working…';
   pw.classList.add('show'); pb.style.width = '5%';
 
@@ -609,49 +645,65 @@ async function importMileSplit(csvText, meetId, progBar) {
   const rows = parseCSV(csvText);
   if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
   const headers = rows[0].map(h => h.trim().toLowerCase());
-  const getCol = names => headers.findIndex(h => names.some(n => h.includes(n)));
+  const getCol  = names => headers.findIndex(h => names.some(n => h.includes(n)));
 
   const idx = {
-    ev: getCol(['event']),
-    div: getCol(['division','level','grade']),
-    ln: getCol(['lname','last']),
-    fn: getCol(['fname','first']),
-    gen: getCol(['gender','sex']),
-    tm: getCol(['team','school'])
+    ev:  getCol(['event']),
+    div: getCol(['division', 'level', 'grade']),
+    ln:  getCol(['lname', 'last']),
+    fn:  getCol(['fname', 'first']),
+    gen: getCol(['gender', 'sex']),
+    tm:  getCol(['team', 'school'])
   };
   if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0)
     throw new Error('CSV missing required columns (first, last, event).');
 
-  const fieldKeywords = ['shot','discus','long jump','triple jump','high jump','pole vault'];
+  const fieldKeywords = ['shot', 'discus', 'long jump', 'triple jump', 'high jump', 'pole vault'];
   const eventsFound = {}, eventRows = [], athleteRows = [], assignRows = [];
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length < 3) continue;
-    const g = col => (col >= 0 && col < row.length) ? (row[col]||'').toString().trim() : '';
+    const g = col => (col >= 0 && col < row.length) ? (row[col] || '').toString().trim() : '';
     if (!g(idx.fn)) continue;
     const evName = g(idx.ev).toLowerCase();
     if (!fieldKeywords.some(k => evName.includes(k))) continue;
 
-    const level = normalizeLevel(g(idx.div));
+    // Normalise once and share between event and athlete records
+    const level  = normalizeLevel(g(idx.div));
     const gender = g(idx.gen);
-    const evKey = g(idx.ev) + '|' + gender + '|' + level;
+    const evKey  = g(idx.ev) + '|' + gender + '|' + level;
 
     if (!eventsFound[evKey]) {
-      const eId = crypto.randomUUID().substring(0, 8);
+      const eId = genId();
       eventsFound[evKey] = eId;
       eventRows.push({ id: eId, name: g(idx.ev), gender, level, meet_id: meetId });
     }
-    const aId = crypto.randomUUID().substring(0, 8);
-    athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
-    assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+' '+g(idx.ln)).trim() });
+
+    const aId = genId();
+    // Store the same normalised level on athlete so event ↔ athlete level always matches
+    athleteRows.push({
+      id:      aId,
+      fname:   g(idx.fn),
+      lname:   g(idx.ln),
+      gender,
+      level,           // consistent with event level
+      team:    g(idx.tm),
+      meet_id: meetId
+    });
+    assignRows.push({
+      athlete_id:   aId,
+      event_id:     eventsFound[evKey],
+      meet_id:      meetId,
+      athlete_name: (g(idx.fn) + ' ' + g(idx.ln)).trim()
+    });
 
     if (progBar) progBar.style.width = (20 + Math.round((i / rows.length) * 70)) + '%';
   }
 
   if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
-  if (eventRows.length) { const { error } = await sb.from('events').insert(eventRows); if (error) throw error; }
-  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows); if (error) throw error; }
+  if (eventRows.length)   { const { error } = await sb.from('events').insert(eventRows);           if (error) throw error; }
+  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows);       if (error) throw error; }
   if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows); if (error) throw error; }
   if (progBar) progBar.style.width = '100%';
   return athleteRows.length;
@@ -689,7 +741,7 @@ async function deleteMeet() {
   }
   allMeets = allMeets.filter(m => m.id !== activeMeetId);
   activeMeetId = null;
-  activeMeet = null;
+  activeMeet   = null;
   document.getElementById('meetCount').textContent = allMeets.length;
   renderMeetList();
   document.getElementById('editPanel').innerHTML = '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
@@ -697,7 +749,7 @@ async function deleteMeet() {
 
 function startNewMeet() {
   activeMeetId = null;
-  activeMeet = null;
+  activeMeet   = null;
   renderMeetList();
   document.getElementById('editPanel').innerHTML = `
     <div class="divider"><span>New Meet</span></div>
@@ -714,7 +766,7 @@ function startNewMeet() {
 async function createMeet() {
   const name = document.getElementById('newName').value.trim();
   const date = document.getElementById('newDate').value || null;
-  const pin = document.getElementById('newPin').value.trim();
+  const pin  = document.getElementById('newPin').value.trim();
   if (!name) return flash('stCreate', '❌ Meet name is required', 'err');
   if (pin.length < 4) return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
   if (!currentUser) return flash('stCreate', '❌ Not logged in', 'err');
@@ -728,43 +780,43 @@ async function createMeet() {
   allMeets.unshift(data);
   document.getElementById('meetCount').textContent = allMeets.length;
   activeMeetId = data.id;
-  activeMeet = data;
+  activeMeet   = data;
   renderMeetList();
   renderEditPanel();
-  flash('stCreate', '✅ Meet created', 'ok');
 }
 
-// Helpers
+// ── CSV helpers ───────────────────────────────────────────────────────────
 function normalizeLevel(raw) {
   if (!raw) return '';
   const t = raw.toString().toLowerCase().trim();
-  if (t.includes('varsity')) return 'Varsity';
-  if (t.includes('jv') || t.includes('junior var')) return 'JV';
-  if (t.includes('8th') || t==='8') return '8th Grade';
-  if (t.includes('7th') || t==='7') return '7th Grade';
+  if (t.includes('varsity'))                              return 'Varsity';
+  if (t.includes('jv') || t.includes('junior var'))      return 'JV';
+  if (t.includes('8th') || t === '8')                    return '8th Grade';
+  if (t.includes('7th') || t === '7')                    return '7th Grade';
   if (t.includes('frosh') || t.includes('freshman') || t.includes('9th')) return 'Freshman';
-  if (t.includes('soph') || t.includes('10th')) return 'Sophomore';
+  if (t.includes('soph') || t.includes('10th'))          return 'Sophomore';
   return raw.toString().trim();
 }
 
 function parseCSV(text) {
-  text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-  const rows=[]; let row=[],field='',inQ=false,i=0;
-  while(i<text.length){
-    const c=text[i];
-    if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;continue;}if(c==='"')inQ=false;else field+=c;}
-    else{if(c==='"')inQ=true;else if(c===','){row.push(field.trim());field='';}else if(c==='\n'){row.push(field.trim());field='';if(row.some(v=>v!=''))rows.push(row);row=[];}else field+=c;}
+  text = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const rows = []; let row = [], field = '', inQ = false, i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"' && text[i + 1] === '"') { field += '"'; i += 2; continue; }
+      if (c === '"') inQ = false; else field += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { row.push(field.trim()); field = ''; }
+      else if (c === '\n') { row.push(field.trim()); field = ''; if (row.some(v => v !== '')) rows.push(row); row = []; }
+      else field += c;
+    }
     i++;
   }
-  row.push(field.trim());if(row.some(v=>v!=''))rows.push(row);
+  row.push(field.trim()); if (row.some(v => v !== '')) rows.push(row);
   return rows;
 }
-
-function fmtDate(d) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
-}
-
-function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
 function flash(id, msg, type) {
   const el = document.getElementById(id);
