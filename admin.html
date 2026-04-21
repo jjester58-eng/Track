@@ -767,22 +767,35 @@ async function createMeet() {
   const name = document.getElementById('newName').value.trim();
   const date = document.getElementById('newDate').value || null;
   const pin  = document.getElementById('newPin').value.trim();
-  if (!name) return flash('stCreate', '❌ Meet name is required', 'err');
-  if (pin.length < 4) return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
-  if (!currentUser) return flash('stCreate', '❌ Not logged in', 'err');
 
-  flash('stCreate', '⏳ Creating…', 'inf');
+  // Validate before touching the DOM
+  if (!name)            return flash('stCreate', '❌ Meet name is required', 'err');
+  if (pin.length < 4)   return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
+  if (!/^\d+$/.test(pin)) return flash('stCreate', '❌ PIN must contain only numbers', 'err');
+  if (!currentUser)     return flash('stCreate', '❌ Not logged in', 'err');
+
+  // Show saving state while the button is still live
+  const btn = document.querySelector('#editPanel .btn-green');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+
   const { data, error } = await sb.from('meets')
     .insert({ name, date, pin, is_active: true, owner_id: currentUser.id })
     .select().single();
-  if (error) return flash('stCreate', '❌ ' + error.message, 'err');
 
+  if (error) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Create Meet'; }
+    return flash('stCreate', '❌ ' + error.message, 'err');
+  }
+
+  // Success — add to local list and render the full edit panel immediately
   allMeets.unshift(data);
   document.getElementById('meetCount').textContent = allMeets.length;
   activeMeetId = data.id;
   activeMeet   = data;
   renderMeetList();
   renderEditPanel();
+  // Show a success banner inside the now-rendered panel
+  flash('stDetails', '✅ Meet created successfully', 'ok');
 }
 
 // ── CSV helpers ───────────────────────────────────────────────────────────
