@@ -504,7 +504,7 @@ async function uploadLogo() {
   flash('stLogo', '⏳ Uploading…', 'inf');
 
   const ext  = file.name.split('.').pop().toLowerCase();
-  const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
+  const name = `${currentUser.id}/meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
 
   try {
     const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
