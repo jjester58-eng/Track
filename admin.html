@@ -503,11 +503,16 @@ async function uploadLogo() {
   if (!file) return flash('stLogo', '❌ Select an image first', 'err');
   flash('stLogo', '⏳ Uploading…', 'inf');
 
+  // Ensure we have a live session — the storage client needs this even if
+  // the user is already "logged in" via the in-memory state.
+  const { data: { session }, error: sessErr } = await sb.auth.getSession();
+  if (sessErr || !session) return flash('stLogo', '❌ Session expired — please log in again', 'err');
+
   const ext  = file.name.split('.').pop().toLowerCase();
-  const name = `${currentUser.id}/meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
+  const name = `${session.user.id}/meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
 
   try {
-    const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
+    const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: true });
     if (upErr) throw upErr;
     const { data } = sb.storage.from('avatars').getPublicUrl(name);
     const url = data.publicUrl;
