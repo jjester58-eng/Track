@@ -28,7 +28,7 @@
     .topbar a { color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; opacity:.75; }
     .topbar a:hover { opacity:1; }
 
-    /* Login Screen (replaces old lock) */
+    /* Login Screen */
     #loginScreen { max-width:380px; margin:100px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:40px 32px; text-align:center; }
     #loginScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 8px; }
     #loginScreen p { font-size:14px; color:var(--text2); margin-bottom:24px; }
@@ -125,6 +125,17 @@
     #evList  { margin-top:10px; max-height:220px; overflow-y:auto; }
 
     .logo-thumb { width:60px; height:60px; border-radius:8px; object-fit:contain; background:var(--bg); border:1px solid var(--border); padding:4px; margin-bottom:10px; display:none; }
+
+    /* PIN display card */
+    .pin-display { background:linear-gradient(135deg,rgba(77,157,224,.15),rgba(126,200,247,.08)); border:2px solid var(--accent); border-radius:10px; padding:16px; margin-bottom:14px; text-align:center; }
+    .pin-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text2); margin-bottom:8px; }
+    .pin-value { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:900; color:var(--accent2); letter-spacing:4px; font-variant-numeric:tabular-nums; }
+
+    /* Roster stats grid */
+    .stat-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+    .stat-row:last-child { border-bottom:none; }
+    .stat-label { font-size:12px; color:var(--text2); }
+    .stat-value { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:800; color:var(--accent2); }
   </style>
 </head>
 <body>
@@ -179,13 +190,13 @@ let activeMeetId = null;
 let activeMeet = null;
 let currentUser = null;
 
-const YOUR_EMAIL = 'jjester58@gmail.com';   // Super admin email
+const YOUR_EMAIL = 'jjester58@gmail.com';
 
 function isSuperAdmin() {
   return currentUser && currentUser.email === YOUR_EMAIL;
 }
 
-// Auth handling
+// Auth
 async function initAuth() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
@@ -240,7 +251,7 @@ function flashErr(el, msg, type = 'err') {
   el.className = `st show st-${type}`;
 }
 
-// Load meets - Super admin sees ALL meets
+// Load meets
 async function loadMeets() {
   if (!currentUser) return;
 
@@ -284,7 +295,6 @@ async function selectMeet(id) {
   renderEditPanel();
 }
 
-// Full original renderEditPanel + New Meet card restored
 async function renderEditPanel() {
   const m = activeMeet;
   const ep = document.getElementById('editPanel');
@@ -300,16 +310,30 @@ async function renderEditPanel() {
       <div class="header-pin">PIN: ${m.pin || '—'}</div>
     </div>
 
+    <!-- WORKER PIN SECTION -->
+    <div class="divider"><span>Worker Access</span></div>
+    <div class="card">
+      <div class="card-title">🔐 Worker PIN</div>
+      <div class="card-desc">Workers use this PIN to enter data during the meet. No PIN required to view results.</div>
+      <div class="pin-display">
+        <div class="pin-label">Current PIN</div>
+        <div class="pin-value">${m.pin || '—'}</div>
+      </div>
+      <div class="field"><label>Set or Change PIN (4–6 digits)</label><input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric"></div>
+      <button class="btn btn-primary" onclick="updatePin()">Update PIN</button>
+      <div class="st" id="stPin"></div>
+    </div>
+
+    <!-- MEET DETAILS SECTION -->
     <div class="divider"><span>Meet Details</span></div>
     <div class="grid2">
       <div class="card">
-        <div class="card-title">📋 Title &amp; Date</div>
+        <div class="card-title">📋 Basic Info</div>
         <div class="field"><label>Meet Name</label><input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025"></div>
         <div class="field"><label>Date</label><input type="date" id="eDate" value="${m.date || ''}"></div>
-        <div class="field"><label>Worker PIN (4–6 digits)</label><input type="tel" id="ePin" maxlength="6" value="${esc(m.pin)}" placeholder="e.g. 2025" inputmode="numeric"></div>
         <div class="field"><label>Status</label>
           <select id="eActive">
-            <option value="active" ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active</option>
+            <option value="active" ${!m.cancelled && m.is_active !== false ? 'selected' : ''}>Active (visible to workers)</option>
             <option value="inactive" ${m.is_active === false && !m.cancelled ? 'selected' : ''}>Inactive (hidden from workers)</option>
             <option value="cancelled" ${m.cancelled ? 'selected' : ''}>Cancelled</option>
           </select>
@@ -320,7 +344,7 @@ async function renderEditPanel() {
 
       <div class="card">
         <div class="card-title">🖼 Meet Logo</div>
-        <div class="card-desc">Replaces the Ironclad logo on scoring &amp; leaderboard for workers in this meet.</div>
+        <div class="card-desc">Custom logo shown on worker screens instead of Ironclad.</div>
         <img id="logoThumb" class="logo-thumb" src="${m.logo_url || ''}" style="${m.logo_url ? 'display:block' : 'display:none'}">
         <div class="field"><label>Upload New Logo</label><input type="file" id="logoFile" accept="image/*" onchange="previewLogo()"></div>
         <button class="btn btn-primary" onclick="uploadLogo()">Upload Logo</button>
@@ -329,22 +353,32 @@ async function renderEditPanel() {
       </div>
     </div>
 
+    <!-- ROSTER & EVENTS SECTION -->
     <div class="divider"><span>Roster &amp; Events</span></div>
-    <div class="card span2">
-      <div class="card-title">📋 Events in This Meet</div>
-      <div id="evLoading" style="color:var(--text3);font-size:13px;">Loading…</div>
-      <div id="evList"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">📋 Events</div>
+        <div class="card-desc">Field events imported for this meet.</div>
+        <div id="evLoading" style="color:var(--text3);font-size:13px;">Loading…</div>
+        <div id="evList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Roster Overview</div>
+        <div class="card-desc">Quick stats on athletes &amp; data entry.</div>
+        <div id="rosterStats" style="color:var(--text2);font-size:13px;line-height:1.8;">Loading…</div>
+      </div>
     </div>
 
-    <div class="divider"><span>Import</span></div>
+    <!-- CSV IMPORT SECTION -->
+    <div class="divider"><span>CSV Management</span></div>
     <div class="card span2">
-      <div class="card-title">📥 Import / Replace Roster</div>
-      <div class="card-desc">Upload a MileSplit CSV. Choose whether to <strong style="color:var(--accent2)">add to</strong> the existing roster or <strong style="color:var(--red)">replace it entirely</strong>.</div>
-      <div class="field"><label>CSV File</label><input type="file" id="csvFile" accept=".csv"></div>
+      <div class="card-title">📥 Upload Roster from CSV</div>
+      <div class="card-desc">Import athletes from MileSplit format. Choose to <strong style="color:var(--accent2)">add to existing</strong> roster or <strong style="color:var(--red)">replace everything</strong> for a fresh start.</div>
+      <div class="field"><label>CSV File (MileSplit format)</label><input type="file" id="csvFile" accept=".csv"></div>
       <div class="field"><label>Import Mode</label>
         <select id="importMode">
           <option value="add">Add to existing roster</option>
-          <option value="replace">Replace entire roster (delete first)</option>
+          <option value="replace">Replace entire roster (delete all, then import)</option>
         </select>
       </div>
       <button class="btn btn-primary" id="importBtn" onclick="doImport()">Run Import</button>
@@ -352,17 +386,18 @@ async function renderEditPanel() {
       <div class="st" id="stImport"></div>
     </div>
 
+    <!-- DANGER ZONE -->
     <div class="divider"><span>Danger Zone</span></div>
     <div class="grid2">
       <div class="card card-danger">
-        <div class="card-title">🗑 Clear Roster &amp; Events</div>
-        <div class="card-desc">Deletes all athletes, events, attempts, and assignments for this meet. Meet shell (name, date, PIN, logo) is kept.</div>
+        <div class="card-title">🗑 Clear Roster</div>
+        <div class="card-desc">Delete all athletes, events, & attempts. Meet info (name, date, PIN, logo) stays.</div>
         <button class="btn btn-danger" onclick="clearRoster()">Clear Roster &amp; Events</button>
         <div class="st" id="stClear"></div>
       </div>
       <div class="card card-danger">
-        <div class="card-title">💣 Delete This Meet</div>
-        <div class="card-desc">Permanently removes this meet and all its data from the database.</div>
+        <div class="card-title">💣 Delete Meet</div>
+        <div class="card-desc">Permanently remove this meet &amp; all associated data.</div>
         <button class="btn btn-danger" onclick="deleteMeet()">Delete Meet Entirely</button>
         <div class="st" id="stDelete"></div>
       </div>
@@ -370,19 +405,31 @@ async function renderEditPanel() {
   `;
 
   loadEventList();
+  loadRosterStats();
 }
 
-// === Your original functions (unchanged) ===
+async function updatePin() {
+  const pin = document.getElementById('ePin').value.trim();
+  if (!pin) return flash('stPin', '❌ PIN cannot be empty', 'err');
+  if (pin.length < 4) return flash('stPin', '❌ PIN must be at least 4 digits', 'err');
+  if (!/^\d+$/.test(pin)) return flash('stPin', '❌ PIN must contain only numbers', 'err');
+
+  const { error } = await sb.from('meets').update({ pin }).eq('id', activeMeetId);
+  if (error) return flash('stPin', '❌ ' + error.message, 'err');
+
+  activeMeet.pin = pin;
+  allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, pin } : m);
+  renderMeetList();
+  flash('stPin', '✅ PIN updated', 'ok');
+}
 
 async function saveDetails() {
   const name = document.getElementById('eName').value.trim();
   const date = document.getElementById('eDate').value || null;
-  const pin = document.getElementById('ePin').value.trim();
   const status = document.getElementById('eActive').value;
   if (!name) return flash('stDetails', '❌ Meet name is required', 'err');
-  if (pin && pin.length < 4) return flash('stDetails', '❌ PIN must be at least 4 digits', 'err');
 
-  const updates = { name, date, pin: pin || activeMeet.pin, is_active: status !== 'inactive', cancelled: status === 'cancelled' };
+  const updates = { name, date, is_active: status !== 'inactive', cancelled: status === 'cancelled' };
   const { error } = await sb.from('meets').update(updates).eq('id', activeMeetId);
   if (error) return flash('stDetails', '❌ ' + error.message, 'err');
 
@@ -475,6 +522,35 @@ async function loadEventList() {
     </div>`).join('');
 }
 
+async function loadRosterStats() {
+  const { data: athletes } = await sb.from('athletes').select('*').eq('meet_id', activeMeetId);
+  const { data: events } = await sb.from('events').select('*').eq('meet_id', activeMeetId);
+  const { data: attempts } = await sb.from('attempts').select('*').eq('meet_id', activeMeetId);
+
+  const athleteCount = athletes?.length || 0;
+  const eventCount = events?.length || 0;
+  const attemptCount = attempts?.length || 0;
+
+  document.getElementById('rosterStats').innerHTML = `
+    <div class="stat-row">
+      <div class="stat-label">Total Athletes</div>
+      <div class="stat-value">${athleteCount}</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Total Events</div>
+      <div class="stat-value">${eventCount}</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Attempts Entered</div>
+      <div class="stat-value">${attemptCount}</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-label">Progress</div>
+      <div class="stat-value">${eventCount > 0 ? Math.round((attemptCount / (athleteCount * eventCount)) * 100) : 0}%</div>
+    </div>
+  `;
+}
+
 async function doImport() {
   const file = document.getElementById('csvFile').files[0];
   if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
@@ -504,8 +580,9 @@ async function doImport() {
     const text = await file.text();
     const n = await importMileSplit(text, activeMeetId, pb);
 
-    flash('stImport', `✅ ${n} athletes imported into "${activeMeet.name}"`, 'ok');
+    flash('stImport', `✅ ${n} athletes imported`, 'ok');
     loadEventList();
+    loadRosterStats();
   } catch(err) {
     flash('stImport', '❌ ' + err.message, 'err');
   } finally {
@@ -580,6 +657,7 @@ async function clearRoster() {
   }
   flash('stClear', '✅ Roster & events cleared.', 'ok');
   loadEventList();
+  loadRosterStats();
 }
 
 async function deleteMeet() {
