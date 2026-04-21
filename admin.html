@@ -22,88 +22,77 @@
     }
     body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); margin:0; min-height:100vh; }
 
-    /* topbar */
+    /* ── TOPBAR ── */
     .topbar { background:var(--bg2); border-bottom:2px solid var(--border); padding:10px 20px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:200; }
     .topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--accent2); letter-spacing:3px; text-transform:uppercase; flex:1; }
     .topbar a { color:var(--accent); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; opacity:.75; }
     .topbar a:hover { opacity:1; }
 
-    /* ── LOGIN SCREEN ── */
-    #loginScreen {
-      max-width:400px; margin:80px auto 0;
-      background:var(--bg2); border:1px solid var(--border);
-      border-radius:18px; padding:40px 32px; text-align:center;
-    }
+    /* ── LOGIN ── */
+    #loginScreen { max-width:400px; margin:80px auto 0; background:var(--bg2); border:1px solid var(--border); border-radius:18px; padding:40px 32px; text-align:center; }
     .login-icon { font-size:48px; margin-bottom:14px; }
-    #loginScreen h3 {
-      font-family:'Barlow Condensed',sans-serif;
-      font-size:24px; font-weight:800; letter-spacing:3px;
-      text-transform:uppercase; color:#e0ecff; margin:0 0 6px;
-    }
+    #loginScreen h3 { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:#e0ecff; margin:0 0 6px; }
     #loginScreen p { font-size:13px; color:var(--text2); margin:0 0 24px; }
-    .login-tabs {
-      display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:20px;
-    }
-    .login-tab {
-      flex:1; padding:9px; background:transparent; border:none;
-      font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:800;
-      letter-spacing:2px; text-transform:uppercase; cursor:pointer;
-      color:var(--text3); transition:all .15s;
-    }
+    .login-tabs { display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:20px; }
+    .login-tab { flex:1; padding:9px; background:transparent; border:none; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; color:var(--text3); transition:all .15s; }
     .login-tab.active { background:var(--bg3); color:var(--accent2); }
 
-    /* two-panel layout */
+    /* ── LAYOUT ── */
     #adminContent { display:none; }
     .admin-layout { display:flex; height:calc(100vh - 54px); }
 
-    /* LEFT: meet list sidebar */
-    .meet-sidebar {
-      width:280px; flex-shrink:0; border-right:2px solid var(--border);
-      background:var(--bg2); display:flex; flex-direction:column; overflow:hidden;
-    }
-    .sidebar-head {
-      padding:14px 16px 10px; border-bottom:1px solid var(--border);
-      font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800;
-      letter-spacing:3px; text-transform:uppercase; color:var(--text3);
-      display:flex; align-items:center; justify-content:space-between;
-    }
-    .sidebar-user {
-      padding:8px 14px; background:var(--bg3); border-bottom:1px solid var(--border);
-      font-size:11px; color:var(--text2); display:flex; align-items:center; justify-content:space-between;
-    }
-    .sidebar-user span { font-weight:600; color:var(--accent2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; }
+    /* ── SIDEBAR ── */
+    .meet-sidebar { width:300px; flex-shrink:0; border-right:2px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow:hidden; }
+    .sidebar-user { padding:8px 14px; background:var(--bg3); border-bottom:1px solid var(--border); font-size:11px; color:var(--text2); display:flex; align-items:center; justify-content:space-between; }
+    .sidebar-user span { font-weight:600; color:var(--accent2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px; }
+    .sidebar-head { padding:12px 14px 8px; border-bottom:1px solid var(--border); font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--text3); display:flex; align-items:center; justify-content:space-between; }
     .sidebar-list { flex:1; overflow-y:auto; padding:8px; }
-    .meet-item {
-      padding:12px 14px; border-radius:8px; cursor:pointer; margin-bottom:4px;
-      border:1px solid transparent; transition:all .15s;
-    }
-    .meet-item:hover { background:var(--bg3); border-color:var(--border); }
-    .meet-item.active { background:var(--bg3); border-color:var(--accent); }
-    .mi-name { font-weight:700; font-size:14px; color:#d0eaff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .mi-date { font-size:11px; color:var(--text2); margin-top:2px; }
-    .mi-pin  { font-size:10px; color:var(--text3); margin-top:2px; letter-spacing:1px; }
-    .mi-status { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; margin-top:4px; }
+
+    /* ── MEET ITEM in sidebar ── */
+    .meet-item { border-radius:10px; margin-bottom:6px; border:1px solid transparent; overflow:hidden; transition:all .15s; }
+    .meet-item:hover { border-color:var(--border); }
+    .meet-item.active { border-color:var(--accent); }
+    .meet-item-header { padding:11px 13px; cursor:pointer; display:flex; align-items:center; gap:10px; }
+    .meet-item.active .meet-item-header { background:var(--bg3); }
+    .meet-item-header:hover { background:var(--bg3); }
+    .mi-logo { width:34px; height:34px; border-radius:6px; object-fit:contain; background:var(--bg); border:1px solid var(--border); padding:2px; flex-shrink:0; }
+    .mi-logo-ph { width:34px; height:34px; border-radius:6px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+    .mi-text { flex:1; min-width:0; }
+    .mi-name { font-weight:700; font-size:13px; color:#d0eaff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mi-date { font-size:10px; color:var(--text2); margin-top:1px; }
+    .mi-status { display:inline-block; font-size:9px; font-weight:700; padding:1px 6px; border-radius:8px; margin-top:3px; }
     .s-active    { background:rgba(61,214,140,.12); color:var(--green);  border:1px solid rgba(61,214,140,.25); }
     .s-inactive  { background:rgba(58,90,126,.12);  color:var(--text3);  border:1px solid var(--border); }
     .s-cancelled { background:rgba(224,82,82,.12);  color:var(--red);    border:1px solid rgba(224,82,82,.25); }
 
-    .new-meet-btn {
-      margin:10px 10px 0; padding:10px; background:var(--bg3); color:var(--accent);
-      border:1px dashed var(--border2); border-radius:8px; font-family:'Barlow Condensed',sans-serif;
-      font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase;
-      cursor:pointer; text-align:center;
+    /* ── QUICK ACTION BUTTONS (shown under active meet) ── */
+    .meet-actions { display:none; padding:6px 10px 10px; background:var(--bg3); border-top:1px solid var(--border); }
+    .meet-item.active .meet-actions { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .qa-btn {
+      padding:8px 6px; border-radius:7px; border:1px solid var(--border2);
+      background:var(--bg); color:var(--text2);
+      font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:800;
+      letter-spacing:1px; text-transform:uppercase; cursor:pointer;
+      display:flex; flex-direction:column; align-items:center; gap:3px;
+      transition:all .15s; text-align:center;
     }
+    .qa-btn:hover { background:var(--bg2); border-color:var(--accent); color:var(--accent2); }
+    .qa-btn .qa-icon { font-size:16px; }
+    .qa-btn.qa-edit  { border-color:rgba(77,157,224,.3); color:var(--accent2); }
+    .qa-btn.qa-logo  { border-color:rgba(61,214,140,.3); color:var(--green); }
+    .qa-btn.qa-csv   { border-color:rgba(240,160,64,.3); color:var(--amber); }
+    .qa-btn.qa-del   { border-color:rgba(224,82,82,.2);  color:var(--red); }
+
+    .new-meet-btn { margin:10px 10px 0; padding:10px; background:var(--bg3); color:var(--accent); border:1px dashed var(--border2); border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; text-align:center; }
     .new-meet-btn:hover { background:var(--bg); border-color:var(--accent); }
 
-    /* RIGHT: edit panel */
+    /* ── EDIT PANEL ── */
     .edit-panel { flex:1; overflow-y:auto; padding:20px 24px 80px; }
-    .no-select-msg { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text3); font-size:16px; }
+    .no-select-msg { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text3); font-size:15px; flex-direction:column; gap:8px; }
+    .no-select-msg span { font-size:32px; }
 
-    /* meet header in edit panel */
-    .meet-header {
-      background:var(--bg2); border:1px solid var(--border); border-radius:14px;
-      padding:18px 20px; display:flex; align-items:center; gap:16px; margin-bottom:20px;
-    }
+    /* meet header */
+    .meet-header { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:18px 20px; display:flex; align-items:center; gap:16px; margin-bottom:20px; }
     .header-logo { width:56px; height:56px; border-radius:10px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:22px; overflow:hidden; flex-shrink:0; }
     .header-logo img { width:100%; height:100%; object-fit:contain; }
     .header-info { flex:1; min-width:0; }
@@ -111,34 +100,28 @@
     .header-sub  { font-size:12px; color:var(--text2); margin-top:3px; }
     .header-pin  { font-family:'Barlow Condensed',sans-serif; font-size:13px; color:var(--accent2); background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:4px 12px; white-space:nowrap; }
 
-    /* section divider */
+    /* divider */
     .divider { display:flex; align-items:center; gap:10px; margin:24px 0 12px; }
     .divider span { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:800; letter-spacing:4px; text-transform:uppercase; color:var(--text3); white-space:nowrap; }
     .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
     .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .span2 { grid-column:1/-1; }
-    @media(max-width:640px){ .grid2{grid-template-columns:1fr;} .span2{grid-column:1;} }
+    @media(max-width:700px){ .grid2{grid-template-columns:1fr;} .span2{grid-column:1;} }
 
     /* cards */
     .card { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:18px; transition:border-color .2s; }
     .card:hover { border-color:var(--border2); }
     .card-title { font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin:0 0 14px; }
     .card-desc  { font-size:12px; color:var(--text2); margin:-8px 0 14px; line-height:1.5; }
-    .card-danger { border-color:#2a1212; background:#0a0d10; }
+    .card-danger { border-color:#2a1212; background:#080b0e; }
     .card-danger:hover { border-color:#5a2020; }
     .card-danger .card-title { color:var(--red); }
-    .card-amber { border-color:#2a1a08; background:#0a0d10; }
-    .card-amber .card-title { color:var(--amber); }
 
     /* fields */
     .field { margin-bottom:12px; }
     label { display:block; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); margin-bottom:5px; }
-    input[type=text],input[type=date],input[type=password],input[type=tel],input[type=email] {
-      width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border);
-      border-radius:7px; color:#e0ecff; font-size:14px; font-family:'Barlow',sans-serif; outline:none;
-      transition:border-color .2s;
-    }
+    input[type=text],input[type=date],input[type=password],input[type=tel],input[type=email] { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:7px; color:#e0ecff; font-size:14px; font-family:'Barlow',sans-serif; outline:none; transition:border-color .2s; }
     input:focus { border-color:var(--accent); }
     input[type=file] { width:100%; padding:9px 12px; background:var(--bg); border:1px dashed var(--border); border-radius:7px; color:var(--text2); font-size:13px; cursor:pointer; }
     input[type=file]:hover { border-color:var(--accent); }
@@ -155,8 +138,6 @@
     .btn-ghost:hover { background:var(--bg3); }
     .btn-green   { background:linear-gradient(135deg,#165a38,#0c3a22); color:#80e0a8; }
     .btn-green:hover:not(:disabled) { background:linear-gradient(135deg,#1e7248,#14502e); }
-    .btn-amber   { background:transparent; color:var(--amber); border:1px solid #3a2008; }
-    .btn-amber:hover { background:var(--amber-bg); }
     .btn-danger  { background:transparent; color:var(--red); border:1px solid #3a1010; }
     .btn-danger:hover { background:var(--red-bg); }
 
@@ -166,29 +147,30 @@
     .st-ok   { background:var(--green-bg); border:1px solid #1a4a28; color:var(--green); }
     .st-err  { background:var(--red-bg);   border:1px solid #4a1a1a; color:var(--red); }
     .st-inf  { background:var(--bg3);      border:1px solid var(--border); color:var(--accent2); }
-    .st-warn { background:var(--amber-bg); border:1px solid #3a2008; color:var(--amber); }
 
     /* progress */
     .prog-wrap { width:100%; background:var(--bg); border-radius:4px; height:5px; margin-top:10px; display:none; }
     .prog-wrap.show { display:block; }
     .prog-bar  { height:5px; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:4px; transition:width .25s; width:0%; }
 
-    /* event badges */
+    /* event list */
     .ev-item { display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; margin-bottom:6px; font-size:13px; }
     .ev-name { color:#d0eaff; font-weight:600; }
     .ev-meta { font-size:11px; color:var(--text3); }
     .badge   { background:var(--bg3); color:var(--accent2); font-size:11px; padding:2px 8px; border-radius:10px; font-weight:700; }
     #evList  { margin-top:10px; max-height:220px; overflow-y:auto; }
 
-    /* logo thumb */
     .logo-thumb { width:60px; height:60px; border-radius:8px; object-fit:contain; background:var(--bg); border:1px solid var(--border); padding:4px; margin-bottom:10px; display:none; }
+    .super-badge { display:inline-block; font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; padding:2px 8px; border-radius:10px; background:rgba(240,160,64,.15); color:var(--amber); border:1px solid rgba(240,160,64,.3); }
 
-    /* super admin badge */
-    .super-badge {
-      display:inline-block; font-size:9px; font-weight:800; letter-spacing:2px;
-      text-transform:uppercase; padding:2px 8px; border-radius:10px;
-      background:rgba(240,160,64,.15); color:var(--amber); border:1px solid rgba(240,160,64,.3);
-    }
+    /* ── PANEL TABS (for focused views) ── */
+    .panel-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .panel-tab { padding:7px 16px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text3); font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:800; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all .15s; }
+    .panel-tab:hover { border-color:var(--border2); color:var(--text2); background:var(--bg3); }
+    .panel-tab.active { border-color:var(--accent); color:var(--accent2); background:var(--bg3); }
+
+    .panel-section { display:none; }
+    .panel-section.active { display:block; }
   </style>
 </head>
 <body>
@@ -199,17 +181,15 @@
   <a href="index.html">⌂ Home</a>
 </div>
 
-<!-- ══ LOGIN SCREEN ══ -->
+<!-- ── LOGIN ── -->
 <div id="loginScreen">
   <div class="login-icon">🔑</div>
   <h3>Admin Login</h3>
   <p>Sign in to manage your meets</p>
-
   <div class="login-tabs">
     <button class="login-tab active" id="tabSignIn" onclick="switchTab('in')">Sign In</button>
     <button class="login-tab"        id="tabSignUp" onclick="switchTab('up')">Create Account</button>
   </div>
-
   <div class="field" style="text-align:left">
     <label>Email</label>
     <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
@@ -219,17 +199,16 @@
     <input type="password" id="pwInput" placeholder="••••••••" autocomplete="current-password"
            onkeypress="if(event.key==='Enter')doAuth()">
   </div>
-
   <button class="btn btn-green" id="authBtn" onclick="doAuth()">Sign In</button>
-  <button class="btn btn-ghost" style="margin-top:8px;" onclick="goHome()">← Back to Home</button>
+  <button class="btn btn-ghost" style="margin-top:8px;" onclick="window.location.href='index.html'">← Back to Home</button>
   <div id="loginErr" class="st"></div>
 </div>
 
-<!-- ══ ADMIN CONTENT ══ -->
+<!-- ── ADMIN ── -->
 <div id="adminContent">
   <div class="admin-layout">
 
-    <!-- LEFT sidebar -->
+    <!-- SIDEBAR -->
     <div class="meet-sidebar">
       <div class="sidebar-user">
         <span id="userEmail">—</span>
@@ -244,70 +223,46 @@
       <div style="height:12px;"></div>
     </div>
 
-    <!-- RIGHT edit panel -->
+    <!-- EDIT PANEL -->
     <div class="edit-panel" id="editPanel">
-      <div class="no-select-msg">← Select a meet to edit, or create a new one</div>
+      <div class="no-select-msg">
+        <span>🏟</span>
+        Select a meet from the sidebar,<br>or create a new one
+      </div>
     </div>
 
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-//  CONFIGURATION
-// ═══════════════════════════════════════════════════════
-const SUPABASE_URL  = 'https://qjomrnguhbqfluzwuntz.supabase.co';
-const SUPABASE_KEY  = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
-const SUPER_ADMIN   = 'jjester58@gmail.com';   // sees ALL meets regardless of owner
-
+const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
+const SUPER_ADMIN  = 'jjester58@gmail.com';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let allMeets     = [];
-let activeMeetId = null;
-let activeMeet   = null;
-let currentUser  = null;
-let authMode     = 'in';  // 'in' | 'up'
+let allMeets = [], activeMeetId = null, activeMeet = null, currentUser = null, authMode = 'in';
+let activeTab = 'details'; // details | logo | csv | events | danger
 
-// ═══════════════════════════════════════════════════════
-//  AUTH INIT  ← This is the key fix for desktop
-//  We await getSession() BEFORE setting up the listener,
-//  so the session stored in localStorage is read first.
-// ═══════════════════════════════════════════════════════
+// ── AUTH ──────────────────────────────────────────────
 window.onload = async function() {
-  // 1. Try to restore existing session from localStorage
-  const { data: { session }, error } = await sb.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    showAdmin();
-    return;
-  }
-
-  // 2. No stored session — show login, but also listen for
-  //    OAuth callbacks or magic-link flows
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user) { currentUser = session.user; showAdmin(); return; }
   sb.auth.onAuthStateChange((event, session) => {
     if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-      currentUser = session.user;
-      showAdmin();
+      currentUser = session.user; showAdmin();
     }
-    if (event === 'SIGNED_OUT') {
-      currentUser = null;
-      location.reload();
-    }
+    if (event === 'SIGNED_OUT') { currentUser = null; location.reload(); }
   });
 };
 
-function isSuperAdmin() {
-  return currentUser?.email === SUPER_ADMIN;
-}
+function isSuperAdmin() { return currentUser?.email === SUPER_ADMIN; }
 
 function showAdmin() {
   document.getElementById('loginScreen').style.display  = 'none';
   document.getElementById('adminContent').style.display = 'block';
   document.getElementById('userEmail').textContent = currentUser.email;
   if (isSuperAdmin()) {
-    document.getElementById('userEmail').insertAdjacentHTML(
-      'afterend', ' <span class="super-badge">super</span>'
-    );
+    document.getElementById('userEmail').insertAdjacentHTML('afterend', ' <span class="super-badge">super</span>');
   }
   loadMeets();
 }
@@ -317,75 +272,37 @@ function switchTab(mode) {
   document.getElementById('tabSignIn').classList.toggle('active', mode === 'in');
   document.getElementById('tabSignUp').classList.toggle('active', mode === 'up');
   document.getElementById('authBtn').textContent = mode === 'in' ? 'Sign In' : 'Create Account';
-  document.getElementById('loginErr').className  = 'st';
+  document.getElementById('loginErr').className = 'st';
 }
-
-function goHome() { window.location.href = 'index.html'; }
 
 async function doAuth() {
-  const email    = document.getElementById('emailInput').value.trim();
+  const email = document.getElementById('emailInput').value.trim();
   const password = document.getElementById('pwInput').value;
-  const errEl    = document.getElementById('loginErr');
+  const errEl = document.getElementById('loginErr');
   if (!email || !password) return flashEl(errEl, '❌ Email and password required', 'err');
-
   document.getElementById('authBtn').disabled = true;
   document.getElementById('authBtn').textContent = 'Working…';
-
-  let result;
-  if (authMode === 'in') {
-    result = await sb.auth.signInWithPassword({ email, password });
-  } else {
-    if (password.length < 6) {
-      document.getElementById('authBtn').disabled = false;
-      document.getElementById('authBtn').textContent = 'Create Account';
-      return flashEl(errEl, '❌ Password must be at least 6 characters', 'err');
-    }
-    result = await sb.auth.signUp({ email, password });
-  }
-
+  let result = authMode === 'in'
+    ? await sb.auth.signInWithPassword({ email, password })
+    : await sb.auth.signUp({ email, password });
   document.getElementById('authBtn').disabled = false;
   document.getElementById('authBtn').textContent = authMode === 'in' ? 'Sign In' : 'Create Account';
-
   if (result.error) return flashEl(errEl, '❌ ' + result.error.message, 'err');
-
-  if (authMode === 'up') {
-    // Check if email confirmation is required
-    if (result.data?.user && !result.data.session) {
-      flashEl(errEl, '✅ Check your email to confirm your account, then sign in.', 'ok');
-      switchTab('in');
-    } else if (result.data?.session) {
-      // Auto-confirmed (local Supabase or email confirmation disabled)
-      currentUser = result.data.user;
-      showAdmin();
-    }
-  } else {
-    if (result.data?.user) {
-      currentUser = result.data.user;
-      showAdmin();
-    }
+  if (authMode === 'up' && result.data?.user && !result.data.session) {
+    flashEl(errEl, '✅ Check your email to confirm, then sign in.', 'ok');
+    switchTab('in'); return;
   }
+  if (result.data?.user) { currentUser = result.data.user; showAdmin(); }
 }
 
-async function logout() {
-  await sb.auth.signOut();
-  location.reload();
-}
+async function logout() { await sb.auth.signOut(); location.reload(); }
 
-// ═══════════════════════════════════════════════════════
-//  MEETS
-// ═══════════════════════════════════════════════════════
+// ── MEETS ─────────────────────────────────────────────
 async function loadMeets() {
-  if (!currentUser) return;
-
-  // Super admin sees all meets; others see only their own
   let query = sb.from('meets').select('*').order('date', { ascending: false });
-  if (!isSuperAdmin()) {
-    query = query.eq('owner_id', currentUser.id);
-  }
-
+  if (!isSuperAdmin()) query = query.eq('owner_id', currentUser.id);
   const { data, error } = await query;
-  if (error) { console.error('loadMeets error:', error); return; }
-
+  if (error) { console.error(error); return; }
   allMeets = data || [];
   document.getElementById('meetCount').textContent = allMeets.length;
   renderMeetList();
@@ -394,20 +311,38 @@ async function loadMeets() {
 function renderMeetList() {
   const el = document.getElementById('meetList');
   if (!allMeets.length) {
-    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No meets yet.<br>Click "+ New Meet" to start.</div>';
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No meets yet.<br>Click "+ New Meet" below.</div>';
     return;
   }
   el.innerHTML = allMeets.map(m => {
     const isActive  = m.id === activeMeetId;
     const statusCls = m.cancelled ? 's-cancelled' : m.is_active === false ? 's-inactive' : 's-active';
-    const statusTxt = m.cancelled ? 'Cancelled'  : m.is_active === false ? 'Inactive'  : 'Active';
-    return `<div class="meet-item ${isActive ? 'active' : ''}" onclick="selectMeet('${m.id}')">
-      <div class="mi-name">${m.name || 'Untitled'}</div>
-      <div class="mi-date">${m.date ? fmtDate(m.date) : 'No date'}</div>
-      <div class="mi-pin">PIN: ${m.pin || '—'}</div>
-      <span class="mi-status ${statusCls}">${statusTxt}</span>
+    const statusTxt = m.cancelled ? 'Cancelled' : m.is_active === false ? 'Inactive' : 'Active';
+    const logoEl = m.logo_url
+      ? `<img src="${m.logo_url}" class="mi-logo" alt="">`
+      : `<div class="mi-logo-ph">🏟</div>`;
+    return `<div class="meet-item ${isActive ? 'active' : ''}" id="mi-${m.id}">
+      <div class="meet-item-header" onclick="selectMeet('${m.id}')">
+        ${logoEl}
+        <div class="mi-text">
+          <div class="mi-name">${m.name || 'Untitled'}</div>
+          <div class="mi-date">${m.date ? fmtDate(m.date) : 'No date'} · PIN: ${m.pin || '—'}</div>
+          <span class="mi-status ${statusCls}">${statusTxt}</span>
+        </div>
+      </div>
+      <div class="meet-actions">
+        <button class="qa-btn qa-edit"  onclick="selectMeetTab('${m.id}','details')"><span class="qa-icon">✏️</span>Edit</button>
+        <button class="qa-btn qa-logo"  onclick="selectMeetTab('${m.id}','logo')"><span class="qa-icon">🖼</span>Logo</button>
+        <button class="qa-btn qa-csv"   onclick="selectMeetTab('${m.id}','csv')"><span class="qa-icon">📥</span>Import CSV</button>
+        <button class="qa-btn qa-del"   onclick="selectMeetTab('${m.id}','danger')"><span class="qa-icon">🗑</span>Delete</button>
+      </div>
     </div>`;
   }).join('');
+}
+
+function selectMeetTab(id, tab) {
+  activeTab = tab;
+  selectMeet(id);
 }
 
 async function selectMeet(id) {
@@ -417,15 +352,21 @@ async function selectMeet(id) {
   renderEditPanel();
 }
 
-// ═══════════════════════════════════════════════════════
-//  EDIT PANEL
-// ═══════════════════════════════════════════════════════
+// ── EDIT PANEL ────────────────────────────────────────
 function renderEditPanel() {
   const m  = activeMeet;
   const ep = document.getElementById('editPanel');
   const logoHtml = m.logo_url
     ? `<div class="header-logo"><img src="${m.logo_url}" alt="logo"></div>`
     : `<div class="header-logo">🏟</div>`;
+
+  const tabs = [
+    { id:'details', label:'✏️ Details' },
+    { id:'logo',    label:'🖼 Logo' },
+    { id:'csv',     label:'📥 Import CSV' },
+    { id:'events',  label:'📋 Events' },
+    { id:'danger',  label:'🗑 Danger' },
+  ];
 
   ep.innerHTML = `
     <div class="meet-header">
@@ -437,10 +378,14 @@ function renderEditPanel() {
       <div class="header-pin">PIN: ${m.pin || '—'}</div>
     </div>
 
-    <div class="divider"><span>Meet Details</span></div>
-    <div class="grid2">
-      <div class="card">
-        <div class="card-title">📋 Title &amp; Date</div>
+    <div class="panel-tabs">
+      ${tabs.map(t => `<button class="panel-tab ${activeTab===t.id?'active':''}" onclick="switchPanelTab('${t.id}')">${t.label}</button>`).join('')}
+    </div>
+
+    <!-- DETAILS -->
+    <div class="panel-section ${activeTab==='details'?'active':''}" id="sec-details">
+      <div class="card" style="max-width:480px;">
+        <div class="card-title">📋 Title, Date &amp; Status</div>
         <div class="field"><label>Meet Name</label>
           <input type="text" id="eName" value="${esc(m.name)}" placeholder="e.g. Spring Invite 2025">
         </div>
@@ -460,10 +405,13 @@ function renderEditPanel() {
         <button class="btn btn-primary" onclick="saveDetails()">Save Changes</button>
         <div class="st" id="stDetails"></div>
       </div>
+    </div>
 
-      <div class="card">
+    <!-- LOGO -->
+    <div class="panel-section ${activeTab==='logo'?'active':''}" id="sec-logo">
+      <div class="card" style="max-width:480px;">
         <div class="card-title">🖼 Meet Logo</div>
-        <div class="card-desc">Replaces the Ironclad logo on scoring &amp; leaderboard for workers in this meet.</div>
+        <div class="card-desc">Replaces the Ironclad logo on scoring &amp; leaderboard pages for this meet.</div>
         <img id="logoThumb" class="logo-thumb" src="${m.logo_url || ''}" style="${m.logo_url ? 'display:block' : 'display:none'}">
         <div class="field"><label>Upload New Logo</label>
           <input type="file" id="logoFile" accept="image/*" onchange="previewLogo()">
@@ -474,93 +422,95 @@ function renderEditPanel() {
       </div>
     </div>
 
-    <div class="divider"><span>Roster &amp; Events</span></div>
-    <div class="card span2">
-      <div class="card-title">📋 Events in This Meet</div>
-      <div id="evLoading" style="color:var(--text3);font-size:13px;">Loading…</div>
-      <div id="evList"></div>
+    <!-- CSV IMPORT -->
+    <div class="panel-section ${activeTab==='csv'?'active':''}" id="sec-csv">
+      <div class="card" style="max-width:560px;">
+        <div class="card-title">📥 Import / Replace Roster</div>
+        <div class="card-desc">Upload a MileSplit CSV. Choose whether to <strong style="color:var(--accent2)">add to</strong> the existing roster or <strong style="color:var(--red)">replace it entirely</strong>.</div>
+        <div class="field"><label>CSV File</label>
+          <input type="file" id="csvFile" accept=".csv">
+        </div>
+        <div class="field"><label>Import Mode</label>
+          <select id="importMode">
+            <option value="add">Add to existing roster</option>
+            <option value="replace">Replace entire roster (delete first)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="importBtn" onclick="doImport()">Run Import</button>
+        <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+        <div class="st" id="stImport"></div>
+      </div>
     </div>
 
-    <div class="divider"><span>Import</span></div>
-    <div class="card span2">
-      <div class="card-title">📥 Import / Replace Roster</div>
-      <div class="card-desc">Upload a MileSplit CSV. Choose whether to <strong style="color:var(--accent2)">add to</strong> the existing roster or <strong style="color:var(--red)">replace it entirely</strong>.</div>
-      <div class="field"><label>CSV File</label>
-        <input type="file" id="csvFile" accept=".csv">
+    <!-- EVENTS -->
+    <div class="panel-section ${activeTab==='events'?'active':''}" id="sec-events">
+      <div class="card">
+        <div class="card-title">📋 Events in This Meet</div>
+        <div id="evLoading" style="color:var(--text3);font-size:13px;">Loading…</div>
+        <div id="evList"></div>
       </div>
-      <div class="field"><label>Import Mode</label>
-        <select id="importMode">
-          <option value="add">Add to existing roster</option>
-          <option value="replace">Replace entire roster (delete first)</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" id="importBtn" onclick="doImport()">Run Import</button>
-      <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
-      <div class="st" id="stImport"></div>
     </div>
 
-    <div class="divider"><span>Danger Zone</span></div>
-    <div class="grid2">
-      <div class="card card-danger">
-        <div class="card-title">🗑 Clear Roster &amp; Events</div>
-        <div class="card-desc">Deletes all athletes, events, attempts, and assignments. Meet shell (name, date, PIN, logo) is kept.</div>
-        <button class="btn btn-danger" onclick="clearRoster()">Clear Roster &amp; Events</button>
-        <div class="st" id="stClear"></div>
-      </div>
-      <div class="card card-danger">
-        <div class="card-title">💣 Delete This Meet</div>
-        <div class="card-desc">Permanently removes this meet and all its data from the database.</div>
-        <button class="btn btn-danger" onclick="deleteMeet()">Delete Meet Entirely</button>
-        <div class="st" id="stDelete"></div>
+    <!-- DANGER -->
+    <div class="panel-section ${activeTab==='danger'?'active':''}" id="sec-danger">
+      <div class="grid2">
+        <div class="card card-danger">
+          <div class="card-title">🗑 Clear Roster &amp; Events</div>
+          <div class="card-desc">Deletes all athletes, events, attempts, and assignments. Meet shell (name, date, PIN, logo) is kept.</div>
+          <button class="btn btn-danger" onclick="clearRoster()">Clear Roster &amp; Events</button>
+          <div class="st" id="stClear"></div>
+        </div>
+        <div class="card card-danger">
+          <div class="card-title">💣 Delete This Meet</div>
+          <div class="card-desc">Permanently removes this meet and all its data from the database. Cannot be undone.</div>
+          <button class="btn btn-danger" onclick="deleteMeet()">Delete Meet Entirely</button>
+          <div class="st" id="stDelete"></div>
+        </div>
       </div>
     </div>
   `;
 
+  // Always load events in background
   loadEventList();
 }
 
-// ═══════════════════════════════════════════════════════
-//  SAVE DETAILS
-// ═══════════════════════════════════════════════════════
+function switchPanelTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().includes(tab.substring(0,4))));
+  document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
+  const sec = document.getElementById(`sec-${tab}`);
+  if (sec) sec.classList.add('active');
+  // Fix tab button highlighting properly
+  document.querySelectorAll('.panel-tab').forEach((t,i) => {
+    const ids = ['details','logo','csv','events','danger'];
+    t.classList.toggle('active', ids[i] === tab);
+  });
+}
+
+// ── SAVE DETAILS ──────────────────────────────────────
 async function saveDetails() {
-  const name   = document.getElementById('eName').value.trim();
-  const date   = document.getElementById('eDate').value || null;
-  const pin    = document.getElementById('ePin').value.trim();
+  const name = document.getElementById('eName').value.trim();
+  const date = document.getElementById('eDate').value || null;
+  const pin  = document.getElementById('ePin').value.trim();
   const status = document.getElementById('eActive').value;
   if (!name)                 return flash('stDetails', '❌ Meet name is required', 'err');
   if (pin && pin.length < 4) return flash('stDetails', '❌ PIN must be at least 4 digits', 'err');
-
-  const updates = {
-    name,
-    date,
-    pin:       pin || activeMeet.pin,
-    is_active: status !== 'inactive',
-    cancelled: status === 'cancelled'
-  };
-
+  const updates = { name, date, pin: pin || activeMeet.pin, is_active: status !== 'inactive', cancelled: status === 'cancelled' };
   const { error } = await sb.from('meets').update(updates).eq('id', activeMeetId);
   if (error) return flash('stDetails', '❌ ' + error.message, 'err');
-
   Object.assign(activeMeet, updates);
   allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, ...updates } : m);
   renderMeetList();
   renderEditPanel();
-  // Brief flash (panel re-renders, so flash after a tick)
   setTimeout(() => flash('stDetails', '✅ Meet updated', 'ok'), 50);
 }
 
-// ═══════════════════════════════════════════════════════
-//  LOGO
-// ═══════════════════════════════════════════════════════
+// ── LOGO ──────────────────────────────────────────────
 function previewLogo() {
   const file = document.getElementById('logoFile').files[0];
   if (!file) return;
   const r = new FileReader();
-  r.onload = e => {
-    const thumb = document.getElementById('logoThumb');
-    thumb.src = e.target.result;
-    thumb.style.display = 'block';
-  };
+  r.onload = e => { const t = document.getElementById('logoThumb'); t.src = e.target.result; t.style.display = 'block'; };
   r.readAsDataURL(file);
 }
 
@@ -568,31 +518,28 @@ async function uploadLogo() {
   const file = document.getElementById('logoFile').files[0];
   if (!file) return flash('stLogo', '❌ Select an image first', 'err');
   flash('stLogo', '⏳ Uploading…', 'inf');
-
   const ext  = file.name.split('.').pop().toLowerCase();
   const name = `meet-logo-${activeMeetId}-${Date.now()}.${ext}`;
-
   try {
     const { error: upErr } = await sb.storage.from('avatars').upload(name, file, { upsert: false });
     if (upErr) throw upErr;
     const { data } = sb.storage.from('avatars').getPublicUrl(name);
     const url = data.publicUrl;
-
     const { error: dbErr } = await sb.from('meets').update({ logo_url: url }).eq('id', activeMeetId);
     if (dbErr) throw dbErr;
-
     activeMeet.logo_url = url;
     allMeets = allMeets.map(m => m.id === activeMeetId ? { ...m, logo_url: url } : m);
     const thumb = document.getElementById('logoThumb');
     thumb.src = url; thumb.style.display = 'block';
     const headerLogo = document.querySelector('.header-logo');
     if (headerLogo) headerLogo.innerHTML = `<img src="${url}" alt="logo">`;
+    renderMeetList();
     flash('stLogo', '✅ Logo uploaded', 'ok');
   } catch(err) { flash('stLogo', '❌ ' + err.message, 'err'); }
 }
 
 async function removeLogo() {
-  if (!confirm('Remove this meet\'s logo? The Ironclad logo will show instead.')) return;
+  if (!confirm('Remove this meet\'s logo?')) return;
   const { error } = await sb.from('meets').update({ logo_url: null }).eq('id', activeMeetId);
   if (error) return flash('stLogo', '❌ ' + error.message, 'err');
   activeMeet.logo_url = null;
@@ -600,68 +547,54 @@ async function removeLogo() {
   document.getElementById('logoThumb').style.display = 'none';
   const headerLogo = document.querySelector('.header-logo');
   if (headerLogo) headerLogo.innerHTML = '🏟';
+  renderMeetList();
   flash('stLogo', '✅ Logo removed', 'ok');
 }
 
-// ═══════════════════════════════════════════════════════
-//  EVENT LIST
-// ═══════════════════════════════════════════════════════
+// ── EVENT LIST ────────────────────────────────────────
 async function loadEventList() {
-  const { data: events, error } = await sb.from('events').select('*')
-    .eq('meet_id', activeMeetId).order('name');
-  document.getElementById('evLoading').textContent = '';
-
+  const evLoadEl = document.getElementById('evLoading');
+  const evListEl = document.getElementById('evList');
+  if (!evLoadEl) return;
+  const { data: events, error } = await sb.from('events').select('*').eq('meet_id', activeMeetId).order('name');
+  evLoadEl.textContent = '';
   if (error || !events || !events.length) {
-    document.getElementById('evList').innerHTML =
-      '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
+    evListEl.innerHTML = '<div style="color:var(--text3);font-size:13px;">No events imported yet.</div>';
     return;
   }
-
   const { data: attempts } = await sb.from('attempts').select('event_id').eq('meet_id', activeMeetId);
   const { data: assigns  } = await sb.from('event_assignments').select('event_id').eq('meet_id', activeMeetId);
   const attCount = {}, athCount = {};
   (attempts || []).forEach(r => attCount[r.event_id] = (attCount[r.event_id]||0)+1);
   (assigns  || []).forEach(r => athCount[r.event_id] = (athCount[r.event_id]||0)+1);
-
-  document.getElementById('evList').innerHTML = events.map(e => `
+  evListEl.innerHTML = events.map(e => `
     <div class="ev-item">
-      <div>
-        <div class="ev-name">${e.name}</div>
-        <div class="ev-meta">${e.gender||''} ${e.level ? '· ' + e.level : ''}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <span class="badge">${athCount[e.id]||0} ath</span>
-        <span class="badge">${attCount[e.id]||0} att</span>
-      </div>
+      <div><div class="ev-name">${e.name}</div><div class="ev-meta">${e.gender||''} ${e.level ? '· '+e.level : ''}</div></div>
+      <div style="display:flex;gap:6px;"><span class="badge">${athCount[e.id]||0} ath</span><span class="badge">${attCount[e.id]||0} att</span></div>
     </div>`).join('');
 }
 
-// ═══════════════════════════════════════════════════════
-//  IMPORT CSV
-// ═══════════════════════════════════════════════════════
+// ── IMPORT CSV ────────────────────────────────────────
 async function doImport() {
   const file = document.getElementById('csvFile').files[0];
   if (!file) return flash('stImport', '❌ Select a CSV file first', 'err');
   const mode = document.getElementById('importMode').value;
   if (!confirm(mode === 'replace'
-    ? `This will DELETE all existing athletes/events for "${activeMeet.name}" then import. Continue?`
-    : `Add new athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
-
+    ? `DELETE all existing athletes/events for "${activeMeet.name}" then import? Continue?`
+    : `Add athletes from CSV to "${activeMeet.name}"? Continue?`)) return;
   const btn = document.getElementById('importBtn');
   const pw  = document.getElementById('progWrap');
   const pb  = document.getElementById('progBar');
   btn.disabled = true; btn.textContent = 'Working…';
   pw.classList.add('show'); pb.style.width = '5%';
-
   try {
     if (mode === 'replace') {
-      flash('stImport', '🗑 Clearing existing roster…', 'inf');
+      flash('stImport', '🗑 Clearing roster…', 'inf');
       for (const s of deleteSteps()) { const { error } = await s; if (error) throw error; }
     }
     pb.style.width = '20%';
     flash('stImport', '⏳ Parsing CSV…', 'inf');
-    const text = await file.text();
-    const n    = await importMileSplit(text, activeMeetId, pb);
+    const n = await importMileSplit(await file.text(), activeMeetId, pb);
     flash('stImport', `✅ ${n} athletes imported`, 'ok');
     loadEventList();
   } catch(err) {
@@ -682,11 +615,10 @@ function deleteSteps() {
 }
 
 async function importMileSplit(csvText, meetId, progBar) {
-  const rows    = parseCSV(csvText);
+  const rows = parseCSV(csvText);
   if (rows.length < 2) throw new Error('CSV appears empty or invalid.');
   const headers = rows[0].map(h => h.trim().toLowerCase());
   const getCol  = names => headers.findIndex(h => names.some(n => h.includes(n)));
-
   const idx = {
     ev:  getCol(['event']),
     div: getCol(['division','level','grade']),
@@ -697,22 +629,17 @@ async function importMileSplit(csvText, meetId, progBar) {
   };
   if (idx.fn < 0 || idx.ln < 0 || idx.ev < 0)
     throw new Error('CSV missing required columns (first, last, event).');
-
   const fieldKeywords = ['shot','discus','long jump','triple jump','high jump','pole vault'];
   const eventsFound = {}, eventRows = [], athleteRows = [], assignRows = [];
-
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length < 3) continue;
     const g = col => (col >= 0 && col < row.length) ? (row[col]||'').toString().trim() : '';
     if (!g(idx.fn)) continue;
-    const evName = g(idx.ev).toLowerCase();
-    if (!fieldKeywords.some(k => evName.includes(k))) continue;
-
-    const level  = normalizeLevel(g(idx.div));
+    if (!fieldKeywords.some(k => g(idx.ev).toLowerCase().includes(k))) continue;
+    const level = normalizeLevel(g(idx.div));
     const gender = g(idx.gen);
-    const evKey  = g(idx.ev) + '|' + gender + '|' + level;
-
+    const evKey = g(idx.ev) + '|' + gender + '|' + level;
     if (!eventsFound[evKey]) {
       const eId = crypto.randomUUID().substring(0, 8);
       eventsFound[evKey] = eId;
@@ -721,23 +648,19 @@ async function importMileSplit(csvText, meetId, progBar) {
     const aId = crypto.randomUUID().substring(0, 8);
     athleteRows.push({ id: aId, fname: g(idx.fn), lname: g(idx.ln), gender, level, team: g(idx.tm), meet_id: meetId });
     assignRows.push({ athlete_id: aId, event_id: eventsFound[evKey], meet_id: meetId, athlete_name: (g(idx.fn)+' '+g(idx.ln)).trim() });
-
     if (progBar) progBar.style.width = (20 + Math.round((i / rows.length) * 70)) + '%';
   }
-
   if (!athleteRows.length) throw new Error('No field event athletes found in this CSV.');
-  if (eventRows.length)   { const { error } = await sb.from('events').insert(eventRows);             if (error) throw error; }
-  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows);          if (error) throw error; }
-  if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows);  if (error) throw error; }
+  if (eventRows.length)   { const { error } = await sb.from('events').insert(eventRows);            if (error) throw error; }
+  if (athleteRows.length) { const { error } = await sb.from('athletes').insert(athleteRows);         if (error) throw error; }
+  if (assignRows.length)  { const { error } = await sb.from('event_assignments').insert(assignRows); if (error) throw error; }
   if (progBar) progBar.style.width = '100%';
   return athleteRows.length;
 }
 
-// ═══════════════════════════════════════════════════════
-//  CLEAR / DELETE
-// ═══════════════════════════════════════════════════════
+// ── CLEAR / DELETE ────────────────────────────────────
 async function clearRoster() {
-  if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?\n\nMeet shell is kept.`)) return;
+  if (!confirm(`Clear ALL athletes, events, and attempts for "${activeMeet.name}"?\nMeet shell is kept.`)) return;
   for (const s of deleteSteps()) {
     const { error } = await s;
     if (error) { flash('stClear', '❌ ' + error.message, 'err'); return; }
@@ -747,32 +670,23 @@ async function clearRoster() {
 }
 
 async function deleteMeet() {
-  if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?\n\nThis cannot be undone.`)) return;
-  const steps = [
-    ...deleteSteps(),
-    sb.from('meets').delete().eq('id', activeMeetId)
-  ];
-  for (const s of steps) {
+  if (!confirm(`Permanently DELETE "${activeMeet.name}" and ALL its data?\nThis cannot be undone.`)) return;
+  for (const s of [...deleteSteps(), sb.from('meets').delete().eq('id', activeMeetId)]) {
     const { error } = await s;
     if (error) { flash('stDelete', '❌ ' + error.message, 'err'); return; }
   }
-  allMeets     = allMeets.filter(m => m.id !== activeMeetId);
-  activeMeetId = null;
-  activeMeet   = null;
+  allMeets = allMeets.filter(m => m.id !== activeMeetId);
+  activeMeetId = null; activeMeet = null;
   document.getElementById('meetCount').textContent = allMeets.length;
   renderMeetList();
   document.getElementById('editPanel').innerHTML =
-    '<div class="no-select-msg">← Select a meet to edit, or create a new one</div>';
+    '<div class="no-select-msg"><span>🏟</span>Select a meet from the sidebar,<br>or create a new one</div>';
 }
 
-// ═══════════════════════════════════════════════════════
-//  CREATE NEW MEET
-// ═══════════════════════════════════════════════════════
+// ── NEW MEET ──────────────────────────────────────────
 function startNewMeet() {
-  activeMeetId = null;
-  activeMeet   = null;
+  activeMeetId = null; activeMeet = null; activeTab = 'details';
   renderMeetList();
-
   document.getElementById('editPanel').innerHTML = `
     <div class="divider"><span>New Meet</span></div>
     <div class="card" style="max-width:480px;">
@@ -797,68 +711,44 @@ async function createMeet() {
   const pin  = document.getElementById('newPin').value.trim();
   if (!name)          return flash('stCreate', '❌ Meet name is required', 'err');
   if (pin.length < 4) return flash('stCreate', '❌ PIN must be at least 4 digits', 'err');
-  if (!currentUser)   return flash('stCreate', '❌ Not logged in', 'err');
-
   flash('stCreate', '⏳ Creating…', 'inf');
   const { data, error } = await sb.from('meets')
     .insert({ name, date, pin, is_active: true, owner_id: currentUser.id })
     .select().single();
   if (error) return flash('stCreate', '❌ ' + error.message, 'err');
-
   allMeets.unshift(data);
   document.getElementById('meetCount').textContent = allMeets.length;
-  activeMeetId = data.id;
-  activeMeet   = data;
+  activeMeetId = data.id; activeMeet = data;
   renderMeetList();
   renderEditPanel();
 }
 
-// ═══════════════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════════════
+// ── HELPERS ───────────────────────────────────────────
 function normalizeLevel(raw) {
   if (!raw) return '';
   const t = raw.toString().toLowerCase().trim();
   if (t.includes('varsity')) return 'Varsity';
   if (t.includes('jv') || t.includes('junior var')) return 'JV';
-  if (t.includes('8th') || t === '8') return '8th Grade';
-  if (t.includes('7th') || t === '7') return '7th Grade';
+  if (t.includes('8th') || t==='8') return '8th Grade';
+  if (t.includes('7th') || t==='7') return '7th Grade';
   if (t.includes('frosh') || t.includes('freshman') || t.includes('9th')) return 'Freshman';
   if (t.includes('soph') || t.includes('10th')) return 'Sophomore';
   return raw.toString().trim();
 }
-
 function parseCSV(text) {
   text = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const rows=[]; let row=[],field='',inQ=false,i=0;
-  while(i<text.length){
-    const c=text[i];
-    if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;continue;}if(c==='"')inQ=false;else field+=c;}
-    else{if(c==='"')inQ=true;else if(c===','){row.push(field.trim());field='';}else if(c==='\n'){row.push(field.trim());field='';if(row.some(v=>v!=''))rows.push(row);row=[];}else field+=c;}
-    i++;
-  }
-  row.push(field.trim());if(row.some(v=>v!=''))rows.push(row);
-  return rows;
+  while(i<text.length){const c=text[i];if(inQ){if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;continue;}if(c==='"')inQ=false;else field+=c;}else{if(c==='"')inQ=true;else if(c===','){row.push(field.trim());field='';}else if(c==='\n'){row.push(field.trim());field='';if(row.some(v=>v!=''))rows.push(row);row=[];}else field+=c;}i++;}
+  row.push(field.trim());if(row.some(v=>v!=''))rows.push(row);return rows;
 }
-
-function fmtDate(d) {
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
-}
-
+function fmtDate(d) { return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
 function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
 function flash(id, msg, type) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = msg;
-  el.className = `st show st-${type}`;
+  const el = document.getElementById(id); if (!el) return;
+  el.innerHTML = msg; el.className = `st show st-${type}`;
   if (type !== 'err') setTimeout(() => el.classList.remove('show'), 5000);
 }
-
-function flashEl(el, msg, type) {
-  el.innerHTML = msg;
-  el.className = `st show st-${type}`;
-}
+function flashEl(el, msg, type) { el.innerHTML = msg; el.className = `st show st-${type}`; }
 </script>
 </body>
 </html>

@@ -10,48 +10,37 @@
   <title>Field Events Pro — Powered by Ironclad</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,800;0,900;1,800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:     #07101c;
-      --bg2:    #0c1b2e;
-      --bg3:    #0f2240;
-      --border: #1a3352;
-      --border2:#254a72;
-      --accent: #4d9de0;
-      --accent2:#7ec8f7;
-      --text:   #c8dcf0;
-      --text2:  #7a9cbf;
-      --text3:  #3a5a7e;
-      --green:  #3dd68c;
-      --amber:  #f0a040;
-      --red:    #e05252;
+      --bg:      #07101c;
+      --bg2:     #0c1b2e;
+      --bg3:     #0f2240;
+      --border:  #1a3352;
+      --border2: #254a72;
+      --accent:  #4d9de0;
+      --accent2: #7ec8f7;
+      --text:    #c8dcf0;
+      --text2:   #7a9cbf;
+      --text3:   #3a5a7e;
+      --green:   #3dd68c;
+      --red:     #e05252;
     }
-
     html, body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Barlow', sans-serif;
       min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ── NOISE TEXTURE ── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0;
     }
 
     /* ── TOPBAR ── */
     .topbar {
       position: sticky; top: 0; z-index: 100;
-      background: rgba(7,16,28,0.94);
+      background: rgba(7,16,28,0.96);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--border);
-      padding: 11px 20px;
+      padding: 10px 20px;
       display: flex; align-items: center; gap: 12px;
     }
     .topbar-brand {
@@ -61,33 +50,32 @@
       text-transform: uppercase; flex: 1;
     }
     .topbar-admin {
-      font-size: 12px; font-weight: 600; letter-spacing: 1px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px; font-weight: 800; letter-spacing: 1.5px;
       color: var(--text3); text-decoration: none;
       padding: 5px 12px; border: 1px solid var(--border);
-      border-radius: 6px; transition: all .15s;
+      border-radius: 6px; transition: all .15s; text-transform: uppercase;
     }
     .topbar-admin:hover { color: var(--accent2); border-color: var(--border2); background: var(--bg3); }
 
+    /* ── PAGE CENTER WRAPPER ── */
+    .page-wrap {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 0 16px 60px;
+      width: 100%;
+    }
+
     /* ── HERO ── */
     .hero {
-      position: relative;
       text-align: center;
-      padding: 48px 24px 32px;
-      overflow: hidden;
-    }
-    .hero-glow {
-      position: absolute;
-      top: -60px; left: 50%; transform: translateX(-50%);
-      width: 600px; height: 320px;
-      background: radial-gradient(ellipse at center, rgba(77,157,224,0.10) 0%, transparent 70%);
-      pointer-events: none;
+      padding: 40px 0 28px;
     }
     .hero-logo {
       height: 72px; width: auto;
-      margin-bottom: 18px;
+      display: block; margin: 0 auto 16px;
       filter: drop-shadow(0 4px 14px rgba(0,0,0,0.5));
-      transition: opacity .3s, src .3s;
-      position: relative; z-index: 1;
+      transition: opacity .3s;
     }
     .hero-badge {
       display: inline-block;
@@ -98,27 +86,25 @@
       font-size: 10px; font-weight: 800;
       letter-spacing: 4px; text-transform: uppercase;
       padding: 4px 14px; border-radius: 20px;
-      margin-bottom: 16px;
-      position: relative; z-index: 1;
+      margin-bottom: 14px;
     }
     .hero h1 {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(38px, 9vw, 68px);
-      font-weight: 900; line-height: 0.94;
+      font-size: clamp(40px, 10vw, 64px);
+      font-weight: 900; line-height: 0.92;
       letter-spacing: -0.5px; text-transform: uppercase;
       color: #e8f4ff;
-      position: relative; z-index: 1;
     }
     .hero h1 em { font-style: italic; color: var(--accent); }
     .hero-sub {
       font-size: 14px; color: var(--text2);
       margin: 12px auto 0; line-height: 1.6;
-      max-width: 360px; position: relative; z-index: 1;
+      max-width: 340px;
     }
     .hero-divider {
       width: 40px; height: 3px;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
-      margin: 22px auto 0; border-radius: 2px;
+      margin: 20px auto 0; border-radius: 2px;
     }
 
     /* ── SECTION LABEL ── */
@@ -127,41 +113,33 @@
       font-size: 10px; font-weight: 800;
       letter-spacing: 4px; text-transform: uppercase;
       color: var(--text3);
-      max-width: 500px; width: 100%;
-      margin: 28px auto 12px;
-      padding: 0 20px;
+      margin: 28px 0 10px;
     }
 
     /* ── MEET LIST ── */
     .meet-list {
-      max-width: 500px; width: 100%;
-      margin: 0 auto;
-      padding: 0 20px;
       display: flex; flex-direction: column; gap: 10px;
     }
     .meet-card {
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 16px 18px;
+      padding: 14px 16px;
       cursor: pointer;
       display: flex; align-items: center; gap: 14px;
       transition: border-color .15s, background .15s, transform .15s;
     }
-    .meet-card:hover {
-      background: var(--bg3);
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
+    .meet-card:hover  { background: var(--bg3); border-color: var(--accent); transform: translateY(-2px); }
     .meet-card:active { transform: scale(0.98); }
+    .meet-card.selected { border-color: var(--accent); background: var(--bg3); }
+
     .meet-logo {
-      width: 50px; height: 50px; border-radius: 10px;
+      width: 48px; height: 48px; border-radius: 9px;
       object-fit: contain; background: var(--bg);
-      border: 1px solid var(--border); padding: 4px;
-      flex-shrink: 0;
+      border: 1px solid var(--border); padding: 3px; flex-shrink: 0;
     }
-    .meet-logo-placeholder {
-      width: 50px; height: 50px; border-radius: 10px;
+    .meet-logo-ph {
+      width: 48px; height: 48px; border-radius: 9px;
       background: var(--bg); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
       font-size: 20px; flex-shrink: 0;
@@ -174,131 +152,89 @@
       letter-spacing: 0.5px;
     }
     .meet-date { font-size: 12px; color: var(--text2); margin-top: 2px; }
-    .meet-arrow { color: var(--text3); font-size: 22px; flex-shrink: 0; }
+    .meet-arrow { color: var(--text3); font-size: 22px; flex-shrink: 0; transition: color .15s; }
+    .meet-card:hover .meet-arrow { color: var(--accent2); }
 
-    /* ── ROLE BUTTONS ── */
+    /* ── INLINE ROLE PICKER (expands below selected card) ── */
+    .role-picker {
+      display: none;
+      background: var(--bg3);
+      border: 1px solid var(--accent);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      padding: 16px;
+      margin-top: -10px;
+      animation: expandDown .18s ease;
+    }
+    .role-picker.open { display: block; }
+    @keyframes expandDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
     .role-grid {
       display: grid; grid-template-columns: 1fr 1fr;
-      gap: 10px; margin-bottom: 4px;
+      gap: 10px; margin-bottom: 0;
     }
     .role-btn {
-      padding: 20px 10px; border-radius: 12px;
+      padding: 16px 10px; border-radius: 10px;
       border: 1px solid transparent;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 16px; font-weight: 800;
+      font-size: 15px; font-weight: 800;
       letter-spacing: 1px; text-transform: uppercase;
       cursor: pointer;
       display: flex; flex-direction: column;
-      align-items: center; gap: 8px;
+      align-items: center; gap: 6px;
       transition: all .15s;
     }
     .role-btn:active { transform: scale(0.96); }
-    .role-btn .icon { font-size: 30px; }
-    .role-btn .role-sub {
-      font-size: 10px; font-weight: 600;
-      letter-spacing: 1px; opacity: 0.65;
-      text-transform: uppercase;
-    }
-    .role-scoring {
-      background: rgba(77,157,224,0.10);
-      border-color: rgba(77,157,224,0.25);
-      color: var(--accent2);
-    }
-    .role-scoring:hover { background: rgba(77,157,224,0.18); border-color: var(--accent); }
-    .role-results {
-      background: rgba(61,214,140,0.10);
-      border-color: rgba(61,214,140,0.25);
-      color: var(--green);
-    }
-    .role-results:hover { background: rgba(61,214,140,0.18); border-color: var(--green); }
+    .role-btn .icon { font-size: 26px; }
+    .role-btn .role-sub { font-size: 10px; font-weight: 600; letter-spacing: 1px; opacity: 0.65; text-transform: uppercase; }
+    .role-scoring { background: rgba(77,157,224,0.12); border-color: rgba(77,157,224,0.3); color: var(--accent2); }
+    .role-scoring:hover { background: rgba(77,157,224,0.22); border-color: var(--accent); }
+    .role-results { background: rgba(61,214,140,0.10); border-color: rgba(61,214,140,0.25); color: var(--green); }
+    .role-results:hover { background: rgba(61,214,140,0.20); border-color: var(--green); }
 
-    /* ── STATES ── */
-    .loading-msg {
-      text-align: center; padding: 24px;
-      color: var(--text3); font-size: 14px;
-    }
-    .empty-msg {
-      text-align: center; padding: 32px 24px;
-      background: var(--bg2); border: 1px dashed var(--border);
-      border-radius: 14px; color: var(--text3); font-size: 14px;
-      max-width: 500px; width: 100%; margin: 0 auto;
-    }
-
-    /* ── MODAL ── */
-    .modal-bg {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.78);
-      backdrop-filter: blur(6px);
-      z-index: 200;
-      align-items: flex-end; justify-content: center;
-    }
-    .modal-bg.show { display: flex; }
-    @media (min-width: 540px) {
-      .modal-bg { align-items: center; padding: 20px; }
-      .modal { border-radius: 18px !important; max-width: 380px; }
-    }
-    .modal {
-      background: var(--bg2);
-      border: 1px solid var(--border2);
-      border-top: 1px solid var(--border2);
-      border-radius: 20px 20px 0 0;
-      padding: 10px 24px 40px;
-      width: 100%;
-      text-align: center;
-      animation: slideUp .22s ease;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(40px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
-    .modal-drag {
-      width: 36px; height: 4px; background: var(--border2);
-      border-radius: 2px; margin: 14px auto 20px;
-    }
-    .modal-logo {
-      height: 58px; width: auto; max-width: 180px;
-      margin-bottom: 12px; object-fit: contain;
-    }
-    .modal h2 {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 22px; font-weight: 900;
-      color: #e8f4ff; letter-spacing: 1px;
-      text-transform: uppercase; margin-bottom: 2px;
-    }
-    .modal-date { color: var(--text2); font-size: 12px; margin-bottom: 22px; }
-    .modal-back {
-      background: none; border: none; color: var(--text3);
-      font-size: 13px; cursor: pointer; padding: 10px 4px 0;
-      font-family: 'Barlow', sans-serif; display: block; margin: 0 auto;
-    }
-    .modal-back:hover { color: var(--accent2); }
-
-    /* PIN step */
-    #pinStep p { color: var(--text2); font-size: 13px; margin-bottom: 14px; }
+    /* ── PIN STEP (inside role picker) ── */
+    .pin-step { display: none; }
+    .pin-step.open { display: block; }
+    .pin-step p { color: var(--text2); font-size: 13px; margin-bottom: 12px; text-align: center; }
     .pin-input {
-      width: 100%; padding: 14px; font-size: 30px;
-      text-align: center; letter-spacing: 14px;
+      width: 100%; padding: 13px; font-size: 28px;
+      text-align: center; letter-spacing: 12px;
       background: var(--bg); border: 2px solid var(--border);
       border-radius: 9px; color: #e0ecff; outline: none;
-      margin-bottom: 12px; font-family: 'Barlow Condensed', sans-serif;
+      margin-bottom: 10px; font-family: 'Barlow Condensed', sans-serif;
       transition: border-color .2s;
     }
     .pin-input:focus { border-color: var(--accent); }
     .pin-btn {
-      width: 100%; padding: 13px; border: none; border-radius: 9px;
+      width: 100%; padding: 12px; border: none; border-radius: 9px;
       background: linear-gradient(135deg, #1e5fa8, #164080);
       color: #d0eaff; font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px; font-weight: 800; letter-spacing: 2px;
+      font-size: 14px; font-weight: 800; letter-spacing: 2px;
       text-transform: uppercase; cursor: pointer; transition: opacity .15s;
     }
     .pin-btn:hover { opacity: .88; }
-    .pin-error { color: var(--red); font-size: 12px; margin-top: 8px; min-height: 16px; }
+    .pin-error { color: var(--red); font-size: 12px; margin-top: 8px; min-height: 16px; text-align: center; }
+    .pin-back {
+      background: none; border: none; color: var(--text3);
+      font-size: 12px; cursor: pointer; padding: 8px 0 0;
+      font-family: 'Barlow', sans-serif; display: block; margin: 0 auto;
+    }
+    .pin-back:hover { color: var(--accent2); }
+
+    /* ── STATES ── */
+    .loading-msg { text-align: center; padding: 24px; color: var(--text3); font-size: 14px; }
+    .empty-msg {
+      text-align: center; padding: 32px 24px;
+      background: var(--bg2); border: 1px dashed var(--border);
+      border-radius: 14px; color: var(--text3); font-size: 14px;
+    }
 
     /* ── FOOTER ── */
     .footer {
-      text-align: center; padding: 28px 20px 48px;
-      font-size: 11px; color: var(--text3);
-      margin-top: 40px;
+      text-align: center; padding: 32px 20px 48px;
+      font-size: 11px; color: var(--text3); margin-top: 20px;
     }
     .footer img { height: 18px; vertical-align: middle; margin-right: 6px; opacity: 0.3; }
   </style>
@@ -312,23 +248,26 @@
     <a href="admin.html" class="topbar-admin">🔐 Admin</a>
   </div>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-glow"></div>
-    <img id="heroLogo"
-         src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-         alt="Field Events Pro" class="hero-logo">
-    <div class="hero-badge">Track &amp; Field · Live Scoring</div>
-    <h1>Field<br><em>Events</em><br>Pro</h1>
-    <p class="hero-sub">Real-time scoring and live leaderboards for every field event.</p>
-    <div class="hero-divider"></div>
-  </section>
+  <div class="page-wrap">
 
-  <!-- MEET LIST -->
-  <div class="section-label">Select Your Meet</div>
-  <div class="meet-list" id="meetList">
-    <div class="loading-msg">Loading meets…</div>
-  </div>
+    <!-- HERO -->
+    <section class="hero">
+      <img id="heroLogo"
+           src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
+           alt="Field Events Pro" class="hero-logo">
+      <div class="hero-badge">Track &amp; Field · Live Scoring</div>
+      <h1>Field<br><em>Events</em><br>Pro</h1>
+      <p class="hero-sub">Real-time scoring and live leaderboards for every field event.</p>
+      <div class="hero-divider"></div>
+    </section>
+
+    <!-- MEET LIST -->
+    <div class="section-label">Select Your Meet</div>
+    <div class="meet-list" id="meetList">
+      <div class="loading-msg">Loading meets…</div>
+    </div>
+
+  </div><!-- /page-wrap -->
 
   <!-- FOOTER -->
   <footer class="footer">
@@ -336,62 +275,18 @@
     &copy; 2025 Ironclad · Field Events Pro
   </footer>
 
-  <!-- ══ MODAL ══ -->
-  <div class="modal-bg" id="modal">
-    <div class="modal">
-      <div class="modal-drag"></div>
-
-      <img id="modalLogo"
-           src="https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png"
-           alt="Meet Logo" class="modal-logo">
-      <h2 id="modalName"></h2>
-      <p class="modal-date" id="modalDate"></p>
-
-      <!-- Step 1: choose role -->
-      <div id="roleStep">
-        <div class="role-grid">
-          <button class="role-btn role-results" onclick="goLeaderboard()">
-            <span class="icon">📊</span>
-            Leaderboard
-            <span class="role-sub">No login</span>
-          </button>
-          <button class="role-btn role-scoring" onclick="showPinStep()">
-            <span class="icon">📋</span>
-            Scoring
-            <span class="role-sub">PIN required</span>
-          </button>
-        </div>
-        <button class="modal-back" onclick="closeModal()">← Back to meets</button>
-      </div>
-
-      <!-- Step 2: PIN entry -->
-      <div id="pinStep" style="display:none;">
-        <p>Enter the scoring PIN provided by your meet director.</p>
-        <input type="tel" id="pinInput" class="pin-input"
-               maxlength="6" inputmode="numeric" pattern="[0-9]*"
-               placeholder="· · · ·"
-               onkeydown="if(event.key==='Enter') submitPin()">
-        <button class="pin-btn" onclick="submitPin()">Enter Scoring</button>
-        <div class="pin-error" id="pinError"></div>
-        <button class="modal-back" onclick="showRoleStep()">← Back</button>
-      </div>
-    </div>
-  </div>
-
 <script>
 const SUPABASE_URL = 'https://qjomrnguhbqfluzwuntz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EkuLnkxIC-nZue4ss2NyJw_jmuXcpd_';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const IRONCLAD = 'https://qjomrnguhbqfluzwuntz.supabase.co/storage/v1/object/public/logos/Ironclad.png';
-let selectedMeet = null;
+const meetsMap = {};
+let selectedId = null;
 
-// ── Load active meets ─────────────────────────────────────────
-const meetsMap = {}; // id → meet object
-
+// ── Load meets ────────────────────────────────────────
 window.onload = async () => {
   const list = document.getElementById('meetList');
-
   try {
     const { data: meets, error } = await sb
       .from('meets')
@@ -402,121 +297,134 @@ window.onload = async () => {
     if (error) throw error;
 
     if (!meets || !meets.length) {
-      list.innerHTML = `<div class="empty-msg">
-        No active meets right now.<br>
-        <span style="font-size:12px;margin-top:6px;display:block;color:var(--text3);">
-          A meet director needs to create and activate one first.
-        </span>
-      </div>`;
+      list.innerHTML = `<div class="empty-msg">No active meets right now.<br>
+        <span style="font-size:12px;margin-top:6px;display:block;">A meet director needs to create one first.</span></div>`;
       return;
     }
 
-    // Store in map so onclick just passes the ID — no JSON-in-HTML
     meets.forEach(m => meetsMap[m.id] = m);
 
     list.innerHTML = meets.map(m => {
       const logo = m.logo_url
         ? `<img src="${m.logo_url}" class="meet-logo" alt="">`
-        : `<div class="meet-logo-placeholder">🏟</div>`;
+        : `<div class="meet-logo-ph">🏟</div>`;
       const dateStr = m.date
         ? new Date(m.date + 'T12:00:00').toLocaleDateString('en-US',
             { weekday:'short', month:'short', day:'numeric', year:'numeric' })
         : 'Date TBD';
-      return `<div class="meet-card" onclick="openMeet('${m.id}')">
-        ${logo}
-        <div class="meet-info">
-          <div class="meet-name">${m.name}</div>
-          <div class="meet-date">${dateStr}</div>
-        </div>
-        <div class="meet-arrow">›</div>
-      </div>`;
+      return `
+        <div>
+          <div class="meet-card" id="card-${m.id}" onclick="toggleMeet('${m.id}')">
+            ${logo}
+            <div class="meet-info">
+              <div class="meet-name">${m.name}</div>
+              <div class="meet-date">${dateStr}</div>
+            </div>
+            <div class="meet-arrow">›</div>
+          </div>
+          <div class="role-picker" id="picker-${m.id}">
+            <div class="role-grid" id="roles-${m.id}">
+              <button class="role-btn role-results" onclick="goLeaderboard('${m.id}')">
+                <span class="icon">📊</span>
+                Leaderboard
+                <span class="role-sub">No login</span>
+              </button>
+              <button class="role-btn role-scoring" onclick="showPin('${m.id}')">
+                <span class="icon">📋</span>
+                Scoring
+                <span class="role-sub">PIN required</span>
+              </button>
+            </div>
+            <div class="pin-step" id="pin-${m.id}">
+              <p>Enter the scoring PIN for this meet.</p>
+              <input type="tel" id="pinInput-${m.id}" class="pin-input"
+                     maxlength="6" inputmode="numeric" placeholder="· · · ·"
+                     onkeydown="if(event.key==='Enter') submitPin('${m.id}')">
+              <button class="pin-btn" onclick="submitPin('${m.id}')">Enter Scoring</button>
+              <div class="pin-error" id="pinErr-${m.id}"></div>
+              <button class="pin-back" onclick="backToRoles('${m.id}')">← Back</button>
+            </div>
+          </div>
+        </div>`;
     }).join('');
 
   } catch(err) {
-    console.error('Error loading meets:', err);
-    list.innerHTML = `<div class="empty-msg">Error loading meets: ${err.message}</div>`;
+    console.error(err);
+    list.innerHTML = `<div class="empty-msg">Error: ${err.message}</div>`;
   }
 };
 
-// ── Open modal ────────────────────────────────────────────────
-function openMeet(id) {
-  selectedMeet = meetsMap[id];
-  if (!selectedMeet) return;
-  const meet = selectedMeet;
-  document.getElementById('heroLogo').src  = meet.logo_url || IRONCLAD;
-  document.getElementById('modalLogo').src = meet.logo_url || IRONCLAD;
-  document.getElementById('modalName').textContent = meet.name;
-  document.getElementById('modalDate').textContent = meet.date
-    ? new Date(meet.date + 'T12:00:00').toLocaleDateString('en-US',
-        { weekday:'long', month:'long', day:'numeric', year:'numeric' })
-    : '';
-  showRoleStep();
-  document.getElementById('modal').classList.add('show');
+// ── Toggle meet card open/closed ──────────────────────
+function toggleMeet(id) {
+  const picker = document.getElementById(`picker-${id}`);
+  const card   = document.getElementById(`card-${id}`);
+  const isOpen = picker.classList.contains('open');
+
+  // Close all others first
+  document.querySelectorAll('.role-picker').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.meet-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.pin-step').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.role-grid').forEach(r => r.style.display = '');
+
+  if (!isOpen) {
+    picker.classList.add('open');
+    card.classList.add('selected');
+    selectedId = id;
+    // Update hero logo
+    const meet = meetsMap[id];
+    document.getElementById('heroLogo').src = meet.logo_url || IRONCLAD;
+  } else {
+    selectedId = null;
+    document.getElementById('heroLogo').src = IRONCLAD;
+  }
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('show');
-  document.getElementById('heroLogo').src = IRONCLAD;
-  selectedMeet = null;
-}
-
-// ── Role steps ────────────────────────────────────────────────
-function showRoleStep() {
-  document.getElementById('roleStep').style.display = 'block';
-  document.getElementById('pinStep').style.display  = 'none';
-  document.getElementById('pinError').textContent   = '';
-  document.getElementById('pinInput').value         = '';
-}
-
-function showPinStep() {
-  document.getElementById('roleStep').style.display = 'none';
-  document.getElementById('pinStep').style.display  = 'block';
-  setTimeout(() => document.getElementById('pinInput').focus(), 80);
-}
-
-// ── Leaderboard — no PIN ──────────────────────────────────────
-function goLeaderboard() {
-  saveMeetSession();
+// ── Role actions ──────────────────────────────────────
+function goLeaderboard(id) {
+  saveMeetSession(id);
   window.location.href = 'results.html';
 }
 
-// ── Scoring — verify PIN ──────────────────────────────────────
-async function submitPin() {
-  const entered = document.getElementById('pinInput').value.trim();
+function showPin(id) {
+  document.getElementById(`roles-${id}`).style.display = 'none';
+  document.getElementById(`pin-${id}`).classList.add('open');
+  setTimeout(() => document.getElementById(`pinInput-${id}`).focus(), 80);
+}
+
+function backToRoles(id) {
+  document.getElementById(`pin-${id}`).classList.remove('open');
+  document.getElementById(`roles-${id}`).style.display = '';
+  document.getElementById(`pinErr-${id}`).textContent = '';
+  document.getElementById(`pinInput-${id}`).value = '';
+}
+
+// ── PIN verify ────────────────────────────────────────
+async function submitPin(id) {
+  const entered = document.getElementById(`pinInput-${id}`).value.trim();
   if (!entered) return;
 
-  const { data, error } = await sb
-    .from('meets').select('pin').eq('id', selectedMeet.id).single();
-
+  const { data, error } = await sb.from('meets').select('pin').eq('id', id).single();
   if (error || !data) {
-    document.getElementById('pinError').textContent = '❌ Could not verify PIN.';
+    document.getElementById(`pinErr-${id}`).textContent = '❌ Could not verify PIN.';
     return;
   }
-
   if (entered === data.pin) {
-    saveMeetSession();
+    saveMeetSession(id);
     window.location.href = 'scoring.html';
   } else {
-    document.getElementById('pinError').textContent = '❌ Incorrect PIN. Try again.';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
+    document.getElementById(`pinErr-${id}`).textContent = '❌ Incorrect PIN. Try again.';
+    document.getElementById(`pinInput-${id}`).value = '';
+    document.getElementById(`pinInput-${id}`).focus();
   }
 }
 
-// ── Save meet to sessionStorage ───────────────────────────────
-function saveMeetSession() {
+// ── Save session ──────────────────────────────────────
+function saveMeetSession(id) {
+  const m = meetsMap[id];
   sessionStorage.setItem('fep_meet', JSON.stringify({
-    id:       selectedMeet.id,
-    name:     selectedMeet.name,
-    date:     selectedMeet.date,
-    logo_url: selectedMeet.logo_url || null
+    id: m.id, name: m.name, date: m.date, logo_url: m.logo_url || null
   }));
 }
-
-// Close modal on backdrop tap
-document.getElementById('modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
 </script>
 </body>
 </html>
